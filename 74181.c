@@ -4,16 +4,153 @@
 #include <time.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <curl/curl.h>
+#if defined(_WIN32)
+#define SISTEMA_WINDOWS 1
+#include <windows.h>
+#else
+#define SISTEMA_WINDOWS 0
+#endif
+#ifdef __APPLE__
+#define SISTEMA_MAC 1
+#else
+#define SISTEMA_MAC 0
+#endif
+#ifdef __linux__
+#define SISTEMA_LINUX 1
+#else
+#define SISTEMA_LINUX 0
+#endif
+#define URL_CLOCK "https://raw.githubusercontent.com/Leo-Galli/74181/main/processors.json"
+#define FILE_CACHE "clock_cache.json"
 
-void delay(int milliseconds) { 
-  clock_t start_time = clock(); 
-  clock_t end_time = milliseconds * CLOCKS_PER_SEC / 1000 + start_time; 
-  while (clock() < end_time); 
+struct stringa {
+    char *dati;
+    size_t lunghezza;
+};
+void inizializza_stringa(struct stringa *s) {
+    s->lunghezza = 0;
+    s->dati = malloc(1);
+    if (s->dati) s->dati[0] = '\0';
 }
-void clock_step(int *CLK, int *prev_CLK, int milliseconds) { 
-  delay(milliseconds); 
-  *prev_CLK = *CLK; 
-  *CLK = 1 - *CLK; 
+size_t scrivi_dati(void *ptr, size_t dim, size_t nmemb, struct stringa *s) {
+    size_t nuova_lung = s->lunghezza + dim * nmemb;
+    s->dati = realloc(s->dati, nuova_lung + 1);
+    memcpy(s->dati + s->lunghezza, ptr, dim * nmemb);
+    s->dati[nuova_lung] = '\0';
+    s->lunghezza = nuova_lung;
+    return dim * nmemb;
+}
+char* scarica_json() {
+    CURL *curl;
+    CURLcode res;
+    struct stringa s;
+    inizializza_stringa(&s);
+    curl = curl_easy_init();
+    if (!curl) return NULL;
+    curl_easy_setopt(curl, CURLOPT_URL, URL_CLOCK);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, scrivi_dati);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+    res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    if (res != CURLE_OK) {
+        free(s.dati);
+        return NULL;
+    }
+    FILE *cache = fopen(FILE_CACHE, "w");
+    if (cache) {
+        fwrite(s.dati, 1, s.lunghezza, cache);
+        fclose(cache);
+    }
+    return s.dati;
+}
+char* leggi_cache_locale() {
+    FILE *f = fopen(FILE_CACHE, "r");
+    if (!f) return NULL;
+    fseek(f, 0, SEEK_END);
+    long len = ftell(f);
+    rewind(f);
+    char *buffer = malloc(len + 1);
+    fread(buffer, 1, len, f);
+    buffer[len] = '\0';
+    fclose(f);
+    return buffer;
+}
+char* rileva_cpu() {
+    static char nome_cpu[256] = "Generic";
+    if (SISTEMA_LINUX) {
+        FILE* f = fopen("/proc/cpuinfo", "r");
+        if (f) {
+            char riga[256];
+            while (fgets(riga, sizeof(riga), f)) {
+                if (strncmp(riga, "model name", 10) == 0) {
+                    char* duepunti = strchr(riga, ':');
+                    if (duepunti) {
+                        strncpy(nome_cpu, duepunti + 2, sizeof(nome_cpu) - 1);
+                        nome_cpu[strcspn(nome_cpu, "\n")] = '\0';
+                        fclose(f);
+                        return nome_cpu;
+                    }
+                }
+            }
+            fclose(f);
+        }
+    }
+    if (SISTEMA_WINDOWS) {
+        HKEY chiave;
+        DWORD tipo = REG_SZ;
+        DWORD dimensione = sizeof(nome_cpu);
+        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &chiave) == ERROR_SUCCESS) {
+            RegQueryValueExA(chiave, "ProcessorNameString", NULL, &tipo, (LPBYTE)nome_cpu, &dimensione);
+            RegCloseKey(chiave);
+            return nome_cpu;
+        }
+    }
+    if (SISTEMA_MAC) {
+        FILE *p = popen("sysctl -n machdep.cpu.brand_string", "r");
+        if (p) {
+            fgets(nome_cpu, sizeof(nome_cpu), p);
+            nome_cpu[strcspn(nome_cpu, "\n")] = '\0';
+            pclose(p);
+            return nome_cpu;
+        }
+    }
+    return nome_cpu;
+}
+long ottieni_clock(const char* nome_cpu) {
+    char *json_data = scarica_json();
+    if (!json_data) json_data = leggi_cache_locale();
+    if (!json_data) return 1000000000;
+    struct json_object *root, *processori, *cpu, *clock_hz;
+    root = json_tokener_parse(json_data);
+    if (!root) return 1000000000;
+    if (!json_object_object_get_ex(root, "processors", &processori)) return 1000000000;
+    if (json_object_object_get_ex(processori, nome_cpu, &cpu)) {
+        if (json_object_object_get_ex(cpu, "clock_hz", &clock_hz))
+            return json_object_get_int64(clock_hz);
+    }
+    if (json_object_object_get_ex(processori, "Generic", &cpu)) {
+        if (json_object_object_get_ex(cpu, "clock_hz", &clock_hz))
+            return json_object_get_int64(clock_hz);
+    }
+    return 1000000000;
+}
+void ritardo_ns(long nanosecondi) {
+    struct timespec inizio, attuale;
+    clock_gettime(CLOCK_MONOTONIC, &inizio);
+    do {
+        clock_gettime(CLOCK_MONOTONIC, &attuale);
+    } while ((attuale.tv_sec - inizio.tv_sec) * 1e9 + (attuale.tv_nsec - inizio.tv_nsec) < nanosecondi);
+}
+void delay(int milliseconds) {
+    long ns = (long)milliseconds * 1000000L;
+    ritardo_ns(ns);
+}
+void clock_step(int *CLK, int *prev_CLK, int milliseconds) {
+    delay(milliseconds);
+    *prev_CLK = *CLK;
+    *CLK = 1 - *CLK;
 }
 int NAND3(int A, int B, int C) { 
   return 1 - (A * B * C); 
@@ -102,13 +239,11 @@ void salva_in_memoria(int valore) {
   } 
   memoria[indice_memoria++] = valore; 
 }
-void attendi_un_ciclo_clock() { 
-  clock_t start_time = clock(); 
-  clock_t current_time; 
-  do { 
-    current_time = clock(); 
-  } 
-  while ((current_time - start_time) < CLOCKS_PER_SEC / 1000); 
+void attendi_un_ciclo_clock() {
+    char *cpu = rileva_cpu();
+    long freq = ottieni_clock(cpu);
+    long ciclo_ns = (long)(1e9 / freq);
+    ritardo_ns(ciclo_ns);
 }
 void stampa_memoria() { 
   printf("Contenuto della memoria:\n"); 
@@ -1525,79 +1660,20 @@ void operazioni_algebriche() {
              "╚════════════════════════════════╝\n");
   }
 void misura_ciclo_clock() {
-    printf("Rilevamento sistema in corso...\n");
-    char *sistema = "Sconosciuto";
-    int su_windows = 0; 
-    int su_linux = 0; 
-    int su_mac = 0;
-    if (system("ver | findstr /i \"Windows\" > nul 2>&1") == 0) { 
-      su_windows = 1; 
-    }
-    if (su_windows == 1) { 
-      sistema = "Windows"; 
-      printf("OS: %s\n", sistema); 
-      printf("CPU: Informazioni limitate via C puro\n"); 
-      printf("Tipo: Intel/AMD (stimato)\n"); 
-      printf("Frequenza: ~N/D (richiede strumenti esterni)\n"); 
-    }
-    FILE *fp = fopen("/proc/version", "r");
-    if (fp != NULL) { 
-      char line[256]; 
-      if (fgets(line, sizeof(line), fp)) { 
-        if (strncmp(line, "Linux", 5) == 0) { 
-          su_linux = 1; 
-        } 
-      } 
-      fclose(fp); 
-    }
-    if (su_linux == 1) { 
-      sistema = "Linux"; 
-      printf("OS: %s\n", sistema); 
-      FILE *os_release = fopen("/etc/os-release", "r"); 
-      if (os_release != NULL) { 
-        char line[256]; 
-        while (fgets(line, sizeof(line), os_release)) { 
-          if (strncmp(line, "PRETTY_NAME=", 12) == 0) { 
-            char *distro = line + 13; 
-            distro[strcspn(distro, "\"\n")] = 0; 
-            printf("Distribuzione Linux: %s\n", distro); 
-            break; 
-          } 
-        } 
-        fclose(os_release); 
-      } 
-      else { 
-        printf("Distribuzione Linux: Impossibile determinare (/etc/os-release non trovato)\n"); 
-      } 
-      printf("CPU: Leggo informazioni da /proc/cpuinfo\n"); 
-      FILE *cpuinfo = fopen("/proc/cpuinfo", "r"); 
-      if (cpuinfo != NULL) { 
-        char line[256]; 
-        int letti = 0; 
-        while (fgets(line, sizeof(line), cpuinfo) && letti < 3) { 
-          if (!strncmp(line, "model name", 10) || !strncmp(line, "vendor_id", 9) || !strncmp(line, "cpu cores", 9) || !strncmp(line, "siblings", 8)) { 
-            printf("%s", line); 
-            letti++; 
-          } 
-        } 
-        fclose(cpuinfo); 
-      } 
-    }
-    #ifdef __APPLE__
-        su_mac = 1;
-    #endif
-    if (su_mac == 1) { 
-      sistema = "macOS"; 
-      printf("OS: %s\n", sistema); 
-      printf("CPU: Apple Silicon o x86 (detected)\n"); 
-      system("sysctl -n machdep.cpu.brand_string"); 
-    }
-    printf("\nMisurando la durata di un ciclo di clock (simulato)...\n"); 
-    for (int i = 0; i < 1000; i++) { 
-      attendi_un_ciclo_clock(); 
-    } 
-    printf("\nSimulazione completata.\nUn ciclo di clock richiede circa 1 millisecondo in questa simulazione.\n"); 
-    printf("Questo è solo un valore stimato. La CPU reale lavora molto più velocemente!\n");
+    printf("\n==============================\n");
+    printf("  Rilevamento del sistema\n");
+    printf("==============================\n\n");
+    char *cpu = rileva_cpu();
+    printf("CPU rilevata: %s\n", cpu);
+    long freq = ottieni_clock(cpu);
+    printf("Frequenza di clock trovata: %ld Hz\n", freq);
+    double durata_ns = (1.0 / freq) * 1e9;
+    printf("Durata stimata di un ciclo: %.3f ns\n", durata_ns);
+    printf("\n==============================\n");
+    printf("  Simulazione clock in corso\n");
+    printf("==============================\n\n");
+    for (int i = 0; i < 1000; i++) attendi_un_ciclo_clock();
+    printf("\nSimulazione completata.\n");
 }
 int main() { 
   int scelta; 
