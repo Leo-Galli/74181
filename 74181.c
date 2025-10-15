@@ -1325,23 +1325,472 @@ void ALU32() {
       } 
       D_F[i] = temp % 2; 
     } 
-    for (int i = 0; i < 4; i++) { clock_step(&CLK, &prev_CLK, 100); reg_PIPO32(D_F, S_reg, R_reg, CLK, prev_CLK_F, Q_F, Q_bar_F); } printf("\n"); printf("╔═════════════════════════════════════════════╗\n║           RISULTATI ALU 32bit               ║\n╚═════════════════════════════════════════════╝\n- Risultato      = %-3d",result); salva_in_memoria(result); FILE *file_out = fopen("risultati_alu32", "w"); if (file_out == NULL) { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║    Impossibile aprire file     ║\n║         di scrittura           ║\n║                                ║\n╚════════════════════════════════╝\n"); return; } fprintf(file_out, "╔═════════════════════════════════════════════╗\n║           RISULTATI ALU 32bit               ║\n╚═════════════════════════════════════════════╝\n- Risultato      = %-3d\n", result); fclose(file_out); sleep(2);
+    for (int i = 0; i < 4; i++) { 
+      clock_step(&CLK, &prev_CLK, 100); 
+      reg_PIPO32(D_F, S_reg, R_reg, CLK, prev_CLK_F, Q_F, Q_bar_F); 
+    } 
+    printf("\n"); 
+    printf("╔═════════════════════════════════════════════╗\n"); 
+    printf("║           RISULTATI ALU 32bit               ║\n"); 
+    printf("╚═════════════════════════════════════════════╝\n"); 
+    printf("- Risultato      = %-3d",result); 
+    salva_in_memoria(result); 
+    FILE *file_out = fopen("risultati_alu32", "w"); 
+    if (file_out == NULL) { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║    Impossibile aprire file     ║\n"); 
+      printf("║         di scrittura           ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    } 
+    fprintf(file_out, "╔═════════════════════════════════════════════╗\n");
+    fprintf(file_out, "║           RISULTATI ALU 32bit               ║\n");
+    fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
+    fprintf(file_out, "- Risultato      = %-3d\n", result); 
+    fclose(file_out); 
+    sleep(2);
 }
-int somma(int a, int b) { return a + b; } int sottrazione(int a, int b) { return a - b; } int moltiplicazione(int a, int b) { return a * b; } int divisione(int a, int b) { if (b == 0) { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║   Impossibile dividere per 0   ║\n║                                ║\n╚════════════════════════════════╝\n"); return 0; } return a / b; }
-void operazioni_algebriche() { int num_elementi; printf(">> Quanti elementi vuoi utilizzare (2 o 3)? "); scanf("%d", &num_elementi); if (num_elementi == 2) { int a, b; printf(">> Inserisci i due numeri: "); scanf("%d %d", &a, &b); char operazione[20]; printf(">> Scegli l'operazione (1 - Somma, 2 - Sottrazione, 3 - Moltiplicazione, 4 - Divisione): "); scanf("%s", operazione); int scelta = 0; if (strlen(operazione) == 1 && isdigit(operazione[0])) { scelta = operazione[0] - '0'; } else { for (int i = 0; operazione[i]; i++) { operazione[i] = tolower(operazione[i]); } if (strcmp(operazione, "somma") == 0) scelta = 1; else if (strcmp(operazione, "sottrazione") == 0) scelta = 2; else if (strcmp(operazione, "moltiplicazione") == 0) scelta = 3; else if (strcmp(operazione, "divisione") == 0) scelta = 4; } switch (scelta) { case 1: if (strcmp(operazione, "somma") != 0) break; { int res = somma(a, b); printf("╔════════════════════════════════╗\n║         SOMMA ALGEBRICA        ║\n╚════════════════════════════════╝\nRisultato: %d\n", res); salva_in_memoria(res); } return; case 2: { int res = sottrazione(a, b); printf("╔════════════════════════════════╗\n║      SOTTRAZIONE ALGEBRICA     ║\n╚════════════════════════════════╝\nRisultato: %d\n", res); salva_in_memoria(res); } return; case 3: { int res = moltiplicazione(a, b); printf("╔════════════════════════════════╗\n║    MOLTIPLICAZIONE ALGEBRICA   ║\n╚════════════════════════════════╝\nRisultato: %d\n", res); salva_in_memoria(res); } return; case 4: { if (b == 0) { printf("Errore: divisione per zero.\n"); } else { int res = divisione(a, b); printf("╔════════════════════════════════╗\n║        DIVISIONE ALGEBRICA     ║\n╚════════════════════════════════╝\nRisultato: %d\n", res); salva_in_memoria(res); } } return; default: printf("╔════════════════════════════════╗\n║             ERRORE             ║\n╠════════════════════════════════╣\n║                                ║\n║   Operazione non riconosciuta  ║\n║                                ║\n╚════════════════════════════════╝\n"); return; } } else if (num_elementi == 3) { int a, b, c; printf(">> Inserisci i tre numeri: "); scanf("%d %d %d", &a, &b, &c); char operazione[20]; printf(">> Scegli l'operazione (somma o moltiplicazione): "); scanf("%s", operazione); int scelta = 0; if (strlen(operazione) == 1 && isdigit(operazione[0])) { scelta = operazione[0] - '0'; } else { for (int i = 0; operazione[i]; i++) { operazione[i] = tolower(operazione[i]); } if (strcmp(operazione, "somma") == 0) scelta = 1; else if (strcmp(operazione, "moltiplicazione") == 0) scelta = 3; } switch (scelta) { case 1: { int res = somma(somma(a, b), c); printf("╔════════════════════════════════╗\n║         SOMMA ALGEBRICA        ║\n╚════════════════════════════════╝\nRisultato: %d\n", res); salva_in_memoria(res); } return; case 3: { int res = moltiplicazione(moltiplicazione(a, b), c); printf("╔════════════════════════════════╗\n║    MOLTIPLICAZIONE ALGEBRICA   ║\n╚════════════════════════════════╝\nRisultato: %d\n", res); salva_in_memoria(res); } return; default: printf("╔════════════════════════════════╗\n║             ERRORE             ║\n╠════════════════════════════════╣\n║                                ║\n║   Operazione non riconosciuta  ║\n║                                ║\n╚════════════════════════════════╝\n"); return; } } else { printf("╔════════════════════════════════╗\n║             ERRORE             ║\n╠════════════════════════════════╣\n║                                ║\n║ Numero di elementi non valido. ║\n║      Scegli tra 2 oppure 3     ║\n║                                ║\n╚════════════════════════════════╝\n"); } }
+int somma(int a, int b) { 
+  return a + b; 
+} 
+int sottrazione(int a, int b) { 
+  return a - b; 
+} 
+int moltiplicazione(int a, int b) { 
+  return a * b; 
+} 
+int divisione(int a, int b) { 
+  if (b == 0) { 
+    printf("╔════════════════════════════════╗\n"); 
+    printf("║            ERRORE              ║\n"); 
+    printf("╠════════════════════════════════╣\n"); 
+    printf("║                                ║\n"); 
+    printf("║   Impossibile dividere per 0   ║\n"); 
+    printf("║                                ║\n"); 
+    printf("╚════════════════════════════════╝\n"); 
+    return 0; 
+  } 
+  return a / b; 
+}
+void operazioni_algebriche() { 
+  int num_elementi; 
+  printf(">> Quanti elementi vuoi utilizzare (2 o 3)? "); 
+  scanf("%d", &num_elementi); 
+  if (num_elementi == 2) { 
+    int a, b; 
+    printf(">> Inserisci i due numeri: "); 
+    scanf("%d %d", &a, &b); 
+    char operazione[20]; 
+    printf(">> Scegli l'operazione (1 - Somma, 2 - Sottrazione, 3 - Moltiplicazione, 4 - Divisione): "); 
+    scanf("%s", operazione); 
+    int scelta = 0; 
+    if (strlen(operazione) == 1 && isdigit(operazione[0])) { 
+      scelta = operazione[0] - '0'; 
+    } 
+    else { 
+      for (int i = 0; operazione[i]; i++) { 
+        operazione[i] = tolower(operazione[i]); 
+      } 
+      if (strcmp(operazione, "somma") == 0){ 
+        scelta = 1;
+      } 
+      else if (strcmp(operazione, "sottrazione") == 0) {
+        scelta = 2;
+      } 
+      else if (strcmp(operazione, "moltiplicazione") == 0) {
+        scelta = 3;
+      } 
+      else if (strcmp(operazione, "divisione") == 0) {
+        scelta = 4;
+      } 
+    } 
+    switch (scelta) { 
+      case 1:
+          if (strcmp(operazione, "somma") != 0) break;
+          {
+              int res = somma(a, b);
+              printf("╔════════════════════════════════╗\n"
+                     "║         SOMMA ALGEBRICA        ║\n"
+                     "╚════════════════════════════════╝\n"
+                     "Risultato: %d\n", res);
+              salva_in_memoria(res);
+          }
+          return;
+      case 2:
+          {
+              int res = sottrazione(a, b);
+              printf("╔════════════════════════════════╗\n"
+                     "║      SOTTRAZIONE ALGEBRICA     ║\n"
+                     "╚════════════════════════════════╝\n"
+                     "Risultato: %d\n", res);
+              salva_in_memoria(res);
+          }
+          return;
+      case 3:
+          {
+              int res = moltiplicazione(a, b);
+              printf("╔════════════════════════════════╗\n"
+                     "║    MOLTIPLICAZIONE ALGEBRICA   ║\n"
+                     "╚════════════════════════════════╝\n"
+                     "Risultato: %d\n", res);
+              salva_in_memoria(res);
+          }
+          return;
+      case 4:
+          {
+              if (b == 0) {
+                  printf("Errore: divisione per zero.\n");
+              } else {
+                  int res = divisione(a, b);
+                  printf("╔════════════════════════════════╗\n"
+                         "║        DIVISIONE ALGEBRICA     ║\n"
+                         "╚════════════════════════════════╝\n"
+                         "Risultato: %d\n", res);
+                  salva_in_memoria(res);
+              }
+          }
+          return;
+      default:
+          printf("╔════════════════════════════════╗\n"
+                 "║             ERRORE             ║\n"
+                 "╠════════════════════════════════╣\n"
+                 "║                                ║\n"
+                 "║   Operazione non riconosciuta  ║\n"
+                 "║                                ║\n"
+                 "╚════════════════════════════════╝\n");
+          return;
+  }
+  } else if (num_elementi == 3) {
+      int a, b, c;
+      printf(">> Inserisci i tre numeri: ");
+      scanf("%d %d %d", &a, &b, &c);
+      char operazione[20];
+      printf(">> Scegli l'operazione (somma o moltiplicazione): ");
+      scanf("%s", operazione);
+      int scelta = 0;
+      if (strlen(operazione) == 1 && isdigit(operazione[0])) {
+          scelta = operazione[0] - '0';
+      } else {
+          for (int i = 0; operazione[i]; i++) {
+              operazione[i] = tolower(operazione[i]);
+          }
+          if (strcmp(operazione, "somma") == 0)
+              scelta = 1;
+          else if (strcmp(operazione, "moltiplicazione") == 0)
+              scelta = 3;
+      }
+      switch (scelta) {
+          case 1:
+              {
+                  int res = somma(somma(a, b), c);
+                  printf("╔════════════════════════════════╗\n"
+                         "║         SOMMA ALGEBRICA        ║\n"
+                         "╚════════════════════════════════╝\n"
+                         "Risultato: %d\n", res);
+                  salva_in_memoria(res);
+              }
+              return;
+          case 3:
+              {
+                  int res = moltiplicazione(moltiplicazione(a, b), c);
+                  printf("╔════════════════════════════════╗\n"
+                         "║    MOLTIPLICAZIONE ALGEBRICA   ║\n"
+                         "╚════════════════════════════════╝\n"
+                         "Risultato: %d\n", res);
+                  salva_in_memoria(res);
+              }
+              return;
+          default:
+              printf("╔════════════════════════════════╗\n"
+                     "║             ERRORE             ║\n"
+                     "╠════════════════════════════════╣\n"
+                     "║                                ║\n"
+                     "║   Operazione non riconosciuta  ║\n"
+                     "║                                ║\n"
+                     "╚════════════════════════════════╝\n");
+              return;
+      }
+  } else {
+      printf("╔════════════════════════════════╗\n"
+             "║             ERRORE             ║\n"
+             "╠════════════════════════════════╣\n"
+             "║                                ║\n"
+             "║ Numero di elementi non valido. ║\n"
+             "║      Scegli tra 2 oppure 3     ║\n"
+             "║                                ║\n"
+             "╚════════════════════════════════╝\n");
+  }
 void misura_ciclo_clock() {
     printf("Rilevamento sistema in corso...\n");
     char *sistema = "Sconosciuto";
-    int su_windows = 0; int su_linux = 0; int su_mac = 0;
-    if (system("ver | findstr /i \"Windows\" > nul 2>&1") == 0) { su_windows = 1; }
-    if (su_windows == 1) { sistema = "Windows"; printf("OS: %s\n", sistema); printf("CPU: Informazioni limitate via C puro\n"); printf("Tipo: Intel/AMD (stimato)\n"); printf("Frequenza: ~N/D (richiede strumenti esterni)\n"); }
+    int su_windows = 0; 
+    int su_linux = 0; 
+    int su_mac = 0;
+    if (system("ver | findstr /i \"Windows\" > nul 2>&1") == 0) { 
+      su_windows = 1; 
+    }
+    if (su_windows == 1) { 
+      sistema = "Windows"; 
+      printf("OS: %s\n", sistema); 
+      printf("CPU: Informazioni limitate via C puro\n"); 
+      printf("Tipo: Intel/AMD (stimato)\n"); 
+      printf("Frequenza: ~N/D (richiede strumenti esterni)\n"); 
+    }
     FILE *fp = fopen("/proc/version", "r");
-    if (fp != NULL) { char line[256]; if (fgets(line, sizeof(line), fp)) { if (strncmp(line, "Linux", 5) == 0) { su_linux = 1; } } fclose(fp); }
-    if (su_linux == 1) { sistema = "Linux"; printf("OS: %s\n", sistema); FILE *os_release = fopen("/etc/os-release", "r"); if (os_release != NULL) { char line[256]; while (fgets(line, sizeof(line), os_release)) { if (strncmp(line, "PRETTY_NAME=", 12) == 0) { char *distro = line + 13; distro[strcspn(distro, "\"\n")] = 0; printf("Distribuzione Linux: %s\n", distro); break; } } fclose(os_release); } else { printf("Distribuzione Linux: Impossibile determinare (/etc/os-release non trovato)\n"); } printf("CPU: Leggo informazioni da /proc/cpuinfo\n"); FILE *cpuinfo = fopen("/proc/cpuinfo", "r"); if (cpuinfo != NULL) { char line[256]; int letti = 0; while (fgets(line, sizeof(line), cpuinfo) && letti < 3) { if (!strncmp(line, "model name", 10) || !strncmp(line, "vendor_id", 9) || !strncmp(line, "cpu cores", 9) || !strncmp(line, "siblings", 8)) { printf("%s", line); letti++; } } fclose(cpuinfo); } }
+    if (fp != NULL) { 
+      char line[256]; 
+      if (fgets(line, sizeof(line), fp)) { 
+        if (strncmp(line, "Linux", 5) == 0) { 
+          su_linux = 1; 
+        } 
+      } 
+      fclose(fp); 
+    }
+    if (su_linux == 1) { 
+      sistema = "Linux"; 
+      printf("OS: %s\n", sistema); 
+      FILE *os_release = fopen("/etc/os-release", "r"); 
+      if (os_release != NULL) { 
+        char line[256]; 
+        while (fgets(line, sizeof(line), os_release)) { 
+          if (strncmp(line, "PRETTY_NAME=", 12) == 0) { 
+            char *distro = line + 13; 
+            distro[strcspn(distro, "\"\n")] = 0; 
+            printf("Distribuzione Linux: %s\n", distro); 
+            break; 
+          } 
+        } 
+        fclose(os_release); 
+      } 
+      else { 
+        printf("Distribuzione Linux: Impossibile determinare (/etc/os-release non trovato)\n"); 
+      } 
+      printf("CPU: Leggo informazioni da /proc/cpuinfo\n"); 
+      FILE *cpuinfo = fopen("/proc/cpuinfo", "r"); 
+      if (cpuinfo != NULL) { 
+        char line[256]; 
+        int letti = 0; 
+        while (fgets(line, sizeof(line), cpuinfo) && letti < 3) { 
+          if (!strncmp(line, "model name", 10) || !strncmp(line, "vendor_id", 9) || !strncmp(line, "cpu cores", 9) || !strncmp(line, "siblings", 8)) { 
+            printf("%s", line); 
+            letti++; 
+          } 
+        } 
+        fclose(cpuinfo); 
+      } 
+    }
     #ifdef __APPLE__
         su_mac = 1;
     #endif
-    if (su_mac == 1) { sistema = "macOS"; printf("OS: %s\n", sistema); printf("CPU: Apple Silicon o x86 (detected)\n"); system("sysctl -n machdep.cpu.brand_string"); }
-    printf("\nMisurando la durata di un ciclo di clock (simulato)...\n"); for (int i = 0; i < 1000; i++) { attendi_un_ciclo_clock(); } printf("\nSimulazione completata.\nUn ciclo di clock richiede circa 1 millisecondo in questa simulazione.\n"); printf("Questo è solo un valore stimato. La CPU reale lavora molto più velocemente!\n");
+    if (su_mac == 1) { 
+      sistema = "macOS"; 
+      printf("OS: %s\n", sistema); 
+      printf("CPU: Apple Silicon o x86 (detected)\n"); 
+      system("sysctl -n machdep.cpu.brand_string"); 
+    }
+    printf("\nMisurando la durata di un ciclo di clock (simulato)...\n"); 
+    for (int i = 0; i < 1000; i++) { 
+      attendi_un_ciclo_clock(); 
+    } 
+    printf("\nSimulazione completata.\nUn ciclo di clock richiede circa 1 millisecondo in questa simulazione.\n"); 
+    printf("Questo è solo un valore stimato. La CPU reale lavora molto più velocemente!\n");
 }
-int main() { int scelta; char input[10]; while (1) { printf("\n╔═════════════════════════════════════════════════════════╗\n║                                                         ║\n║                     ▄▀▀▀▄▄▄▄▄▄▄▀▀▀▄                     ║\n║                     █▒▒░░░░░░░░░▒▒█                     ║\n║                      █░░█░░░░░█░░█                      ║\n║                   ▄▄  █░░░▀█▀░░░█  ▄▄                   ║\n║                  █░░█ ▀▄░░░░░░░▄▀ █░░█                  ║\n║                        ALU 74181                        ║\n║                                                         ║\n║                     MENU PRINCIPALE                     ║\n╠═════════════════════════════════════════════════════════╣\n║   1. Operazioni Logiche (ALU 74181 - Singolo)           ║\n║   2. Operazioni Logiche (ALU 74181 - Singolo con clock) ║\n║   3. Operazioni Algebriche                              ║\n║   4. Convertitore Binario → Decimale                    ║\n║   5. Convertitore Decimale → Binario                    ║\n║   6. ALU in Modalità PIPO (32 bit - 8x74181)            ║\n║   7. ALU in Modalità PIPO (32 bit - 8x74181 con clock)  ║\n║   8. Visualizza Memoria                                 ║\n║   9. Calcolo del Clock                                  ║\n║   0. Esci                                               ║\n╚═════════════════════════════════════════════════════════╝\n"); printf(">> Inserisci la tua scelta: "); fgets(input, sizeof(input), stdin); if (sscanf(input, "%d", &scelta) == 1) {} else { printf("╔════════════════════════════════╗\n║             ERRORE             ║\n╠════════════════════════════════╣\n║                                ║\n║   Inserisci un numero valido  ║\n║                                ║\n╚════════════════════════════════╝\n"); continue; } if (scelta == 0) { printf("Uscita dal programma...\n"); break; } else if (scelta == 1) { simula_alu_74181(); } else if (scelta == 2) { sleep(2); simula_alu_74181(); } else if (scelta == 3) { operazioni_algebriche(); } else if (scelta == 4) { char bin[33]; char risposta[3]; printf("Inserire dati manualmente? (S/N): "); scanf("%2s", risposta); risposta[0] = toupper(risposta[0]); if (risposta[0] == 'S') { printf(">> Inserisci un numero binario: "); scanf("%32s", bin); int risultato = BIN_DEC_DECODER(bin); if (risultato != -1) { printf("Risultato (decimale): %d\n", risultato); } } else { FILE *file = fopen("input_bin.txt", "r"); if (!file) { file = fopen("input_bin.txt", "w"); if (!file) { printf("ERRORE: Impossibile creare il file\n"); return 1; } fprintf(file, "Numero Binario: <0>\n"); fclose(file); printf("Creato file input_bin.txt. Compilarlo e riavviare.\n"); return 1; } char line[100]; if (!fgets(line, sizeof(line), file)) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return 1; } fclose(file); if (sscanf(line, "%*[^<]<%32[^>]>", bin) != 1) { printf("ERRORE: Formato binario non trovato\n"); return 1; } int risultato = BIN_DEC_DECODER(bin); FILE *file_out = fopen("risultati_dec.txt", "w"); if (!file_out) { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║    Impossibile aprire file     ║\n║         di scrittura           ║\n║                                ║\n╚════════════════════════════════╝\n"); return 1; } fprintf(file_out, "╔═════════════════════════════════════════════╗\n║          RISULTATI CONVERTITORE             ║\n╚═════════════════════════════════════════════╝\nRisultato      = %-3d", risultato); fclose(file_out); sleep(2); } } else if (scelta == 5) { char risposta[3]; int dec; printf("Inserire dati manualmente? (S/N): "); scanf("%2s", risposta); risposta[0] = toupper(risposta[0]); if (risposta[0] == 'S') { printf(">> Inserisci un numero decimale: "); scanf("%d", &dec); printf("Risultato (binario): %s\n", DEC_BIN_CODER(dec)); } else { FILE *file = fopen("input_dec.txt", "r"); if (!file) { file = fopen("input_dec.txt", "w"); if (!file) { printf("ERRORE: Impossibile creare il file\n"); return 1; } fprintf(file, "Numero Decimale: <0>\n"); fclose(file); printf("Creato file input_dec.txt. Compilarlo e riavviare.\n"); return 1; } char line[100]; if (!fgets(line, sizeof(line), file)) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return 1; } fclose(file); char buffer[33]; if (sscanf(line, "%*[^<]<%32[^>]>", buffer) != 1) { printf("ERRORE: Formato binario non trovato\n"); return 1; } dec = atoi(buffer); FILE *file_out = fopen("risultati_bin.txt", "w"); if (!file_out) { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║    Impossibile aprire file     ║\n║         di scrittura           ║\n║                                ║\n╚════════════════════════════════╝\n"); return 1; } fprintf(file_out, "╔═════════════════════════════════════════════╗\n ║          RISULTATI CONVERTITORE             ║\n ╚═════════════════════════════════════════════╝\n Risultato      = %-16s", DEC_BIN_CODER(dec)); fclose(file_out); sleep(2); } } else if (scelta == 6) { ALU32(); } else if (scelta == 7) { sleep(2); ALU32(); } else if (scelta == 8) { stampa_memoria(); stato_memoria(); } else if (scelta == 9) { misura_ciclo_clock(); } else { printf("Scelta non valida!\n"); } sleep(2); } if (memoria != NULL) { free(memoria); memoria = NULL; printf("[INFO] Memoria liberata.\n"); } return 0; }
+int main() { 
+  int scelta; 
+  char input[10]; 
+  while (1) { 
+    printf("\n╔═════════════════════════════════════════════════════════╗\n"); 
+    printf("║                                                         ║\n"); 
+    printf("║                     ▄▀▀▀▄▄▄▄▄▄▄▀▀▀▄                     ║\n"); 
+    printf("║                     █▒▒░░░░░░░░░▒▒█                     ║\n"); 
+    printf("║                      █░░█░░░░░█░░█                      ║\n"); 
+    printf("║                   ▄▄  █░░░▀█▀░░░█  ▄▄                   ║\n"); 
+    printf("║                  █░░█ ▀▄░░░░░░░▄▀ █░░█                  ║\n"); 
+    printf("║                        ALU 74181                        ║\n"); 
+    printf("║                                                         ║\n"); 
+    printf("║                     MENU PRINCIPALE                     ║\n"); 
+    printf("╠═════════════════════════════════════════════════════════╣\n"); 
+    printf("║   1. Operazioni Logiche (ALU 74181 - Singolo)           ║\n"); 
+    printf("║   2. Operazioni Logiche (ALU 74181 - Singolo con clock) ║\n"); 
+    printf("║   3. Operazioni Algebriche                              ║\n"); 
+    printf("║   4. Convertitore Binario → Decimale                    ║\n"); 
+    printf("║   5. Convertitore Decimale → Binario                    ║\n"); 
+    printf("║   6. ALU in Modalità PIPO (32 bit - 8x74181)            ║\n"); 
+    printf("║   7. ALU in Modalità PIPO (32 bit - 8x74181 con clock)  ║\n"); 
+    printf("║   8. Visualizza Memoria                                 ║\n"); 
+    printf("║   9. Calcolo del Clock                                  ║\n"); 
+    printf("║   0. Esci                                               ║\n"); 
+    printf("╚═════════════════════════════════════════════════════════╝\n"); 
+    printf(">> Inserisci la tua scelta: "); 
+    fgets(input, sizeof(input), stdin); 
+    if (sscanf(input, "%d", &scelta) == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║             ERRORE             ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║   Inserisci un numero valido  ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+        continue; 
+      } if (scelta == 0) { 
+        printf("Uscita dal programma...\n"); 
+        break; 
+      } 
+      else if (scelta == 1) { 
+        simula_alu_74181(); 
+      } 
+      else if (scelta == 2) { 
+        sleep(2); 
+        simula_alu_74181(); 
+      } 
+      else if (scelta == 3) { 
+        operazioni_algebriche(); 
+      } 
+      else if (scelta == 4) { 
+        char bin[33]; 
+        char risposta[3]; 
+        printf("Inserire dati manualmente? (S/N): "); 
+        scanf("%2s", risposta); 
+        risposta[0] = toupper(risposta[0]); 
+        if (risposta[0] == 'S') { 
+          printf(">> Inserisci un numero binario: "); 
+          scanf("%32s", bin); 
+          int risultato = BIN_DEC_DECODER(bin); 
+          if (risultato != -1) { 
+            printf("Risultato (decimale): %d\n", risultato); 
+          } 
+        } 
+        else { 
+          FILE *file = fopen("input_bin.txt", "r"); 
+          if (!file) { 
+            file = fopen("input_bin.txt", "w"); 
+            if (!file) { 
+              printf("ERRORE: Impossibile creare il file\n"); 
+              return 1; 
+            } 
+            fprintf(file, "Numero Binario: <0>\n"); 
+            fclose(file); 
+            printf("Creato file input_bin.txt. Compilarlo e riavviare.\n"); 
+            return 1; 
+          } 
+          char line[100]; 
+          if (!fgets(line, sizeof(line), file)) { 
+            printf("ERRORE: Formato file incompleto\n"); 
+            fclose(file); 
+            return 1; 
+          } 
+          fclose(file); 
+          if (sscanf(line, "%*[^<]<%32[^>]>", bin) != 1) { 
+            printf("ERRORE: Formato binario non trovato\n"); 
+            return 1; 
+          } 
+          int risultato = BIN_DEC_DECODER(bin); 
+          FILE *file_out = fopen("risultati_dec.txt", "w"); 
+          if (!file_out) { 
+            printf("╔════════════════════════════════╗\n"); 
+            printf("║            ERRORE              ║\n"); 
+            printf("╠════════════════════════════════╣\n"); 
+            printf("║                                ║\n"); 
+            printf("║    Impossibile aprire file     ║\n"); 
+            printf("║         di scrittura           ║\n"); 
+            printf("║                                ║\n"); 
+            printf("╚════════════════════════════════╝\n"); 
+            return 1; 
+          } 
+          fprintf(file_out, "╔═════════════════════════════════════════════╗\n"); 
+          fprintf(file_out, "║          RISULTATI CONVERTITORE             ║\n"); 
+          fprintf(file_out, "╚═════════════════════════════════════════════╝\n"); 
+          fprintf(file_out, "Risultato      = %-3d", risultato); 
+          fclose(file_out); 
+          sleep(2); 
+        } 
+      } 
+      else if (scelta == 5) { 
+        char risposta[3]; 
+        int dec; 
+        printf("Inserire dati manualmente? (S/N): "); 
+        scanf("%2s", risposta); 
+        risposta[0] = toupper(risposta[0]); 
+        if (risposta[0] == 'S') { 
+          printf(">> Inserisci un numero decimale: "); 
+          scanf("%d", &dec); 
+          printf("Risultato (binario): %s\n", DEC_BIN_CODER(dec)); 
+        } 
+        else { 
+          FILE *file = fopen("input_dec.txt", "r"); 
+          if (!file) { 
+            file = fopen("input_dec.txt", "w"); 
+            if (!file) { 
+              printf("ERRORE: Impossibile creare il file\n"); 
+              return 1; 
+            } 
+            fprintf(file, "Numero Decimale: <0>\n"); 
+            fclose(file); 
+            printf("Creato file input_dec.txt. Compilarlo e riavviare.\n"); 
+            return 1; 
+          } 
+          char line[100]; 
+          if (!fgets(line, sizeof(line), file)) { 
+            printf("ERRORE: Formato file incompleto\n"); 
+            fclose(file); 
+            return 1; 
+          } 
+          fclose(file); 
+          char buffer[33]; 
+          if (sscanf(line, "%*[^<]<%32[^>]>", buffer) != 1) { 
+            printf("ERRORE: Formato binario non trovato\n"); 
+            return 1; 
+          } 
+          dec = atoi(buffer); 
+          FILE *file_out = fopen("risultati_bin.txt", "w"); 
+          if (!file_out) { 
+            printf("╔════════════════════════════════╗\n"); 
+            printf("║            ERRORE              ║\n"); 
+            printf("╠════════════════════════════════╣\n"); 
+            printf("║                                ║\n"); 
+            printf("║    Impossibile aprire file     ║\n"); 
+            printf("║         di scrittura           ║\n"); 
+            printf("║                                ║\n"); 
+            printf("╚════════════════════════════════╝\n"); 
+            return 1; 
+          } 
+          fprintf(file_out, "╔═════════════════════════════════════════════╗\n 
+          ║          RISULTATI CONVERTITORE             ║\n 
+          ╚═════════════════════════════════════════════╝\n 
+          Risultato      = %-16s", DEC_BIN_CODER(dec)); 
+          fclose(file_out); 
+          sleep(2); 
+        } 
+      } 
+      else if (scelta == 6) { 
+        ALU32(); 
+      } else if (scelta == 7) { 
+        sleep(2); 
+        ALU32(); 
+      } 
+      else if (scelta == 8) { 
+        stampa_memoria(); 
+        stato_memoria(); 
+      } 
+      else if (scelta == 9) { 
+        misura_ciclo_clock(); 
+      } 
+      else { 
+        printf("Scelta non valida!\n"); 
+      } 
+      sleep(2); 
+    } 
+    if (memoria != NULL) { 
+      free(memoria); 
+      memoria = NULL; 
+      printf("[INFO] Memoria liberata.\n"); 
+    } 
+    return 0; 
+  }
