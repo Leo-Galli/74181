@@ -5,77 +5,1093 @@
 #include <ctype.h>
 #include <unistd.h>
 
-/**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-
-void delay(int milliseconds) { clock_t start_time = clock(); clock_t end_time = milliseconds * CLOCKS_PER_SEC / 1000 + start_time; while (clock() < end_time); }
-void clock_step(int *CLK, int *prev_CLK, int milliseconds) { delay(milliseconds); *prev_CLK = *CLK; *CLK = 1 - *CLK; }
-int NAND3(int A, int B, int C) { return 1 - (A * B * C); } 
-void n_SR_FLIP_FLOP(int D, int S_reg, int R_reg, int CLK, int *prev_CLK, int *Q, int *Q_bar) { if ((CLK * (1 - *prev_CLK)) == 1) { int J = D; int K = 1 - D; *Q     = NAND3(S_reg, *Q_bar, NAND3(J, CLK, *Q_bar)); *Q_bar = NAND3(R_reg, *Q,     NAND3(K, CLK, *Q)); } *prev_CLK = CLK; }
-void n_PIPO74198(int D[8], int S_reg[8], int R_reg[8], int CLK, int prev_CLK[8], int Q[8], int Q_bar[8]) { for (int i = 0; i < 8; i++) { n_SR_FLIP_FLOP(D[i], S_reg[i], R_reg[i], CLK, &prev_CLK[i], &Q[i], &Q_bar[i]); } }
-void reg_PIPO32(int D[32], int S_reg[32], int R_reg[32], int CLK, int prev_CLK[32], int Q[32], int Q_bar[32]) { for (int i = 0; i < 4; i++) { n_PIPO74198(&D[i * 8], &S_reg[i * 8], &R_reg[i * 8], CLK, &prev_CLK[i * 8], &Q[i * 8], &Q_bar[i * 8]); } }
-int BIN_DEC_DECODER(const char *binario) { if (binario == NULL) { printf("ERRORE: input NULL non valido.\n"); return -1; } int decimale = 0; int lunghezza = strlen(binario); for (int i = 0; i < lunghezza; i++) { if (binario[i] == '1') { decimale = decimale * 2 + 1; } else if (binario[i] == '0') { decimale = decimale * 2; } else { printf("Input non valido. Solo 0 e 1 sono accettati.\n"); return -1; } } return decimale; }
-char* DEC_BIN_CODER(int numero) { static char binario[33]; int i = 0; if (numero == 0) { strcpy(binario, "0"); return binario; } while (numero > 0) { binario[i++] = '0' + (numero % 2); numero /= 2; } binario[i] = '\0'; for (int j = 0; j < i / 2; j++) { char temp = binario[j]; binario[j] = binario[i - 1 - j]; binario[i - 1 - j] = temp; } return binario; }
-int *memoria = NULL; int capacita_memoria = 10; int indice_memoria = 0;
-void salva_in_memoria(int valore) { if (memoria == NULL) { memoria = malloc(capacita_memoria * sizeof(int)); if (!memoria) { printf("ERRORE: impossibile allocare la memoria.\n"); exit(EXIT_FAILURE); } } if (indice_memoria >= capacita_memoria) { capacita_memoria *= 2; int *temp = realloc(memoria, capacita_memoria * sizeof(int)); if (!temp) { printf("ERRORE: impossibile espandere la memoria.\n"); free(memoria); memoria = NULL; exit(EXIT_FAILURE); } memoria = temp; printf("[INFO] Memoria espansa a %d celle.\n", capacita_memoria); } memoria[indice_memoria++] = valore; }
-void attendi_un_ciclo_clock() { clock_t start_time = clock(); clock_t current_time; do { current_time = clock(); } while ((current_time - start_time) < CLOCKS_PER_SEC / 1000); }
-void stampa_memoria() { printf("Contenuto della memoria:\n"); for (int i = 0; i < indice_memoria; i++) { printf("Memoria[%d] = %-3d\n", i, memoria[i]); } }
-void stato_memoria() { printf("Stato memoria:\n"); printf("- Totale allocato: %d celle\n", capacita_memoria); printf("- Occupato: %d celle\n", indice_memoria); } int porta_not(int a) { return 1 - a; } int porta_and(int a, int b) { return a * b; } int porta_or(int a, int b) { return (a + b) - (a * b); } int porta_exor(int a, int b) { return (a + b) - 2 * (a * b); } int porta_or_3(int a, int b, int c) { int tmp = porta_or(a, b); return porta_or(tmp, c); } int porta_or_4(int a, int b, int c, int d) { int tmp1 = porta_or(a, b); int tmp2 = porta_or(c, d); return porta_or(tmp1, tmp2); } int porta_or_5(int a, int b, int c, int d, int e) { int tmp = porta_or_4(a, b, c, d); return porta_or(tmp, e); } int porta_and_3(int a, int b, int c) { int tmp = porta_and(a, b); return porta_and(tmp, c); } int porta_and_4(int a, int b, int c, int d) { int tmp = porta_and(a, b); int tmp2 = porta_and(c, d); return porta_and(tmp, tmp2); } int porta_and_5(int a, int b, int c, int d, int e) { int tmp = porta_and_3(a, b, c); tmp = porta_and(tmp, d); return porta_and(tmp, e); } int porta_exor_3(int a, int b, int c) { int tmp = porta_exor(a, b); return porta_exor(tmp, c); } int porta_exor_4(int a, int b, int c, int d) { int tmp = porta_exor(a, b); int tmp2 = porta_exor(c, d); return porta_exor(tmp, tmp2); } int porta_exor_5(int a, int b, int c, int d, int e) { int tmp = porta_exor_4(a, b, c, d); return porta_exor(tmp, e); }
-void n_ALU74181(int Cn, int M, int A[4], int B[4], int S[4], int F[4], int *A_uguale_B, int *P, int *Cn_piu_4, int *G) { F[0] = porta_exor(porta_not(porta_and(Cn, porta_not(M))), porta_and(porta_not(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))))); F[1] = porta_exor(porta_not(porta_or(porta_and(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_and_3(porta_not(M), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), Cn))), porta_and(porta_not(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))))); F[2] = porta_exor(porta_not(porta_or_3(porta_and(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))), porta_and_4(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))))), porta_and(porta_not(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))))); F[3] = porta_exor(porta_not(porta_or_4(porta_and(porta_not(M), porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_4(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_5(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))))), porta_and(porta_not(porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3]))))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3]))))); *A_uguale_B = porta_and_4(porta_exor(porta_not(porta_and(Cn, porta_not(M))), porta_and(porta_not(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))))), porta_exor(porta_not(porta_or(porta_and(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_and_3(porta_not(M), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), Cn))), porta_and(porta_not(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))))), porta_exor(porta_not(porta_or_3(porta_and(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))), porta_and_4(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))))), porta_and(porta_not(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))))), porta_exor(porta_not(porta_or_4(porta_and(porta_not(M), porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_4(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_5(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))))), porta_and(porta_not(porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3]))))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))))); *P = porta_not(porta_and_4(porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3]))))); *Cn_piu_4 = porta_or(porta_not(porta_not(porta_and_5(Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))))), porta_not(porta_not(porta_or_4(porta_and_4(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and_3(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2])))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3])))))))); *G = porta_not(porta_or_4(porta_and_4(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and_3(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2])))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3])))))); }
+void delay(int milliseconds) { 
+  clock_t start_time = clock(); 
+  clock_t end_time = milliseconds * CLOCKS_PER_SEC / 1000 + start_time; 
+  while (clock() < end_time); 
+}
+void clock_step(int *CLK, int *prev_CLK, int milliseconds) { 
+  delay(milliseconds); 
+  *prev_CLK = *CLK; 
+  *CLK = 1 - *CLK; 
+}
+int NAND3(int A, int B, int C) { 
+  return 1 - (A * B * C); 
+} 
+void n_SR_FLIP_FLOP(int D, int S_reg, int R_reg, int CLK, int *prev_CLK, int *Q, int *Q_bar) { 
+  if ((CLK * (1 - *prev_CLK)) == 1) { 
+    int J = D; 
+    int K = 1 - D; 
+    *Q     = NAND3(S_reg, *Q_bar, NAND3(J, CLK, *Q_bar)); 
+    *Q_bar = NAND3(R_reg, *Q,     NAND3(K, CLK, *Q)); 
+  } 
+  *prev_CLK = CLK; 
+}
+void n_PIPO74198(int D[8], int S_reg[8], int R_reg[8], int CLK, int prev_CLK[8], int Q[8], int Q_bar[8]) { 
+  for (int i = 0; i < 8; i++) { 
+    n_SR_FLIP_FLOP(D[i], S_reg[i], R_reg[i], CLK, &prev_CLK[i], &Q[i], &Q_bar[i]); 
+  } 
+}
+void reg_PIPO32(int D[32], int S_reg[32], int R_reg[32], int CLK, int prev_CLK[32], int Q[32], int Q_bar[32]) { 
+  for (int i = 0; i < 4; i++) { 
+    n_PIPO74198(&D[i * 8], &S_reg[i * 8], &R_reg[i * 8], CLK, &prev_CLK[i * 8], &Q[i * 8], &Q_bar[i * 8]);
+  } 
+}
+int BIN_DEC_DECODER(const char *binario) { 
+  if (binario == NULL) { 
+    printf("ERRORE: input NULL non valido.\n"); 
+    return -1; 
+  } 
+  int decimale = 0; 
+  int lunghezza = strlen(binario); 
+  for (int i = 0; i < lunghezza; i++) { 
+    if (binario[i] == '1') { 
+      decimale = decimale * 2 + 1; 
+    } 
+    else if (binario[i] == '0') { 
+      decimale = decimale * 2; 
+    } 
+    else { 
+      printf("Input non valido. Solo 0 e 1 sono accettati.\n"); 
+      return -1; 
+    } 
+  } 
+  return decimale; 
+}
+char* DEC_BIN_CODER(int numero) { 
+  static char binario[33]; 
+  int i = 0; 
+  if (numero == 0) { 
+    strcpy(binario, "0"); 
+    return binario; 
+  } 
+  while (numero > 0) { 
+    binario[i++] = '0' + (numero % 2); 
+    numero /= 2; 
+  } 
+  binario[i] = '\0'; 
+  for (int j = 0; j < i / 2; j++) { 
+    char temp = binario[j]; 
+    binario[j] = binario[i - 1 - j]; 
+    binario[i - 1 - j] = temp; 
+  } 
+  return binario; 
+}
+int *memoria = NULL; 
+int capacita_memoria = 10; 
+int indice_memoria = 0;
+void salva_in_memoria(int valore) { 
+  if (memoria == NULL) { 
+    memoria = malloc(capacita_memoria * sizeof(int)); 
+    if (!memoria) { 
+      printf("ERRORE: impossibile allocare la memoria.\n"); 
+      exit(EXIT_FAILURE); 
+    } 
+  } 
+  if (indice_memoria >= capacita_memoria) { 
+    capacita_memoria *= 2; 
+    int *temp = realloc(memoria, capacita_memoria * sizeof(int)); 
+    if (!temp) { 
+      printf("ERRORE: impossibile espandere la memoria.\n"); 
+      free(memoria); 
+      memoria = NULL; 
+      exit(EXIT_FAILURE); 
+    } 
+    memoria = temp; 
+    printf("[INFO] Memoria espansa a %d celle.\n", capacita_memoria); 
+  } 
+  memoria[indice_memoria++] = valore; 
+}
+void attendi_un_ciclo_clock() { 
+  clock_t start_time = clock(); 
+  clock_t current_time; 
+  do { 
+    current_time = clock(); 
+  } 
+  while ((current_time - start_time) < CLOCKS_PER_SEC / 1000); 
+}
+void stampa_memoria() { 
+  printf("Contenuto della memoria:\n"); 
+  for (int i = 0; i < indice_memoria; i++) { 
+    printf("Memoria[%d] = %-3d\n", i, memoria[i]); 
+  } 
+}
+void stato_memoria() { 
+  printf("Stato memoria:\n"); 
+  printf("- Totale allocato: %d celle\n", capacita_memoria); 
+  printf("- Occupato: %d celle\n", indice_memoria); 
+} 
+int porta_not(int a) { 
+  return 1 - a; 
+} 
+int porta_and(int a, int b) { 
+  return a * b; 
+} 
+int porta_or(int a, int b) { 
+  return (a + b) - (a * b); 
+} 
+int porta_exor(int a, int b) { 
+  return (a + b) - 2 * (a * b); 
+} 
+int porta_or_3(int a, int b, int c) { 
+  int tmp = porta_or(a, b); 
+  return porta_or(tmp, c); 
+} 
+int porta_or_4(int a, int b, int c, int d) { 
+  int tmp1 = porta_or(a, b); 
+  int tmp2 = porta_or(c, d); 
+  return porta_or(tmp1, tmp2); 
+} 
+int porta_or_5(int a, int b, int c, int d, int e) { 
+  int tmp = porta_or_4(a, b, c, d); 
+  return porta_or(tmp, e); 
+} 
+int porta_and_3(int a, int b, int c) { 
+  int tmp = porta_and(a, b); 
+  return porta_and(tmp, c); 
+} 
+int porta_and_4(int a, int b, int c, int d) { 
+  int tmp = porta_and(a, b); 
+  int tmp2 = porta_and(c, d); 
+  return porta_and(tmp, tmp2); 
+} 
+int porta_and_5(int a, int b, int c, int d, int e) { 
+  int tmp = porta_and_3(a, b, c); 
+  tmp = porta_and(tmp, d); 
+  return porta_and(tmp, e); 
+} 
+int porta_exor_3(int a, int b, int c) { 
+  int tmp = porta_exor(a, b); 
+  return porta_exor(tmp, c); 
+} 
+int porta_exor_4(int a, int b, int c, int d) { 
+  int tmp = porta_exor(a, b); 
+  int tmp2 = porta_exor(c, d); 
+  return porta_exor(tmp, tmp2); 
+} 
+int porta_exor_5(int a, int b, int c, int d, int e) { 
+  int tmp = porta_exor_4(a, b, c, d); 
+  return porta_exor(tmp, e); 
+}
+void n_ALU74181(int Cn, int M, int A[4], int B[4], int S[4], int F[4], int *A_uguale_B, int *P, int *Cn_piu_4, int *G) { 
+  F[0] = porta_exor(porta_not(porta_and(Cn, porta_not(M))), porta_and(porta_not(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))))); 
+  F[1] = porta_exor(porta_not(porta_or(porta_and(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_and_3(porta_not(M), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), Cn))), porta_and(porta_not(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))))); 
+  F[2] = porta_exor(porta_not(porta_or_3(porta_and(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))), porta_and_4(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))))), porta_and(porta_not(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))))); 
+  F[3] = porta_exor(porta_not(porta_or_4(porta_and(porta_not(M), porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_4(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_5(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))))), porta_and(porta_not(porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3]))))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3]))))); 
+  *A_uguale_B = porta_and_4(porta_exor(porta_not(porta_and(Cn, porta_not(M))), porta_and(porta_not(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))))), porta_exor(porta_not(porta_or(porta_and(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_and_3(porta_not(M), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), Cn))), porta_and(porta_not(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))))), porta_exor(porta_not(porta_or_3(porta_and(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))), porta_and_4(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))))), porta_and(porta_not(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))))), porta_exor(porta_not(porta_or_4(porta_and(porta_not(M), porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_4(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_5(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))))), porta_and(porta_not(porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3]))))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))))); 
+  *P = porta_not(porta_and_4(porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3]))))); 
+  *Cn_piu_4 = porta_or(porta_not(porta_not(porta_and_5(Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))))), porta_not(porta_not(porta_or_4(porta_and_4(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and_3(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2])))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3])))))))); 
+  *G = porta_not(porta_or_4(porta_and_4(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and_3(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2])))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3])))))); 
+}
 void simula_alu_74181() {
-    int Cn, M, A0, B0, A1, B1, A2, B2, A3, B3, S0, S1, S2, S3; char scelta[3];
-    printf("Inserire dati manualmente? (S/N): "); scanf("%s", scelta); scelta[0] = toupper(scelta[0]);
-    if (scelta[0] == 'S') {
-        printf(">> Inserisci i valori degli input (0 o 1):\n");
-        printf(">> Cn: "); scanf("%d", &Cn); if (Cn == 0){}else if(Cn == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      Cn deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> M:  "); scanf("%d", &M); if (M == 0){}else if(M == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║       M deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> A0: "); scanf("%d", &A0); if (A0 == 0){}else if(A0 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      A0 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> B0: "); scanf("%d", &B0); if (B0 == 0){}else if(B0 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      B0 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> A1: "); scanf("%d", &A1); if (A1 == 0){}else if(A1 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      A1 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> B1: "); scanf("%d", &B1); if (B1 == 0){}else if(B1 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      B1 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> A2: "); scanf("%d", &A2); if (A2 == 0){}else if(A2 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      A2 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> B2: "); scanf("%d", &B2); if (B2 == 0){}else if(B2 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      B2 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> A3: "); scanf("%d", &A3); if (A3 == 0){}else if(A3 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      A3 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> B3: "); scanf("%d", &B3); if (B3 == 0){}else if(B3 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      B3 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> S0: "); scanf("%d", &S0); if (S0 == 0){}else if(S0 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S0 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> S1: "); scanf("%d", &S1); if (S1 == 0){}else if(S1 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S1 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> S2: "); scanf("%d", &S2); if (S2 == 0){}else if(S2 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S2 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> S3: "); scanf("%d", &S3); if (S3 == 0){}else if(S3 == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S3 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-    } else {
-        FILE *file = fopen("input_alu.txt", "r"); if (file == NULL) { file = fopen("input_alu.txt", "w"); if (file == NULL) { printf("ERRORE: Impossibile creare il file\n"); return; } fprintf(file, "Cn: <0>\n"); fprintf(file, "M: <0>\n"); fprintf(file, "A0: <0>\n"); fprintf(file, "B0: <0>\n"); fprintf(file, "A1: <0>\n"); fprintf(file, "B1: <0>\n"); fprintf(file, "A2: <0>\n"); fprintf(file, "B2: <0>\n"); fprintf(file, "A3: <0>\n"); fprintf(file, "B3: <0>\n"); fprintf(file, "S0: <0>\n"); fprintf(file, "S1: <0>\n"); fprintf(file, "S2: <0>\n"); fprintf(file, "S3: <0>\n"); fclose(file); printf("Creato file input_alu.txt. Compilarlo e riavviare.\n"); return; } char line[100];
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_Cn = sscanf(line, "%*[^<]<%d>", &Cn); if (sscanf_result_Cn == 1) {} else { printf("ERRORE: Valore non valido in Cn\n"); fclose(file); return; } if (Cn == 0) {} else if (Cn == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      Cn deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_M = sscanf(line, "%*[^<]<%d>", &M); if (sscanf_result_M == 1) {} else { printf("ERRORE: Valore non valido in M\n"); fclose(file); return; } if (M == 0) {} else if (M == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║       M deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_A0 = sscanf(line, "%*[^<]<%d>", &A0); if (sscanf_result_A0 == 1) {} else { printf("ERRORE: Valore non valido in A0\n"); fclose(file); return; } if (A0 == 0) {} else if (A0 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      A0 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_B0 = sscanf(line, "%*[^<]<%d>", &B0); if (sscanf_result_B0 == 1) {} else { printf("ERRORE: Valore non valido in B0\n"); fclose(file); return; } if (B0 == 0) {} else if (B0 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      B0 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_A1 = sscanf(line, "%*[^<]<%d>", &A1); if (sscanf_result_A1 == 1) {} else { printf("ERRORE: Valore non valido in A1\n"); fclose(file); return; } if (A1 == 0) {} else if (A1 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      A1 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_B1 = sscanf(line, "%*[^<]<%d>", &B1); if (sscanf_result_B1 == 1) {} else { printf("ERRORE: Valore non valido in B1\n"); fclose(file); return; } if (B1 == 0) {} else if (B1 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      B1 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_A2 = sscanf(line, "%*[^<]<%d>", &A2); if (sscanf_result_A2 == 1) {} else { printf("ERRORE: Valore non valido in A2\n"); fclose(file); return; } if (A2 == 0) {} else if (A2 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      A2 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_B2 = sscanf(line, "%*[^<]<%d>", &B2); if (sscanf_result_B2 == 1) {} else { printf("ERRORE: Valore non valido in B2\n"); fclose(file); return; } if (B2 == 0) {} else if (B2 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      B2 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_A3 = sscanf(line, "%*[^<]<%d>", &A3); if (sscanf_result_A3 == 1) {} else { printf("ERRORE: Valore non valido in A3\n"); fclose(file); return; } if (A3 == 0) {} else if (A3 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      A3 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_B3 = sscanf(line, "%*[^<]<%d>", &B3); if (sscanf_result_B3 == 1) {} else { printf("ERRORE: Valore non valido in B3\n"); fclose(file); return; } if (B3 == 0) {} else if (B3 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      B3 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_S0 = sscanf(line, "%*[^<]<%d>", &S0); if (sscanf_result_S0 == 1) {} else { printf("ERRORE: Valore non valido in S0\n"); fclose(file); return; } if (S0 == 0) {} else if (S0 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S0 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_S1 = sscanf(line, "%*[^<]<%d>", &S1); if (sscanf_result_S1 == 1) {} else { printf("ERRORE: Valore non valido in S1\n"); fclose(file); return; } if (S1 == 0) {} else if (S1 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S1 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_S2 = sscanf(line, "%*[^<]<%d>", &S2); if (sscanf_result_S2 == 1) {} else { printf("ERRORE: Valore non valido in S2\n"); fclose(file); return; } if (S2 == 0) {} else if (S2 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S2 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_S3 = sscanf(line, "%*[^<]<%d>", &S3); if (sscanf_result_S3 == 1) {} else { printf("ERRORE: Valore non valido in S3\n"); fclose(file); return; } if (S3 == 0) {} else if (S3 == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S3 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        fclose(file);
-    } int A[4] = {A0, A1, A2, A3}; int B[4] = {B0, B1, B2, B3}; int S[4] = {S0, S1, S2, S3}; int F[4], A_uguale_B, P, Cn_piu_4, G; n_ALU74181(Cn, M, A, B, S, F, &A_uguale_B, &P, &Cn_piu_4, &G); printf("\n"); printf("╔═════════════════════════════════════════════╗\n║           RISULTATI ALU 74181               ║\n╠═════════════════════════════════════════════╣\n║                                             ║\n║  - F0      = %-3d                            ║\n║  - F1      = %-3d                            ║\n║  - A = B   = %-3d                            ║\n║  - F2      = %-3d                            ║\n║  - F3      = %-3d                            ║\n║  - P       = %-3d                            ║\n║  - Cn + 4  = %-3d                            ║\n║  - G       = %-3d                            ║\n║                                             ║\n╚═════════════════════════════════════════════╝\n",F[0],F[1],A_uguale_B,F[2],F[3],P,Cn_piu_4,G); salva_in_memoria(Cn_piu_4); FILE *file_out = fopen("risultati_alu_74181.txt", "w"); if (file_out == NULL) { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║    Impossibile aprire file     ║\n║         di scrittura           ║\n║                                ║\n╚════════════════════════════════╝\n"); return; } fprintf(file_out, "╔═════════════════════════════════════════════╗\n║           RISULTATI ALU 74181               ║\n╠═════════════════════════════════════════════╣\n║                                             ║\n║  - F0      = %-3d                            ║\n║  - F1      = %-3d                            ║\n║  - A = B   = %-3d                            ║\n║  - F2      = %-3d                            ║\n║  - F3      = %-3d                            ║\n║  - P       = %-3d                            ║\n║  - Cn + 4  = %-3d                            ║\n║  - G       = %-3d                            ║\n║                                             ║\n╚═════════════════════════════════════════════╝\n", F[0],F[1],A_uguale_B,F[2],F[3],P,Cn_piu_4,G); fclose(file_out); sleep(2); return;
+  int Cn, M, A0, B0, A1, B1, A2, B2, A3, B3, S0, S1, S2, S3; 
+  char scelta[3];
+  printf("Inserire dati manualmente? (S/N): "); 
+  scanf("%s", scelta); 
+  scelta[0] = toupper(scelta[0]);
+  if (scelta[0] == 'S') {
+    printf(">> Inserisci i valori degli input (0 o 1):\n");
+    printf(">> Cn: "); 
+    scanf("%d", &Cn); 
+    if (Cn == 0){
+      /**/
+    }
+    else if(Cn == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n");
+      printf("║            ERRORE              ║\n");
+      printf("╠════════════════════════════════╣\n");
+      printf("║                                ║\n");
+      printf("║      Cn deve essere 0 o 1      ║\n");
+      printf("║                                ║\n");
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> M:  "); 
+    scanf("%d", &M); 
+    if (M == 0){
+      /**/
+    }
+    else if(M == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n");
+      printf("║            ERRORE              ║\n");
+      printf("╠════════════════════════════════╣\n");
+      printf("║                                ║\n");
+      printf("║       M deve essere 0 o 1      ║\n");
+      printf("║                                ║\n");
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> A0: "); 
+    scanf("%d", &A0); 
+    if (A0 == 0){
+      /**/
+    }
+    else if(A0 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n");
+      printf("║            ERRORE              ║\n");
+      printf("╠════════════════════════════════╣\n");
+      printf("║                                ║\n");
+      printf("║      A0 deve essere 0 o 1      ║\n");
+      printf("║                                ║\n");
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> B0: "); 
+    scanf("%d", &B0); 
+    if (B0 == 0){
+      /**/
+    }
+    else if(B0 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      B0 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> A1: "); 
+    scanf("%d", &A1); 
+    if (A1 == 0){
+      /**/
+    }
+    else if(A1 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      A1 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> B1: "); 
+    scanf("%d", &B1); 
+    if (B1 == 0){
+      /**/
+    }
+    else if(B1 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      B1 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> A2: "); 
+    scanf("%d", &A2); 
+    if (A2 == 0){
+      /**/
+    }
+    else if(A2 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      A2 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> B2: "); 
+    scanf("%d", &B2); 
+    if (B2 == 0){
+      /**/
+    }
+    else if(B2 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      B2 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> A3: "); 
+    scanf("%d", &A3); 
+    if (A3 == 0){
+      /**/
+    }
+    else if(A3 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      A3 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> B3: "); 
+    scanf("%d", &B3); 
+    if (B3 == 0){
+      /**/
+    }
+    else if(B3 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      B3 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> S0: "); 
+    scanf("%d", &S0); 
+    if (S0 == 0){
+      /**/
+    }
+    else if(S0 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      S0 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> S1: "); 
+    scanf("%d", &S1); 
+    if (S1 == 0){
+      /**/
+    }
+    else if(S1 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      S1 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> S2: "); 
+    scanf("%d", &S2); 
+    if (S2 == 0){
+      /**/
+    }
+    else if(S2 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      S2 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    printf(">> S3: "); 
+    scanf("%d", &S3); 
+    if (S3 == 0){
+      /**/
+    }
+    else if(S3 == 1){
+      /**/
+    }
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      S3 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+  } 
+  else {
+    FILE *file = fopen("input_alu.txt", "r"); 
+    if (file == NULL) { 
+      file = fopen("input_alu.txt", "w"); 
+      if (file == NULL) { 
+        printf("ERRORE: Impossibile creare il file\n"); 
+        return; 
+      } 
+      fprintf(file, "Cn: <0>\n"); 
+      fprintf(file, "M: <0>\n"); 
+      fprintf(file, "A0: <0>\n"); 
+      fprintf(file, "B0: <0>\n"); 
+      fprintf(file, "A1: <0>\n"); 
+      fprintf(file, "B1: <0>\n"); 
+      fprintf(file, "A2: <0>\n"); 
+      fprintf(file, "B2: <0>\n"); 
+      fprintf(file, "A3: <0>\n"); 
+      fprintf(file, "B3: <0>\n"); 
+      fprintf(file, "S0: <0>\n"); 
+      fprintf(file, "S1: <0>\n"); 
+      fprintf(file, "S2: <0>\n"); 
+      fprintf(file, "S3: <0>\n"); 
+      fclose(file); 
+      printf("Creato file input_alu.txt. Compilarlo e riavviare.\n"); 
+      return; 
+    } 
+    char line[100];
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_Cn = sscanf(line, "%*[^<]<%d>", &Cn); 
+    if (sscanf_result_Cn == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in Cn\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (Cn == 0) {
+      /**/
+    } 
+    else if (Cn == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n");
+      printf("║            ERRORE              ║\n");
+      printf("╠════════════════════════════════╣\n");
+      printf("║                                ║\n");
+      printf("║      Cn deve essere 0 o 1      ║\n");
+      printf("║                                ║\n");
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); return; 
+    } 
+    int sscanf_result_M = sscanf(line, "%*[^<]<%d>", &M); 
+    if (sscanf_result_M == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in M\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (M == 0) {
+      /**/
+    } 
+    else if (M == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║       M deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_A0 = sscanf(line, "%*[^<]<%d>", &A0); 
+    if (sscanf_result_A0 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in A0\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (A0 == 0) {
+      /**/
+    } 
+    else if (A0 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      A0 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_B0 = sscanf(line, "%*[^<]<%d>", &B0); 
+    if (sscanf_result_B0 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in B0\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (B0 == 0) {
+      /**/
+    } 
+    else if (B0 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      B0 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_A1 = sscanf(line, "%*[^<]<%d>", &A1); 
+    if (sscanf_result_A1 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in A1\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (A1 == 0) {
+      /**/
+    } 
+    else if (A1 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      A1 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_B1 = sscanf(line, "%*[^<]<%d>", &B1); 
+    if (sscanf_result_B1 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in B1\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (B1 == 0) {
+      /**/
+    } 
+    else if (B1 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      B1 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_A2 = sscanf(line, "%*[^<]<%d>", &A2); 
+    if (sscanf_result_A2 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in A2\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (A2 == 0) {
+      /**/
+    } 
+    else if (A2 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      A2 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_B2 = sscanf(line, "%*[^<]<%d>", &B2); 
+    if (sscanf_result_B2 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in B2\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (B2 == 0) {
+      /**/
+    } 
+    else if (B2 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      B2 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_A3 = sscanf(line, "%*[^<]<%d>", &A3); 
+    if (sscanf_result_A3 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in A3\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (A3 == 0) {
+      /**/
+    } 
+    else if (A3 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      A3 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_B3 = sscanf(line, "%*[^<]<%d>", &B3); 
+    if (sscanf_result_B3 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in B3\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (B3 == 0) {
+      /**/
+    } 
+    else if (B3 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      B3 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_S0 = sscanf(line, "%*[^<]<%d>", &S0); 
+    if (sscanf_result_S0 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in S0\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (S0 == 0) {
+      /**/
+    } 
+    else if (S0 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      S0 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_S1 = sscanf(line, "%*[^<]<%d>", &S1); 
+    if (sscanf_result_S1 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in S1\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (S1 == 0) {
+      /**/
+    } 
+    else if (S1 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      S1 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_S2 = sscanf(line, "%*[^<]<%d>", &S2); 
+    if (sscanf_result_S2 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in S2\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (S2 == 0) {
+      /**/
+    } 
+    else if (S2 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      S2 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    if (fgets(line, sizeof(line), file) == NULL) { 
+      printf("ERRORE: Formato file incompleto\n"); 
+      fclose(file); 
+      return; 
+    } 
+    int sscanf_result_S3 = sscanf(line, "%*[^<]<%d>", &S3); 
+    if (sscanf_result_S3 == 1) {
+      /**/
+    } 
+    else { 
+      printf("ERRORE: Valore non valido in S3\n"); 
+      fclose(file); 
+      return; 
+    } 
+    if (S3 == 0) {
+      /**/
+    } 
+    else if (S3 == 1) {
+      /**/
+    } 
+    else { 
+      printf("╔════════════════════════════════╗\n"); 
+      printf("║            ERRORE              ║\n"); 
+      printf("╠════════════════════════════════╣\n"); 
+      printf("║                                ║\n"); 
+      printf("║      S3 deve essere 0 o 1      ║\n"); 
+      printf("║                                ║\n"); 
+      printf("╚════════════════════════════════╝\n"); 
+      return; 
+    }
+    fclose(file);
+  } 
+  int A[4] = {A0, A1, A2, A3}; 
+  int B[4] = {B0, B1, B2, B3}; 
+  int S[4] = {S0, S1, S2, S3}; 
+  int F[4], A_uguale_B, P, Cn_piu_4, G; n_ALU74181(Cn, M, A, B, S, F, &A_uguale_B, &P, &Cn_piu_4, &G); 
+  printf("\n"); 
+  printf("╔═════════════════════════════════════════════╗\n");
+  printf("║           RISULTATI ALU 74181               ║\n");
+  printf("╠═════════════════════════════════════════════╣\n");
+  printf("║                                             ║\n");
+  printf("║  - F0      = %-3d                            ║\n");
+  printf("║  - F1      = %-3d                            ║\n");
+  printf("║  - A = B   = %-3d                            ║\n");
+  printf("║  - F2      = %-3d                            ║\n");
+  printf("║  - F3      = %-3d                            ║\n");
+  printf("║  - P       = %-3d                            ║\n");
+  printf("║  - Cn + 4  = %-3d                            ║\n");
+  printf("║  - G       = %-3d                            ║\n");
+  printf("║                                             ║\n");
+  printf("╚═════════════════════════════════════════════╝\n",F[0],F[1],A_uguale_B,F[2],F[3],P,Cn_piu_4,G); 
+  salva_in_memoria(Cn_piu_4); 
+  FILE *file_out = fopen("risultati_alu_74181.txt", "w"); 
+  if (file_out == NULL) { 
+    printf("╔════════════════════════════════╗\n"); 
+    printf("║            ERRORE              ║\n"); 
+    printf("╠════════════════════════════════╣\n"); 
+    printf("║                                ║\n"); 
+    printf("║    Impossibile aprire file     ║\n"); 
+    printf("║         di scrittura           ║\n"); 
+    printf("║                                ║\n"); 
+    printf("╚════════════════════════════════╝\n"); 
+    return; 
+  } 
+  fprintf(file_out, "╔═════════════════════════════════════════════╗\n");
+  fprintf(file_out, "║           RISULTATI ALU 74181               ║\n");
+  fprintf(file_out, "╠═════════════════════════════════════════════╣\n");
+  fprintf(file_out, "║                                             ║\n");
+  fprintf(file_out, "║  - F0      = %-3d                            ║\n");
+  fprintf(file_out, "║  - F1      = %-3d                            ║\n");
+  fprintf(file_out, "║  - A = B   = %-3d                            ║\n");
+  fprintf(file_out, "║  - F2      = %-3d                            ║\n");
+  fprintf(file_out, "║  - F3      = %-3d                            ║\n");
+  fprintf(file_out, "║  - P       = %-3d                            ║\n");
+  fprintf(file_out, "║  - Cn + 4  = %-3d                            ║\n");
+  fprintf(file_out, "║  - G       = %-3d                            ║\n");
+  fprintf(file_out, "║                                             ║\n");
+  fprintf(file_out, "╚═════════════════════════════════════════════╝\n", F[0],F[1],A_uguale_B,F[2],F[3],P,Cn_piu_4,G); 
+  fclose(file_out); 
+  sleep(2); 
+  return;
 }
 void ALU32() {
-    unsigned int operandoA, operandoB; int Cn, M, S[4]; char scelta[3];
-    printf("Inserire dati manualmente? (S/N): "); scanf("%s", scelta); scelta[0] = toupper(scelta[0]);
+    unsigned int operandoA, operandoB; 
+    int Cn, M, S[4]; 
+    char scelta[3];
+    printf("Inserire dati manualmente? (S/N): "); 
+    scanf("%s", scelta); 
+    scelta[0] = toupper(scelta[0]);
     if (scelta[0] == 'S') {
-        printf(">> Inserisci il primo operando (numero decimale a 32 bit): "); scanf("%u", &operandoA);
-        printf(">> Inserisci il secondo operando (numero decimale a 32 bit): "); scanf("%u", &operandoB);
+        printf(">> Inserisci il primo operando (numero decimale a 32 bit): "); 
+        scanf("%u", &operandoA);
+        printf(">> Inserisci il secondo operando (numero decimale a 32 bit): "); 
+        scanf("%u", &operandoB);
         printf(">> Inserisci i valori degli input (0 o 1):\n");
-        printf(">> Cn: "); scanf("%d", &Cn); if (Cn == 0){}else if(Cn == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      Cn deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> M:  "); scanf("%d", &M); if (M == 0){}else if(M == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║       M deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> S0: "); scanf("%d", &S[0]); if (S[0] == 0){}else if(S[0] == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S0 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> S1: "); scanf("%d", &S[1]); if (S[1] == 0){}else if(S[1] == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S1 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> S2: "); scanf("%d", &S[2]); if (S[2] == 0){}else if(S[2] == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S2 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
-        printf(">> S3: "); scanf("%d", &S[3]); if (S[3] == 0){}else if(S[3] == 1){}else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S3 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
+        printf(">> Cn: "); 
+        scanf("%d", &Cn); 
+        if (Cn == 0){
+          /**/
+        }else if(Cn == 1){
+          /**/
+        }else { 
+          printf("╔════════════════════════════════╗\n");
+          printf("║            ERRORE              ║\n");
+          printf("╠════════════════════════════════╣\n");
+          printf("║                                ║\n");
+          printf("║      Cn deve essere 0 o 1      ║\n");
+          printf("║                                ║\n");
+          printf("╚════════════════════════════════╝\n"); 
+          return; 
+        }
+        printf(">> M:  "); 
+        scanf("%d", &M); 
+        if (M == 0){
+          /**/
+        }else if(M == 1){
+          /**/
+        }else { 
+          printf("╔════════════════════════════════╗\n"); 
+          printf("║            ERRORE              ║\n"); 
+          printf("╠════════════════════════════════╣\n"); 
+          printf("║                                ║\n"); 
+          printf("║       M deve essere 0 o 1      ║\n"); 
+          printf("║                                ║\n"); 
+          printf("╚════════════════════════════════╝\n"); 
+          return; 
+        }
+        printf(">> S0: "); 
+        scanf("%d", &S[0]); 
+        if (S[0] == 0){
+          /**/
+        }
+        else if(S[0] == 1){
+          /**/
+        }
+        else { 
+          printf("╔════════════════════════════════╗\n"); 
+          printf("║            ERRORE              ║\n"); 
+          printf("╠════════════════════════════════╣\n"); 
+          printf("║                                ║\n"); 
+          printf("║      S0 deve essere 0 o 1      ║\n"); 
+          printf("║                                ║\n"); 
+          printf("╚════════════════════════════════╝\n"); 
+          return; 
+        }
+        printf(">> S1: "); 
+        scanf("%d", &S[1]); 
+        if (S[1] == 0){
+          /**/
+        }
+        else if(S[1] == 1){
+          /**/
+        }
+        else { 
+          printf("╔════════════════════════════════╗\n"); 
+          printf("║            ERRORE              ║\n"); 
+          printf("╠════════════════════════════════╣\n"); 
+          printf("║                                ║\n"); 
+          printf("║      S1 deve essere 0 o 1      ║\n"); 
+          printf("║                                ║\n"); 
+          printf("╚════════════════════════════════╝\n"); 
+          return; 
+        }
+        printf(">> S2: "); 
+        scanf("%d", &S[2]); 
+        if (S[2] == 0){
+          /**/
+        }
+        else if(S[2] == 1){
+          /**/
+        }
+        else { 
+          printf("╔════════════════════════════════╗\n"); 
+          printf("║            ERRORE              ║\n"); 
+          printf("╠════════════════════════════════╣\n"); 
+          printf("║                                ║\n"); 
+          printf("║      S2 deve essere 0 o 1      ║\n"); 
+          printf("║                                ║\n"); 
+          printf("╚════════════════════════════════╝\n"); 
+          return; 
+        }
+        printf(">> S3: "); 
+        scanf("%d", &S[3]); 
+        if (S[3] == 0){
+          /**/
+        }
+        else if(S[3] == 1){
+          /**/
+        }
+        else { 
+          printf("╔════════════════════════════════╗\n"); 
+          printf("║            ERRORE              ║\n"); 
+          printf("╠════════════════════════════════╣\n"); 
+          printf("║                                ║\n"); 
+          printf("║      S3 deve essere 0 o 1      ║\n"); 
+          printf("║                                ║\n"); 
+          printf("╚════════════════════════════════╝\n"); 
+          return; 
+        }
     } else {
-        FILE *file = fopen("input_alu32.txt", "r"); if (file == NULL) { file = fopen("input_alu32.txt", "w"); if (file == NULL) { printf("ERRORE: Impossibile creare il file\n"); return; } fprintf(file, "Operando A: <0>\n"); fprintf(file, "Operando B: <0>\n"); fprintf(file, "Cn: <0>\n"); fprintf(file, "M: <0>\n"); fprintf(file, "S0: <0>\n"); fprintf(file, "S1: <0>\n"); fprintf(file, "S2: <0>\n"); fprintf(file, "S3: <0>\n"); fclose(file); printf("Creato file input_alu32.txt. Compilarlo e riavviare.\n"); return; } char line[100];
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_operandoA = sscanf(line, "%*[^<]<%d>", &operandoA);
-        if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_operandoB = sscanf(line, "%*[^<]<%d>", &operandoB);
+        FILE *file = fopen("input_alu32.txt", "r"); 
+        if (file == NULL) { 
+          file = fopen("input_alu32.txt", "w"); 
+          if (file == NULL) { 
+            printf("ERRORE: Impossibile creare il file\n"); 
+            return; 
+          } 
+          fprintf(file, "Operando A: <0>\n"); 
+          fprintf(file, "Operando B: <0>\n"); 
+          fprintf(file, "Cn: <0>\n"); 
+          fprintf(file, "M: <0>\n"); 
+          fprintf(file, "S0: <0>\n"); 
+          fprintf(file, "S1: <0>\n"); 
+          fprintf(file, "S2: <0>\n"); 
+          fprintf(file, "S3: <0>\n"); 
+          fclose(file); 
+          printf("Creato file input_alu32.txt. Compilarlo e riavviare.\n"); 
+          return; 
+        } 
+        char line[100];
+        if (fgets(line, sizeof(line), file) == NULL) { 
+          printf("ERRORE: Formato file incompleto\n"); 
+          fclose(file); 
+          return; 
+        } 
+        int sscanf_result_operandoA = sscanf(line, "%*[^<]<%d>", &operandoA);
+        if (fgets(line, sizeof(line), file) == NULL) { 
+          printf("ERRORE: Formato file incompleto\n"); 
+          fclose(file); 
+          return; 
+        } 
+        int sscanf_result_operandoB = sscanf(line, "%*[^<]<%d>", &operandoB);
         if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_Cn = sscanf(line, "%*[^<]<%d>", &Cn); if (sscanf_result_Cn == 1) {} else { printf("ERRORE: Valore non valido in Cn\n"); fclose(file); return; } if (Cn == 0) {} else if (Cn == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      Cn deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
         if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_M = sscanf(line, "%*[^<]<%d>", &M); if (sscanf_result_M == 1) {} else { printf("ERRORE: Valore non valido in M\n"); fclose(file); return; } if (M == 0) {} else if (M == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║       M deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
         if (fgets(line, sizeof(line), file) == NULL) { printf("ERRORE: Formato file incompleto\n"); fclose(file); return; } int sscanf_result_S0 = sscanf(line, "%*[^<]<%d>", &S[0]); if (sscanf_result_S0 == 1) {} else { printf("ERRORE: Valore non valido in S0\n"); fclose(file); return; } if (S[0] == 0) {} else if (S[0] == 1) {} else { printf("╔════════════════════════════════╗\n║            ERRORE              ║\n╠════════════════════════════════╣\n║                                ║\n║      S0 deve essere 0 o 1      ║\n║                                ║\n╚════════════════════════════════╝\n"); return; }
