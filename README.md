@@ -107,3 +107,8 @@ Vedi [LICENSE](LICENSE) per i dettagli.
 <a href="https://github.com/Leo-Galli/74181/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Leo-Galli/74181" />
 </a>
+
+---
+## Preview
+
+![Dimostrazione Simulatore](video/dimostrazione.gif)
