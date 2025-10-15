@@ -4,7 +4,6 @@
 #include <time.h>
 #include <ctype.h>
 #include <unistd.h>
-#include <curl/curl.h>
 #if defined(_WIN32)
 #define SISTEMA_WINDOWS 1
 #include <windows.h>
@@ -21,62 +20,109 @@
 #else
 #define SISTEMA_LINUX 0
 #endif
-#define URL_CLOCK "https://raw.githubusercontent.com/Leo-Galli/74181/main/processors.json"
-#define FILE_CACHE "clock_cache.json"
 
-struct stringa {
-    char *dati;
-    size_t lunghezza;
+typedef struct {
+    const char *nome;
+    long clock_hz;
+} Processore;
+
+static const Processore db_processori[] = {
+    {"Intel(R) Core(TM) i3-2100", 3100000000L},
+    {"Intel(R) Core(TM) i3-3220", 3300000000L},
+    {"Intel(R) Core(TM) i3-4130", 3400000000L},
+    {"Intel(R) Core(TM) i3-6100", 3700000000L},
+    {"Intel(R) Core(TM) i3-7100", 3900000000L},
+    {"Intel(R) Core(TM) i3-8100", 3600000000L},
+    {"Intel(R) Core(TM) i3-9100", 3600000000L},
+    {"Intel(R) Core(TM) i3-10100", 3600000000L},
+    {"Intel(R) Core(TM) i3-11100", 3700000000L},
+    {"Intel(R) Core(TM) i3-12100", 3300000000L},
+    {"Intel(R) Core(TM) i3-13100", 3400000000L},
+    {"Intel(R) Core(TM) i5-2400", 3100000000L},
+    {"Intel(R) Core(TM) i5-2500K", 3300000000L},
+    {"Intel(R) Core(TM) i5-3570K", 3400000000L},
+    {"Intel(R) Core(TM) i5-4460", 3200000000L},
+    {"Intel(R) Core(TM) i5-6500", 3200000000L},
+    {"Intel(R) Core(TM) i5-7400", 3000000000L},
+    {"Intel(R) Core(TM) i5-7500T", 2900000000L},
+    {"Intel(R) Core(TM) i5-8400", 2800000000L},
+    {"Intel(R) Core(TM) i5-9400F", 2900000000L},
+    {"Intel(R) Core(TM) i5-9600K", 3700000000L},
+    {"Intel(R) Core(TM) i5-10400", 2900000000L},
+    {"Intel(R) Core(TM) i5-10600K", 4100000000L},
+    {"Intel(R) Core(TM) i5-11400", 2600000000L},
+    {"Intel(R) Core(TM) i5-12400", 2500000000L},
+    {"Intel(R) Core(TM) i5-12600K", 3700000000L},
+    {"Intel(R) Core(TM) i5-13400", 2500000000L},
+    {"Intel(R) Core(TM) i5-13600K", 3500000000L},
+    {"Intel(R) Core(TM) i7-2600K", 3400000000L},
+    {"Intel(R) Core(TM) i7-3770K", 3500000000L},
+    {"Intel(R) Core(TM) i7-4770K", 3500000000L},
+    {"Intel(R) Core(TM) i7-6700K", 4000000000L},
+    {"Intel(R) Core(TM) i7-7700K", 4200000000L},
+    {"Intel(R) Core(TM) i7-8700K", 3700000000L},
+    {"Intel(R) Core(TM) i7-9700K", 3600000000L},
+    {"Intel(R) Core(TM) i7-10700K", 3800000000L},
+    {"Intel(R) Core(TM) i7-11700K", 3600000000L},
+    {"Intel(R) Core(TM) i7-12700K", 3600000000L},
+    {"Intel(R) Core(TM) i7-13700K", 3900000000L},
+    {"Intel(R) Core(TM) i7-14700K", 4200000000L},
+    {"Intel(R) Core(TM) i9-7900X", 3300000000L},
+    {"Intel(R) Core(TM) i9-9900K", 3600000000L},
+    {"Intel(R) Core(TM) i9-10900K", 3700000000L},
+    {"Intel(R) Core(TM) i9-11900K", 3500000000L},
+    {"Intel(R) Core(TM) i9-12900K", 3700000000L},
+    {"Intel(R) Core(TM) i9-13900K", 5500000000L},
+    {"Intel(R) Core(TM) i9-14900K", 6000000000L},
+    {"Intel Xeon E5-2620", 2000000000L},
+    {"Intel Xeon E5-2680", 2700000000L},
+    {"Intel Xeon E5-2690", 2900000000L},
+    {"Intel Xeon W-2145", 3700000000L},
+    {"Intel Xeon W-3175X", 3500000000L},
+    {"AMD FX-6300", 3500000000L},
+    {"AMD FX-8350", 4000000000L},
+    {"AMD Ryzen 3 1200", 3100000000L},
+    {"AMD Ryzen 3 2200G", 3500000000L},
+    {"AMD Ryzen 3 3200G", 3600000000L},
+    {"AMD Ryzen 3 5300G", 4000000000L},
+    {"AMD Ryzen 5 1600", 3200000000L},
+    {"AMD Ryzen 5 2600", 3400000000L},
+    {"AMD Ryzen 5 3600", 3600000000L},
+    {"AMD Ryzen 5 5600", 3500000000L},
+    {"AMD Ryzen 5 5600X", 3700000000L},
+    {"AMD Ryzen 5 7600", 3800000000L},
+    {"AMD Ryzen 7 1700", 3000000000L},
+    {"AMD Ryzen 7 2700X", 3700000000L},
+    {"AMD Ryzen 7 3700X", 3600000000L},
+    {"AMD Ryzen 7 3800X", 3900000000L},
+    {"AMD Ryzen 7 5800X", 3800000000L},
+    {"AMD Ryzen 7 7700X", 4200000000L},
+    {"AMD Ryzen 9 3900X", 3800000000L},
+    {"AMD Ryzen 9 3950X", 3500000000L},
+    {"AMD Ryzen 9 5900X", 3700000000L},
+    {"AMD Ryzen 9 5950X", 3400000000L},
+    {"AMD Ryzen 9 7900X", 4700000000L},
+    {"AMD Ryzen 9 7950X", 4500000000L},
+    {"AMD Ryzen Threadripper 1950X", 3400000000L},
+    {"AMD Ryzen Threadripper 2970WX", 3000000000L},
+    {"AMD Ryzen Threadripper 2990WX", 3100000000L},
+    {"AMD Ryzen Threadripper 3990X", 2900000000L},
+    {"AMD EPYC 7601", 2200000000L},
+    {"AMD EPYC 7742", 2250000000L},
+    {"AMD EPYC 9654", 2400000000L},
+    {"Apple M1", 3200000000L},
+    {"Apple M1 Pro", 3220000000L},
+    {"Apple M1 Max", 3300000000L},
+    {"Apple M2", 3500000000L},
+    {"Apple M2 Pro", 3700000000L},
+    {"Apple M2 Max", 3850000000L},
+    {"Apple M3", 4000000000L},
+    {"Apple M3 Pro", 4100000000L},
+    {"Apple M3 Max", 4200000000L},
+    {"Generic", 1000000000L}
 };
-void inizializza_stringa(struct stringa *s) {
-    s->lunghezza = 0;
-    s->dati = malloc(1);
-    if (s->dati) s->dati[0] = '\0';
-}
-size_t scrivi_dati(void *ptr, size_t dim, size_t nmemb, struct stringa *s) {
-    size_t nuova_lung = s->lunghezza + dim * nmemb;
-    s->dati = realloc(s->dati, nuova_lung + 1);
-    memcpy(s->dati + s->lunghezza, ptr, dim * nmemb);
-    s->dati[nuova_lung] = '\0';
-    s->lunghezza = nuova_lung;
-    return dim * nmemb;
-}
-char* scarica_json() {
-    CURL *curl;
-    CURLcode res;
-    struct stringa s;
-    inizializza_stringa(&s);
-    curl = curl_easy_init();
-    if (!curl) return NULL;
-    curl_easy_setopt(curl, CURLOPT_URL, URL_CLOCK);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, scrivi_dati);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
-    res = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-    if (res != CURLE_OK) {
-        free(s.dati);
-        return NULL;
-    }
-    FILE *cache = fopen(FILE_CACHE, "w");
-    if (cache) {
-        fwrite(s.dati, 1, s.lunghezza, cache);
-        fclose(cache);
-    }
-    return s.dati;
-}
-char* leggi_cache_locale() {
-    FILE *f = fopen(FILE_CACHE, "r");
-    if (!f) return NULL;
-    fseek(f, 0, SEEK_END);
-    long len = ftell(f);
-    rewind(f);
-    char *buffer = malloc(len + 1);
-    fread(buffer, 1, len, f);
-    buffer[len] = '\0';
-    fclose(f);
-    return buffer;
-}
+#define NUM_PROCESSORI (sizeof(db_processori) / sizeof(db_processori[0]))
+
 char* rileva_cpu() {
     static char nome_cpu[256] = "Generic";
     if (SISTEMA_LINUX) {
@@ -119,29 +165,26 @@ char* rileva_cpu() {
     return nome_cpu;
 }
 long ottieni_clock(const char* nome_cpu) {
-    char *json_data = scarica_json();
-    if (!json_data) json_data = leggi_cache_locale();
-    if (!json_data) return 1000000000;
-    struct json_object *root, *processori, *cpu, *clock_hz;
-    root = json_tokener_parse(json_data);
-    if (!root) return 1000000000;
-    if (!json_object_object_get_ex(root, "processors", &processori)) return 1000000000;
-    if (json_object_object_get_ex(processori, nome_cpu, &cpu)) {
-        if (json_object_object_get_ex(cpu, "clock_hz", &clock_hz))
-            return json_object_get_int64(clock_hz);
+    if (!nome_cpu) return 1000000000L;
+    for (int i = 0; i < NUM_PROCESSORI; i++) {
+        if (strstr(nome_cpu, db_processori[i].nome) != NULL) {
+            return db_processori[i].clock_hz;
+        }
     }
-    if (json_object_object_get_ex(processori, "Generic", &cpu)) {
-        if (json_object_object_get_ex(cpu, "clock_hz", &clock_hz))
-            return json_object_get_int64(clock_hz);
-    }
-    return 1000000000;
+    return 1000000000L;
 }
 void ritardo_ns(long nanosecondi) {
+#if SISTEMA_WINDOWS
+    long ms = nanosecondi / 1000000L;
+    if (ms <= 0 && nanosecondi > 0) ms = 1;
+    Sleep((DWORD)ms);
+#else
     struct timespec inizio, attuale;
     clock_gettime(CLOCK_MONOTONIC, &inizio);
     do {
         clock_gettime(CLOCK_MONOTONIC, &attuale);
-    } while ((attuale.tv_sec - inizio.tv_sec) * 1e9 + (attuale.tv_nsec - inizio.tv_nsec) < nanosecondi);
+    } while ((attuale.tv_sec - inizio.tv_sec) * 1000000000L + (attuale.tv_nsec - inizio.tv_nsec) < nanosecondi);
+#endif
 }
 void delay(int milliseconds) {
     long ns = (long)milliseconds * 1000000L;
@@ -244,6 +287,17 @@ void attendi_un_ciclo_clock() {
     long freq = ottieni_clock(cpu);
     long ciclo_ns = (long)(1e9 / freq);
     ritardo_ns(ciclo_ns);
+}
+void attendi_cicli_clock_equivalenti_a_secondi(double secondi) {
+    char *cpu = rileva_cpu();
+    long freq = ottieni_clock(cpu);
+    long num_cicli = (long)(freq * secondi);
+    if (num_cicli > 1000000000L) {
+        num_cicli = 1000000000L;
+    }
+    for (long i = 0; i < num_cicli; i++) {
+        attendi_un_ciclo_clock();
+    }
 }
 void stampa_memoria() { 
   printf("Contenuto della memoria:\n"); 
@@ -1074,7 +1128,7 @@ void simula_alu_74181() {
   fprintf(file_out, "║                                             ║\n");
   fprintf(file_out, "╚═════════════════════════════════════════════╝\n", F[0],F[1],A_uguale_B,F[2],F[3],P,Cn_piu_4,G); 
   fclose(file_out); 
-  sleep(2); 
+  attendi_cicli_clock_equivalenti_a_secondi(2.0); 
   return;
 }
 void ALU32() {
@@ -1487,7 +1541,7 @@ void ALU32() {
     fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
     fprintf(file_out, "- Risultato      = %-3d\n", result); 
     fclose(file_out); 
-    sleep(2);
+    attendi_cicli_clock_equivalenti_a_secondi(2.0);
 }
 int somma(int a, int b) { 
   return a + b; 
@@ -1675,198 +1729,176 @@ void misura_ciclo_clock() {
     for (int i = 0; i < 1000; i++) attendi_un_ciclo_clock();
     printf("\nSimulazione completata.\n");
 }
-int main() { 
-  int scelta; 
-  char input[10]; 
-  while (1) { 
-    printf("\n╔═════════════════════════════════════════════════════════╗\n"); 
-    printf("║                                                         ║\n"); 
-    printf("║                     ▄▀▀▀▄▄▄▄▄▄▄▀▀▀▄                     ║\n"); 
-    printf("║                     █▒▒░░░░░░░░░▒▒█                     ║\n"); 
-    printf("║                      █░░█░░░░░█░░█                      ║\n"); 
-    printf("║                   ▄▄  █░░░▀█▀░░░█  ▄▄                   ║\n"); 
-    printf("║                  █░░█ ▀▄░░░░░░░▄▀ █░░█                  ║\n"); 
-    printf("║                        ALU 74181                        ║\n"); 
-    printf("║                                                         ║\n"); 
-    printf("║                     MENU PRINCIPALE                     ║\n"); 
-    printf("╠═════════════════════════════════════════════════════════╣\n"); 
-    printf("║   1. Operazioni Logiche (ALU 74181 - Singolo)           ║\n"); 
-    printf("║   2. Operazioni Logiche (ALU 74181 - Singolo con clock) ║\n"); 
-    printf("║   3. Operazioni Algebriche                              ║\n"); 
-    printf("║   4. Convertitore Binario → Decimale                    ║\n"); 
-    printf("║   5. Convertitore Decimale → Binario                    ║\n"); 
-    printf("║   6. ALU in Modalità PIPO (32 bit - 8x74181)            ║\n"); 
-    printf("║   7. ALU in Modalità PIPO (32 bit - 8x74181 con clock)  ║\n"); 
-    printf("║   8. Visualizza Memoria                                 ║\n"); 
-    printf("║   9. Calcolo del Clock                                  ║\n"); 
-    printf("║   0. Esci                                               ║\n"); 
-    printf("╚═════════════════════════════════════════════════════════╝\n"); 
-    printf(">> Inserisci la tua scelta: "); 
-    fgets(input, sizeof(input), stdin); 
-    if (sscanf(input, "%d", &scelta) == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║             ERRORE             ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║   Inserisci un numero valido  ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-        continue; 
-      } if (scelta == 0) { 
-        printf("Uscita dal programma...\n"); 
-        break; 
-      } 
-      else if (scelta == 1) { 
-        simula_alu_74181(); 
-      } 
-      else if (scelta == 2) { 
-        sleep(2); 
-        simula_alu_74181(); 
-      } 
-      else if (scelta == 3) { 
-        operazioni_algebriche(); 
-      } 
-      else if (scelta == 4) { 
-        char bin[33]; 
-        char risposta[3]; 
-        printf("Inserire dati manualmente? (S/N): "); 
-        scanf("%2s", risposta); 
-        risposta[0] = toupper(risposta[0]); 
-        if (risposta[0] == 'S') { 
-          printf(">> Inserisci un numero binario: "); 
-          scanf("%32s", bin); 
-          int risultato = BIN_DEC_DECODER(bin); 
-          if (risultato != -1) { 
-            printf("Risultato (decimale): %d\n", risultato); 
-          } 
-        } 
-        else { 
-          FILE *file = fopen("input_bin.txt", "r"); 
-          if (!file) { 
-            file = fopen("input_bin.txt", "w"); 
-            if (!file) { 
-              printf("ERRORE: Impossibile creare il file\n"); 
-              return 1; 
-            } 
-            fprintf(file, "Numero Binario: <0>\n"); 
-            fclose(file); 
-            printf("Creato file input_bin.txt. Compilarlo e riavviare.\n"); 
-            return 1; 
-          } 
-          char line[100]; 
-          if (!fgets(line, sizeof(line), file)) { 
-            printf("ERRORE: Formato file incompleto\n"); 
-            fclose(file); 
-            return 1; 
-          } 
-          fclose(file); 
-          if (sscanf(line, "%*[^<]<%32[^>]>", bin) != 1) { 
-            printf("ERRORE: Formato binario non trovato\n"); 
-            return 1; 
-          } 
-          int risultato = BIN_DEC_DECODER(bin); 
-          FILE *file_out = fopen("risultati_dec.txt", "w"); 
-          if (!file_out) { 
-            printf("╔════════════════════════════════╗\n"); 
-            printf("║            ERRORE              ║\n"); 
-            printf("╠════════════════════════════════╣\n"); 
-            printf("║                                ║\n"); 
-            printf("║    Impossibile aprire file     ║\n"); 
-            printf("║         di scrittura           ║\n"); 
-            printf("║                                ║\n"); 
-            printf("╚════════════════════════════════╝\n"); 
-            return 1; 
-          } 
-          fprintf(file_out, "╔═════════════════════════════════════════════╗\n"); 
-          fprintf(file_out, "║          RISULTATI CONVERTITORE             ║\n"); 
-          fprintf(file_out, "╚═════════════════════════════════════════════╝\n"); 
-          fprintf(file_out, "Risultato      = %-3d", risultato); 
-          fclose(file_out); 
-          sleep(2); 
-        } 
-      } 
-      else if (scelta == 5) { 
-        char risposta[3]; 
-        int dec; 
-        printf("Inserire dati manualmente? (S/N): "); 
-        scanf("%2s", risposta); 
-        risposta[0] = toupper(risposta[0]); 
-        if (risposta[0] == 'S') { 
-          printf(">> Inserisci un numero decimale: "); 
-          scanf("%d", &dec); 
-          printf("Risultato (binario): %s\n", DEC_BIN_CODER(dec)); 
-        } 
-        else { 
-          FILE *file = fopen("input_dec.txt", "r"); 
-          if (!file) { 
-            file = fopen("input_dec.txt", "w"); 
-            if (!file) { 
-              printf("ERRORE: Impossibile creare il file\n"); 
-              return 1; 
-            } 
-            fprintf(file, "Numero Decimale: <0>\n"); 
-            fclose(file); 
-            printf("Creato file input_dec.txt. Compilarlo e riavviare.\n"); 
-            return 1; 
-          } 
-          char line[100]; 
-          if (!fgets(line, sizeof(line), file)) { 
-            printf("ERRORE: Formato file incompleto\n"); 
-            fclose(file); 
-            return 1; 
-          } 
-          fclose(file); 
-          char buffer[33]; 
-          if (sscanf(line, "%*[^<]<%32[^>]>", buffer) != 1) { 
-            printf("ERRORE: Formato binario non trovato\n"); 
-            return 1; 
-          } 
-          dec = atoi(buffer); 
-          FILE *file_out = fopen("risultati_bin.txt", "w"); 
-          if (!file_out) { 
-            printf("╔════════════════════════════════╗\n"); 
-            printf("║            ERRORE              ║\n"); 
-            printf("╠════════════════════════════════╣\n"); 
-            printf("║                                ║\n"); 
-            printf("║    Impossibile aprire file     ║\n"); 
-            printf("║         di scrittura           ║\n"); 
-            printf("║                                ║\n"); 
-            printf("╚════════════════════════════════╝\n"); 
-            return 1; 
-          } 
-          fprintf(file_out, "╔═════════════════════════════════════════════╗\n");
-          fprintf(file_out, "║          RISULTATI CONVERTITORE             ║\n"); 
-          fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
-          fprintf(file_out, "Risultato      = %-16s", DEC_BIN_CODER(dec)); 
-          fclose(file_out); 
-          sleep(2); 
-        } 
-      } 
-      else if (scelta == 6) { 
-        ALU32(); 
-      } else if (scelta == 7) { 
-        sleep(2); 
-        ALU32(); 
-      } 
-      else if (scelta == 8) { 
-        stampa_memoria(); 
-        stato_memoria(); 
-      } 
-      else if (scelta == 9) { 
-        misura_ciclo_clock(); 
-      } 
-      else { 
-        printf("Scelta non valida!\n"); 
-      } 
-      sleep(2); 
-    } 
-    if (memoria != NULL) { 
-      free(memoria); 
-      memoria = NULL; 
-      printf("[INFO] Memoria liberata.\n"); 
-    } 
-    return 0; 
-  }
+int main() {
+    int scelta;
+    char input[10];
+    while (1) {
+        printf("\n╔═════════════════════════════════════════════════════════╗\n");
+        printf("║                                                         ║\n");
+        printf("║                     ▄▀▀▀▄▄▄▄▄▄▄▀▀▀▄                     ║\n");
+        printf("║                     █▒▒░░░░░░░░░▒▒█                     ║\n");
+        printf("║                      █░░█░░░░░█░░█                      ║\n");
+        printf("║                   ▄▄  █░░░▀█▀░░░█  ▄▄                   ║\n");
+        printf("║                  █░░█ ▀▄░░░░░░░▄▀ █░░█                  ║\n");
+        printf("║                        ALU 74181                        ║\n");
+        printf("║                                                         ║\n");
+        printf("║                     MENU PRINCIPALE                     ║\n");
+        printf("╠═════════════════════════════════════════════════════════╣\n");
+        printf("║   1. Operazioni Logiche (ALU 74181 - Singolo)           ║\n");
+        printf("║   2. Operazioni Logiche (ALU 74181 - Singolo con clock) ║\n");
+        printf("║   3. Operazioni Algebriche                              ║\n");
+        printf("║   4. Convertitore Binario → Decimale                    ║\n");
+        printf("║   5. Convertitore Decimale → Binario                    ║\n");
+        printf("║   6. ALU in Modalità PIPO (32 bit - 8x74181)            ║\n");
+        printf("║   7. ALU in Modalità PIPO (32 bit - 8x74181 con clock)  ║\n");
+        printf("║   8. Visualizza Memoria                                 ║\n");
+        printf("║   9. Calcolo del Clock                                  ║\n");
+        printf("║   0. Esci                                               ║\n");
+        printf("╚═════════════════════════════════════════════════════════╝\n");
+        printf(">> Inserisci la tua scelta: ");
+        if (fgets(input, sizeof(input), stdin) == NULL) {
+            printf("Errore di input.\n");
+            continue;
+        }
+        if (sscanf(input, "%d", &scelta) != 1) {
+            printf("╔════════════════════════════════╗\n");
+            printf("║             ERRORE             ║\n");
+            printf("╠════════════════════════════════╣\n");
+            printf("║                                ║\n");
+            printf("║   Inserisci un numero valido   ║\n");
+            printf("║                                ║\n");
+            printf("╚════════════════════════════════╝\n");
+            attendi_cicli_clock_equivalenti_a_secondi(2.0);
+            continue;
+        }
+        if (scelta == 0) {
+            printf("Uscita dal programma...\n");
+            break;
+        }
+        else if (scelta == 1) {
+            simula_alu_74181();
+        }
+        else if (scelta == 2) {
+            attendi_cicli_clock_equivalenti_a_secondi(2.0);
+            simula_alu_74181();
+        }
+        else if (scelta == 3) {
+            operazioni_algebriche();
+        }
+        else if (scelta == 4) {
+            char bin[33];
+            char risposta[3];
+            printf("Inserire dati manualmente? (S/N): ");
+            scanf("%2s", risposta);
+            risposta[0] = toupper(risposta[0]);
+            if (risposta[0] == 'S') {
+                printf(">> Inserisci un numero binario: ");
+                scanf("%32s", bin);
+                int risultato = BIN_DEC_DECODER(bin);
+                if (risultato != -1) {
+                    printf("Risultato (decimale): %d\n", risultato);
+                }
+            } else {
+                FILE *file = fopen("input_bin.txt", "r");
+                if (!file) {
+                    file = fopen("input_bin.txt", "w");
+                    if (!file) {
+                        printf("ERRORE: Impossibile creare il file\n");
+                    } else {
+                        fprintf(file, "Numero Binario: <0>\n");
+                        fclose(file);
+                        printf("Creato file input_bin.txt. Compilarlo e riavviare.\n");
+                    }
+                } else {
+                    char line[100];
+                    if (fgets(line, sizeof(line), file)) {
+                        fclose(file);
+                        if (sscanf(line, "%*[^<]<%32[^>]>", bin) == 1) {
+                            int risultato = BIN_DEC_DECODER(bin);
+                            FILE *file_out = fopen("risultati_dec.txt", "w");
+                            if (file_out) {
+                                fprintf(file_out, "╔═════════════════════════════════════════════╗\n");
+                                fprintf(file_out, "║          RISULTATI CONVERTITORE             ║\n");
+                                fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
+                                fprintf(file_out, "Risultato      = %-3d\n", risultato);
+                                fclose(file_out);
+                            }
+                        }
+                    } else {
+                        fclose(file);
+                        printf("ERRORE: Formato file incompleto\n");
+                    }
+                }
+            }
+        }
+        else if (scelta == 5) {
+            char risposta[3];
+            int dec;
+            printf("Inserire dati manualmente? (S/N): ");
+            scanf("%2s", risposta);
+            risposta[0] = toupper(risposta[0]);
+            if (risposta[0] == 'S') {
+                printf(">> Inserisci un numero decimale: ");
+                scanf("%d", &dec);
+                printf("Risultato (binario): %s\n", DEC_BIN_CODER(dec));
+            } else {
+                FILE *file = fopen("input_dec.txt", "r");
+                if (!file) {
+                    file = fopen("input_dec.txt", "w");
+                    if (!file) {
+                        printf("ERRORE: Impossibile creare il file\n");
+                    } else {
+                        fprintf(file, "Numero Decimale: <0>\n");
+                        fclose(file);
+                        printf("Creato file input_dec.txt. Compilarlo e riavviare.\n");
+                    }
+                } else {
+                    char line[100];
+                    if (fgets(line, sizeof(line), file)) {
+                        fclose(file);
+                        char buffer[33];
+                        if (sscanf(line, "%*[^<]<%32[^>]>", buffer) == 1) {
+                            dec = atoi(buffer);
+                            FILE *file_out = fopen("risultati_bin.txt", "w");
+                            if (file_out) {
+                                fprintf(file_out, "╔═════════════════════════════════════════════╗\n");
+                                fprintf(file_out, "║          RISULTATI CONVERTITORE             ║\n");
+                                fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
+                                fprintf(file_out, "Risultato      = %-16s\n", DEC_BIN_CODER(dec));
+                                fclose(file_out);
+                            }
+                        }
+                    } else {
+                        fclose(file);
+                        printf("ERRORE: Formato file incompleto\n");
+                    }
+                }
+            }
+        }
+        else if (scelta == 6) {
+            ALU32();
+        }
+        else if (scelta == 7) {
+            attendi_cicli_clock_equivalenti_a_secondi(2.0);
+            ALU32();
+        }
+        else if (scelta == 8) {
+            stampa_memoria();
+            stato_memoria();
+        }
+        else if (scelta == 9) {
+            misura_ciclo_clock();
+        }
+        else {
+            printf("Scelta non valida!\n");
+        }
+        attendi_cicli_clock_equivalenti_a_secondi(2.0);
+    }
+    if (memoria != NULL) {
+        free(memoria);
+        memoria = NULL;
+        printf("[INFO] Memoria liberata.\n");
+    }
+
+    return 0;
+}
