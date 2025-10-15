@@ -25,7 +25,8 @@ typedef struct {
     const char *nome;
     long clock_hz;
 } Processore;
-
+static int leggi_bit_input_74181(const char* nome, int* var);
+static int leggi_bit_input_32(const char* nome, int* var);
 static const Processore db_processori[] = {
     {"Intel(R) Core(TM) i3-2100", 3100000000L},
     {"Intel(R) Core(TM) i3-3220", 3300000000L},
@@ -44,7 +45,6 @@ static const Processore db_processori[] = {
     {"Intel(R) Core(TM) i5-4460", 3200000000L},
     {"Intel(R) Core(TM) i5-6500", 3200000000L},
     {"Intel(R) Core(TM) i5-7400", 3000000000L},
-    {"Intel(R) Core(TM) i5-7500T", 2900000000L},
     {"Intel(R) Core(TM) i5-8400", 2800000000L},
     {"Intel(R) Core(TM) i5-9400F", 2900000000L},
     {"Intel(R) Core(TM) i5-9600K", 3700000000L},
@@ -79,6 +79,8 @@ static const Processore db_processori[] = {
     {"Intel Xeon E5-2690", 2900000000L},
     {"Intel Xeon W-2145", 3700000000L},
     {"Intel Xeon W-3175X", 3500000000L},
+    {"Intel Xeon Gold 6248R", 3000000000L},
+    {"Intel Xeon Platinum 8380", 2300000000L},
     {"AMD FX-6300", 3500000000L},
     {"AMD FX-8350", 4000000000L},
     {"AMD Ryzen 3 1200", 3100000000L},
@@ -107,9 +109,11 @@ static const Processore db_processori[] = {
     {"AMD Ryzen Threadripper 2970WX", 3000000000L},
     {"AMD Ryzen Threadripper 2990WX", 3100000000L},
     {"AMD Ryzen Threadripper 3990X", 2900000000L},
+    {"AMD Ryzen Threadripper PRO 5995WX", 2700000000L},
     {"AMD EPYC 7601", 2200000000L},
     {"AMD EPYC 7742", 2250000000L},
     {"AMD EPYC 9654", 2400000000L},
+    {"AMD EPYC 7763", 2450000000L},
     {"Apple M1", 3200000000L},
     {"Apple M1 Pro", 3220000000L},
     {"Apple M1 Max", 3300000000L},
@@ -119,6 +123,12 @@ static const Processore db_processori[] = {
     {"Apple M3", 4000000000L},
     {"Apple M3 Pro", 4100000000L},
     {"Apple M3 Max", 4200000000L},
+    {"ARM Cortex-A72", 1500000000L},
+    {"ARM Cortex-A76", 2400000000L},
+    {"ARM Cortex-X1", 3000000000L},
+    {"ARM Neoverse N1", 3000000000L},
+    {"Qualcomm Snapdragon 8 Gen 2", 3200000000L},
+    {"Apple A17 Pro", 3780000000L},
     {"Generic", 1000000000L}
 };
 #define NUM_PROCESSORI (sizeof(db_processori) / sizeof(db_processori[0]))
@@ -143,16 +153,16 @@ char* rileva_cpu() {
             fclose(f);
         }
     }
-    if (SISTEMA_WINDOWS) {
-        HKEY chiave;
-        DWORD tipo = REG_SZ;
-        DWORD dimensione = sizeof(nome_cpu);
-        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &chiave) == ERROR_SUCCESS) {
-            RegQueryValueExA(chiave, "ProcessorNameString", NULL, &tipo, (LPBYTE)nome_cpu, &dimensione);
-            RegCloseKey(chiave);
-            return nome_cpu;
-        }
-    }
+    #if SISTEMA_WINDOWS
+      HKEY chiave;
+      DWORD tipo = REG_SZ;
+      DWORD dimensione = sizeof(nome_cpu);
+      if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &chiave) == ERROR_SUCCESS) {
+        RegQueryValueExA(chiave, "ProcessorNameString", NULL, &tipo, (LPBYTE)nome_cpu, &dimensione);
+        RegCloseKey(chiave);
+        return nome_cpu;
+      }
+    #endif
     if (SISTEMA_MAC) {
         FILE *p = popen("sysctl -n machdep.cpu.brand_string", "r");
         if (p) {
@@ -260,32 +270,34 @@ char* DEC_BIN_CODER(int numero) {
 int *memoria = NULL; 
 int capacita_memoria = 10; 
 int indice_memoria = 0;
-void salva_in_memoria(int valore) { 
-  if (memoria == NULL) { 
-    memoria = malloc(capacita_memoria * sizeof(int)); 
-    if (!memoria) { 
-      printf("ERRORE: impossibile allocare la memoria.\n"); 
-      exit(EXIT_FAILURE); 
-    } 
-  } 
-  if (indice_memoria >= capacita_memoria) { 
-    capacita_memoria *= 2; 
-    int *temp = realloc(memoria, capacita_memoria * sizeof(int)); 
-    if (!temp) { 
-      printf("ERRORE: impossibile espandere la memoria.\n"); 
-      free(memoria); 
-      memoria = NULL; 
-      exit(EXIT_FAILURE); 
-    } 
-    memoria = temp; 
-    printf("[INFO] Memoria espansa a %d celle.\n", capacita_memoria); 
-  } 
-  memoria[indice_memoria++] = valore; 
+void salva_in_memoria(int valore) {
+    if (memoria == NULL) {
+        memoria = malloc(capacita_memoria * sizeof(int));
+        if (!memoria) {
+            printf("ERRORE: impossibile allocare la memoria. Salvataggio saltato.\n");
+            return;
+        }
+    }
+    if (indice_memoria >= capacita_memoria) {
+        capacita_memoria *= 2;
+        int *temp = realloc(memoria, capacita_memoria * sizeof(int));
+        if (!temp) {
+            printf("ERRORE: impossibile espandere la memoria. Salvataggio saltato.\n");
+            capacita_memoria /= 2;
+            return;
+        }
+        memoria = temp;
+        printf("[INFO] Memoria espansa a %d celle.\n", capacita_memoria);
+    }
+    memoria[indice_memoria++] = valore;
 }
 void attendi_un_ciclo_clock() {
     char *cpu = rileva_cpu();
     long freq = ottieni_clock(cpu);
     long ciclo_ns = (long)(1e9 / freq);
+    if (ciclo_ns < 1000) {
+        ciclo_ns = 1000;
+    }
     ritardo_ns(ciclo_ns);
 }
 void attendi_cicli_clock_equivalenti_a_secondi(double secondi) {
@@ -372,1175 +384,353 @@ void n_ALU74181(int Cn, int M, int A[4], int B[4], int S[4], int F[4], int *A_ug
   *Cn_piu_4 = porta_or(porta_not(porta_not(porta_and_5(Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))))), porta_not(porta_not(porta_or_4(porta_and_4(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and_3(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2])))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3])))))))); 
   *G = porta_not(porta_or_4(porta_and_4(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and_3(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2])))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3])))))); 
 }
+static int leggi_bit_input_74181(const char* nome, int* var) {
+    int input;
+    printf(">> %s: ", nome);
+    if (scanf("%d", &input) != 1 || (input != 0 && input != 1)) {
+        printf("╔════════════════════════════════╗\n");
+        printf("║            ERRORE              ║\n");
+        printf("╠════════════════════════════════╣\n");
+        printf("║                                ║\n");
+        printf("║   %s deve essere 0 o 1      ║\n", nome);
+        printf("║                                ║\n");
+        printf("╚════════════════════════════════╝\n");
+        return 0;
+    }
+    *var = input;
+    return 1;
+}
+static int leggi_bit_input_32(const char* nome, int* var) {
+    return leggi_bit_input_74181(nome, var);
+}
 void simula_alu_74181() {
-  int Cn, M, A0, B0, A1, B1, A2, B2, A3, B3, S0, S1, S2, S3; 
-  char scelta[3];
-  printf("Inserire dati manualmente? (S/N): "); 
-  scanf("%s", scelta); 
-  scelta[0] = toupper(scelta[0]);
-  if (scelta[0] == 'S') {
-    printf(">> Inserisci i valori degli input (0 o 1):\n");
-    printf(">> Cn: "); 
-    scanf("%d", &Cn); 
-    if (Cn == 0){
-      /**/
+    int Cn, M, A0, B0, A1, B1, A2, B2, A3, B3, S0, S1, S2, S3;
+    char scelta[3];
+    int input_valido = 1;
+
+    printf("Inserire dati manualmente? (S/N): ");
+    scanf("%2s", scelta);
+    scelta[0] = toupper(scelta[0]);
+
+    if (scelta[0] == 'S') {
+        if (!leggi_bit_input_74181("Cn", &Cn)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("M", &M)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("A0", &A0)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("B0", &B0)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("A1", &A1)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("B1", &B1)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("A2", &A2)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("B2", &B2)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("A3", &A3)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("B3", &B3)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("S0", &S0)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("S1", &S1)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("S2", &S2)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_74181("S3", &S3)) input_valido = 0;
+    } else {
+        FILE *file = fopen("input_alu.txt", "r");
+        if (!file) {
+            file = fopen("input_alu.txt", "w");
+            if (!file) {
+                printf("ERRORE: Impossibile creare il file input_alu.txt\n");
+                input_valido = 0;
+            } else {
+                fprintf(file, "Cn: <0>\n");
+                fprintf(file, "M: <0>\n");
+                fprintf(file, "A0: <0>\n");
+                fprintf(file, "B0: <0>\n");
+                fprintf(file, "A1: <0>\n");
+                fprintf(file, "B1: <0>\n");
+                fprintf(file, "A2: <0>\n");
+                fprintf(file, "B2: <0>\n");
+                fprintf(file, "A3: <0>\n");
+                fprintf(file, "B3: <0>\n");
+                fprintf(file, "S0: <0>\n");
+                fprintf(file, "S1: <0>\n");
+                fprintf(file, "S2: <0>\n");
+                fprintf(file, "S3: <0>\n");
+                fclose(file);
+                printf("Creato file input_alu.txt. Compilarlo e riavviare.\n");
+                input_valido = 0;
+            }
+        } else {
+            char line[100];
+            #define LEGGI_BIT_FILE(var, nome) do { \
+                if (!fgets(line, sizeof(line), file)) { \
+                    printf("ERRORE: Formato file incompleto (%s)\n", nome); \
+                    input_valido = 0; \
+                } else if (sscanf(line, "%*[^<]<%d>", &(var)) != 1) { \
+                    printf("ERRORE: Valore non valido in %s\n", nome); \
+                    input_valido = 0; \
+                } else if ((var) != 0 && (var) != 1) { \
+                    printf("╔════════════════════════════════╗\n"); \
+                    printf("║            ERRORE              ║\n"); \
+                    printf("╠════════════════════════════════╣\n"); \
+                    printf("║                                ║\n"); \
+                    printf("║   %s deve essere 0 o 1      ║\n", nome); \
+                    printf("║                                ║\n"); \
+                    printf("╚════════════════════════════════╝\n"); \
+                    input_valido = 0; \
+                } \
+            } while(0)
+
+            LEGGI_BIT_FILE(Cn, "Cn");
+            if (input_valido) LEGGI_BIT_FILE(M, "M");
+            if (input_valido) LEGGI_BIT_FILE(A0, "A0");
+            if (input_valido) LEGGI_BIT_FILE(B0, "B0");
+            if (input_valido) LEGGI_BIT_FILE(A1, "A1");
+            if (input_valido) LEGGI_BIT_FILE(B1, "B1");
+            if (input_valido) LEGGI_BIT_FILE(A2, "A2");
+            if (input_valido) LEGGI_BIT_FILE(B2, "B2");
+            if (input_valido) LEGGI_BIT_FILE(A3, "A3");
+            if (input_valido) LEGGI_BIT_FILE(B3, "B3");
+            if (input_valido) LEGGI_BIT_FILE(S0, "S0");
+            if (input_valido) LEGGI_BIT_FILE(S1, "S1");
+            if (input_valido) LEGGI_BIT_FILE(S2, "S2");
+            if (input_valido) LEGGI_BIT_FILE(S3, "S3");
+
+            #undef LEGGI_BIT_FILE
+            fclose(file);
+        }
     }
-    else if(Cn == 1){
-      /**/
+
+    if (!input_valido) {
+        return; // torna al menu
     }
-    else { 
-      printf("╔════════════════════════════════╗\n");
-      printf("║            ERRORE              ║\n");
-      printf("╠════════════════════════════════╣\n");
-      printf("║                                ║\n");
-      printf("║      Cn deve essere 0 o 1      ║\n");
-      printf("║                                ║\n");
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
+
+    // === SIMULAZIONE ===
+    int A[4] = {A0, A1, A2, A3};
+    int B[4] = {B0, B1, B2, B3};
+    int S_arr[4] = {S0, S1, S2, S3};
+    int F[4], A_uguale_B, P, Cn_piu_4, G;
+    n_ALU74181(Cn, M, A, B, S_arr, F, &A_uguale_B, &P, &Cn_piu_4, &G);
+
+    printf("\n");
+    printf("╔═════════════════════════════════════════════╗\n");
+    printf("║           RISULTATI ALU 74181               ║\n");
+    printf("╠═════════════════════════════════════════════╣\n");
+    printf("║                                             ║\n");
+    printf("║  - F0      = %-3d                            ║\n", F[0]);
+    printf("║  - F1      = %-3d                            ║\n", F[1]);
+    printf("║  - A = B   = %-3d                            ║\n", A_uguale_B);
+    printf("║  - F2      = %-3d                            ║\n", F[2]);
+    printf("║  - F3      = %-3d                            ║\n", F[3]);
+    printf("║  - P       = %-3d                            ║\n", P);
+    printf("║  - Cn + 4  = %-3d                            ║\n", Cn_piu_4);
+    printf("║  - G       = %-3d                            ║\n", G);
+    printf("║                                             ║\n");
+    printf("╚═════════════════════════════════════════════╝\n");
+
+    salva_in_memoria(Cn_piu_4);
+
+    FILE *file_out = fopen("risultati_alu_74181.txt", "w");
+    if (file_out) {
+        fprintf(file_out, "╔═════════════════════════════════════════════╗\n");
+        fprintf(file_out, "║           RISULTATI ALU 74181               ║\n");
+        fprintf(file_out, "╠═════════════════════════════════════════════╣\n");
+        fprintf(file_out, "║                                             ║\n");
+        fprintf(file_out, "║  - F0      = %-3d                            ║\n", F[0]);
+        fprintf(file_out, "║  - F1      = %-3d                            ║\n", F[1]);
+        fprintf(file_out, "║  - A = B   = %-3d                            ║\n", A_uguale_B);
+        fprintf(file_out, "║  - F2      = %-3d                            ║\n", F[2]);
+        fprintf(file_out, "║  - F3      = %-3d                            ║\n", F[3]);
+        fprintf(file_out, "║  - P       = %-3d                            ║\n", P);
+        fprintf(file_out, "║  - Cn + 4  = %-3d                            ║\n", Cn_piu_4);
+        fprintf(file_out, "║  - G       = %-3d                            ║\n", G);
+        fprintf(file_out, "║                                             ║\n");
+        fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
+        fclose(file_out);
+    } else {
+        printf("╔════════════════════════════════╗\n");
+        printf("║            ERRORE              ║\n");
+        printf("╠════════════════════════════════╣\n");
+        printf("║                                ║\n");
+        printf("║    Impossibile aprire file     ║\n");
+        printf("║         di scrittura           ║\n");
+        printf("║                                ║\n");
+        printf("╚════════════════════════════════╝\n");
     }
-    printf(">> M:  "); 
-    scanf("%d", &M); 
-    if (M == 0){
-      /**/
-    }
-    else if(M == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n");
-      printf("║            ERRORE              ║\n");
-      printf("╠════════════════════════════════╣\n");
-      printf("║                                ║\n");
-      printf("║       M deve essere 0 o 1      ║\n");
-      printf("║                                ║\n");
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> A0: "); 
-    scanf("%d", &A0); 
-    if (A0 == 0){
-      /**/
-    }
-    else if(A0 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n");
-      printf("║            ERRORE              ║\n");
-      printf("╠════════════════════════════════╣\n");
-      printf("║                                ║\n");
-      printf("║      A0 deve essere 0 o 1      ║\n");
-      printf("║                                ║\n");
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> B0: "); 
-    scanf("%d", &B0); 
-    if (B0 == 0){
-      /**/
-    }
-    else if(B0 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      B0 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> A1: "); 
-    scanf("%d", &A1); 
-    if (A1 == 0){
-      /**/
-    }
-    else if(A1 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      A1 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> B1: "); 
-    scanf("%d", &B1); 
-    if (B1 == 0){
-      /**/
-    }
-    else if(B1 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      B1 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> A2: "); 
-    scanf("%d", &A2); 
-    if (A2 == 0){
-      /**/
-    }
-    else if(A2 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      A2 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> B2: "); 
-    scanf("%d", &B2); 
-    if (B2 == 0){
-      /**/
-    }
-    else if(B2 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      B2 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> A3: "); 
-    scanf("%d", &A3); 
-    if (A3 == 0){
-      /**/
-    }
-    else if(A3 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      A3 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> B3: "); 
-    scanf("%d", &B3); 
-    if (B3 == 0){
-      /**/
-    }
-    else if(B3 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      B3 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> S0: "); 
-    scanf("%d", &S0); 
-    if (S0 == 0){
-      /**/
-    }
-    else if(S0 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      S0 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> S1: "); 
-    scanf("%d", &S1); 
-    if (S1 == 0){
-      /**/
-    }
-    else if(S1 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      S1 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> S2: "); 
-    scanf("%d", &S2); 
-    if (S2 == 0){
-      /**/
-    }
-    else if(S2 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      S2 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    printf(">> S3: "); 
-    scanf("%d", &S3); 
-    if (S3 == 0){
-      /**/
-    }
-    else if(S3 == 1){
-      /**/
-    }
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      S3 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-  } 
-  else {
-    FILE *file = fopen("input_alu.txt", "r"); 
-    if (file == NULL) { 
-      file = fopen("input_alu.txt", "w"); 
-      if (file == NULL) { 
-        printf("ERRORE: Impossibile creare il file\n"); 
-        return; 
-      } 
-      fprintf(file, "Cn: <0>\n"); 
-      fprintf(file, "M: <0>\n"); 
-      fprintf(file, "A0: <0>\n"); 
-      fprintf(file, "B0: <0>\n"); 
-      fprintf(file, "A1: <0>\n"); 
-      fprintf(file, "B1: <0>\n"); 
-      fprintf(file, "A2: <0>\n"); 
-      fprintf(file, "B2: <0>\n"); 
-      fprintf(file, "A3: <0>\n"); 
-      fprintf(file, "B3: <0>\n"); 
-      fprintf(file, "S0: <0>\n"); 
-      fprintf(file, "S1: <0>\n"); 
-      fprintf(file, "S2: <0>\n"); 
-      fprintf(file, "S3: <0>\n"); 
-      fclose(file); 
-      printf("Creato file input_alu.txt. Compilarlo e riavviare.\n"); 
-      return; 
-    } 
-    char line[100];
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_Cn = sscanf(line, "%*[^<]<%d>", &Cn); 
-    if (sscanf_result_Cn == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in Cn\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (Cn == 0) {
-      /**/
-    } 
-    else if (Cn == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n");
-      printf("║            ERRORE              ║\n");
-      printf("╠════════════════════════════════╣\n");
-      printf("║                                ║\n");
-      printf("║      Cn deve essere 0 o 1      ║\n");
-      printf("║                                ║\n");
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); return; 
-    } 
-    int sscanf_result_M = sscanf(line, "%*[^<]<%d>", &M); 
-    if (sscanf_result_M == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in M\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (M == 0) {
-      /**/
-    } 
-    else if (M == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║       M deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_A0 = sscanf(line, "%*[^<]<%d>", &A0); 
-    if (sscanf_result_A0 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in A0\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (A0 == 0) {
-      /**/
-    } 
-    else if (A0 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      A0 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_B0 = sscanf(line, "%*[^<]<%d>", &B0); 
-    if (sscanf_result_B0 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in B0\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (B0 == 0) {
-      /**/
-    } 
-    else if (B0 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      B0 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_A1 = sscanf(line, "%*[^<]<%d>", &A1); 
-    if (sscanf_result_A1 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in A1\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (A1 == 0) {
-      /**/
-    } 
-    else if (A1 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      A1 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_B1 = sscanf(line, "%*[^<]<%d>", &B1); 
-    if (sscanf_result_B1 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in B1\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (B1 == 0) {
-      /**/
-    } 
-    else if (B1 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      B1 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_A2 = sscanf(line, "%*[^<]<%d>", &A2); 
-    if (sscanf_result_A2 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in A2\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (A2 == 0) {
-      /**/
-    } 
-    else if (A2 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      A2 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_B2 = sscanf(line, "%*[^<]<%d>", &B2); 
-    if (sscanf_result_B2 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in B2\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (B2 == 0) {
-      /**/
-    } 
-    else if (B2 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      B2 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_A3 = sscanf(line, "%*[^<]<%d>", &A3); 
-    if (sscanf_result_A3 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in A3\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (A3 == 0) {
-      /**/
-    } 
-    else if (A3 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      A3 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_B3 = sscanf(line, "%*[^<]<%d>", &B3); 
-    if (sscanf_result_B3 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in B3\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (B3 == 0) {
-      /**/
-    } 
-    else if (B3 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      B3 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_S0 = sscanf(line, "%*[^<]<%d>", &S0); 
-    if (sscanf_result_S0 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in S0\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (S0 == 0) {
-      /**/
-    } 
-    else if (S0 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      S0 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_S1 = sscanf(line, "%*[^<]<%d>", &S1); 
-    if (sscanf_result_S1 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in S1\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (S1 == 0) {
-      /**/
-    } 
-    else if (S1 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      S1 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_S2 = sscanf(line, "%*[^<]<%d>", &S2); 
-    if (sscanf_result_S2 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in S2\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (S2 == 0) {
-      /**/
-    } 
-    else if (S2 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      S2 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    if (fgets(line, sizeof(line), file) == NULL) { 
-      printf("ERRORE: Formato file incompleto\n"); 
-      fclose(file); 
-      return; 
-    } 
-    int sscanf_result_S3 = sscanf(line, "%*[^<]<%d>", &S3); 
-    if (sscanf_result_S3 == 1) {
-      /**/
-    } 
-    else { 
-      printf("ERRORE: Valore non valido in S3\n"); 
-      fclose(file); 
-      return; 
-    } 
-    if (S3 == 0) {
-      /**/
-    } 
-    else if (S3 == 1) {
-      /**/
-    } 
-    else { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║      S3 deve essere 0 o 1      ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    }
-    fclose(file);
-  } 
-  int A[4] = {A0, A1, A2, A3}; 
-  int B[4] = {B0, B1, B2, B3}; 
-  int S[4] = {S0, S1, S2, S3}; 
-  int F[4], A_uguale_B, P, Cn_piu_4, G; n_ALU74181(Cn, M, A, B, S, F, &A_uguale_B, &P, &Cn_piu_4, &G); 
-  printf("\n"); 
-  printf("╔═════════════════════════════════════════════╗\n");
-  printf("║           RISULTATI ALU 74181               ║\n");
-  printf("╠═════════════════════════════════════════════╣\n");
-  printf("║                                             ║\n");
-  printf("║  - F0      = %-3d                            ║\n");
-  printf("║  - F1      = %-3d                            ║\n");
-  printf("║  - A = B   = %-3d                            ║\n");
-  printf("║  - F2      = %-3d                            ║\n");
-  printf("║  - F3      = %-3d                            ║\n");
-  printf("║  - P       = %-3d                            ║\n");
-  printf("║  - Cn + 4  = %-3d                            ║\n");
-  printf("║  - G       = %-3d                            ║\n");
-  printf("║                                             ║\n");
-  printf("╚═════════════════════════════════════════════╝\n",F[0],F[1],A_uguale_B,F[2],F[3],P,Cn_piu_4,G); 
-  salva_in_memoria(Cn_piu_4); 
-  FILE *file_out = fopen("risultati_alu_74181.txt", "w"); 
-  if (file_out == NULL) { 
-    printf("╔════════════════════════════════╗\n"); 
-    printf("║            ERRORE              ║\n"); 
-    printf("╠════════════════════════════════╣\n"); 
-    printf("║                                ║\n"); 
-    printf("║    Impossibile aprire file     ║\n"); 
-    printf("║         di scrittura           ║\n"); 
-    printf("║                                ║\n"); 
-    printf("╚════════════════════════════════╝\n"); 
-    return; 
-  } 
-  fprintf(file_out, "╔═════════════════════════════════════════════╗\n");
-  fprintf(file_out, "║           RISULTATI ALU 74181               ║\n");
-  fprintf(file_out, "╠═════════════════════════════════════════════╣\n");
-  fprintf(file_out, "║                                             ║\n");
-  fprintf(file_out, "║  - F0      = %-3d                            ║\n");
-  fprintf(file_out, "║  - F1      = %-3d                            ║\n");
-  fprintf(file_out, "║  - A = B   = %-3d                            ║\n");
-  fprintf(file_out, "║  - F2      = %-3d                            ║\n");
-  fprintf(file_out, "║  - F3      = %-3d                            ║\n");
-  fprintf(file_out, "║  - P       = %-3d                            ║\n");
-  fprintf(file_out, "║  - Cn + 4  = %-3d                            ║\n");
-  fprintf(file_out, "║  - G       = %-3d                            ║\n");
-  fprintf(file_out, "║                                             ║\n");
-  fprintf(file_out, "╚═════════════════════════════════════════════╝\n", F[0],F[1],A_uguale_B,F[2],F[3],P,Cn_piu_4,G); 
-  fclose(file_out); 
-  attendi_cicli_clock_equivalenti_a_secondi(2.0); 
-  return;
+
+    attendi_cicli_clock_equivalenti_a_secondi(2.0);
 }
 void ALU32() {
-    unsigned int operandoA, operandoB; 
-    int Cn, M, S[4]; 
+    unsigned int operandoA = 0, operandoB = 0;
+    int Cn = 0, M = 0, S[4] = {0};
     char scelta[3];
-    printf("Inserire dati manualmente? (S/N): "); 
-    scanf("%s", scelta); 
+    int input_valido = 1;
+
+    printf("Inserire dati manualmente? (S/N): ");
+    scanf("%2s", scelta);
     scelta[0] = toupper(scelta[0]);
+
     if (scelta[0] == 'S') {
-        printf(">> Inserisci il primo operando (numero decimale a 32 bit): "); 
-        scanf("%u", &operandoA);
-        printf(">> Inserisci il secondo operando (numero decimale a 32 bit): "); 
-        scanf("%u", &operandoB);
-        printf(">> Inserisci i valori degli input (0 o 1):\n");
-        printf(">> Cn: "); 
-        scanf("%d", &Cn); 
-        if (Cn == 0){
-          /**/
-        }else if(Cn == 1){
-          /**/
-        }else { 
-          printf("╔════════════════════════════════╗\n");
-          printf("║            ERRORE              ║\n");
-          printf("╠════════════════════════════════╣\n");
-          printf("║                                ║\n");
-          printf("║      Cn deve essere 0 o 1      ║\n");
-          printf("║                                ║\n");
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
+        printf(">> Inserisci il primo operando (numero decimale a 32 bit): ");
+        if (scanf("%u", &operandoA) != 1) {
+            printf("ERRORE: Input operando A non valido.\n");
+            input_valido = 0;
         }
-        printf(">> M:  "); 
-        scanf("%d", &M); 
-        if (M == 0){
-          /**/
-        }else if(M == 1){
-          /**/
-        }else { 
-          printf("╔════════════════════════════════╗\n"); 
-          printf("║            ERRORE              ║\n"); 
-          printf("╠════════════════════════════════╣\n"); 
-          printf("║                                ║\n"); 
-          printf("║       M deve essere 0 o 1      ║\n"); 
-          printf("║                                ║\n"); 
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
+        if (!input_valido) { return; }
+
+        printf(">> Inserisci il secondo operando (numero decimale a 32 bit): ");
+        if (scanf("%u", &operandoB) != 1) {
+            printf("ERRORE: Input operando B non valido.\n");
+            input_valido = 0;
         }
-        printf(">> S0: "); 
-        scanf("%d", &S[0]); 
-        if (S[0] == 0){
-          /**/
-        }
-        else if(S[0] == 1){
-          /**/
-        }
-        else { 
-          printf("╔════════════════════════════════╗\n"); 
-          printf("║            ERRORE              ║\n"); 
-          printf("╠════════════════════════════════╣\n"); 
-          printf("║                                ║\n"); 
-          printf("║      S0 deve essere 0 o 1      ║\n"); 
-          printf("║                                ║\n"); 
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
-        }
-        printf(">> S1: "); 
-        scanf("%d", &S[1]); 
-        if (S[1] == 0){
-          /**/
-        }
-        else if(S[1] == 1){
-          /**/
-        }
-        else { 
-          printf("╔════════════════════════════════╗\n"); 
-          printf("║            ERRORE              ║\n"); 
-          printf("╠════════════════════════════════╣\n"); 
-          printf("║                                ║\n"); 
-          printf("║      S1 deve essere 0 o 1      ║\n"); 
-          printf("║                                ║\n"); 
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
-        }
-        printf(">> S2: "); 
-        scanf("%d", &S[2]); 
-        if (S[2] == 0){
-          /**/
-        }
-        else if(S[2] == 1){
-          /**/
-        }
-        else { 
-          printf("╔════════════════════════════════╗\n"); 
-          printf("║            ERRORE              ║\n"); 
-          printf("╠════════════════════════════════╣\n"); 
-          printf("║                                ║\n"); 
-          printf("║      S2 deve essere 0 o 1      ║\n"); 
-          printf("║                                ║\n"); 
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
-        }
-        printf(">> S3: "); 
-        scanf("%d", &S[3]); 
-        if (S[3] == 0){
-          /**/
-        }
-        else if(S[3] == 1){
-          /**/
-        }
-        else { 
-          printf("╔════════════════════════════════╗\n"); 
-          printf("║            ERRORE              ║\n"); 
-          printf("╠════════════════════════════════╣\n"); 
-          printf("║                                ║\n"); 
-          printf("║      S3 deve essere 0 o 1      ║\n"); 
-          printf("║                                ║\n"); 
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
-        }
+        if (!input_valido) { return; }
+
+        if (!leggi_bit_input_32("Cn", &Cn)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_32("M", &M)) input_valido = 0;
+        if (input_valido && !leggi_bit_input_32("S0", &S[0])) input_valido = 0;
+        if (input_valido && !leggi_bit_input_32("S1", &S[1])) input_valido = 0;
+        if (input_valido && !leggi_bit_input_32("S2", &S[2])) input_valido = 0;
+        if (input_valido && !leggi_bit_input_32("S3", &S[3])) input_valido = 0;
     } else {
-        FILE *file = fopen("input_alu32.txt", "r"); 
-        if (file == NULL) { 
-          file = fopen("input_alu32.txt", "w"); 
-          if (file == NULL) { 
-            printf("ERRORE: Impossibile creare il file\n"); 
-            return; 
-          } 
-          fprintf(file, "Operando A: <0>\n"); 
-          fprintf(file, "Operando B: <0>\n"); 
-          fprintf(file, "Cn: <0>\n"); 
-          fprintf(file, "M: <0>\n"); 
-          fprintf(file, "S0: <0>\n"); 
-          fprintf(file, "S1: <0>\n"); 
-          fprintf(file, "S2: <0>\n"); 
-          fprintf(file, "S3: <0>\n"); 
-          fclose(file); 
-          printf("Creato file input_alu32.txt. Compilarlo e riavviare.\n"); 
-          return; 
-        } 
-        char line[100];
-        if (fgets(line, sizeof(line), file) == NULL) { 
-          printf("ERRORE: Formato file incompleto\n"); 
-          fclose(file); 
-          return; 
-        } 
-        int sscanf_result_operandoA = sscanf(line, "%*[^<]<%d>", &operandoA);
-        if (fgets(line, sizeof(line), file) == NULL) { 
-          printf("ERRORE: Formato file incompleto\n"); 
-          fclose(file); 
-          return; 
-        } 
-        int sscanf_result_operandoB = sscanf(line, "%*[^<]<%d>", &operandoB);
-        if (fgets(line, sizeof(line), file) == NULL) { 
-          printf("ERRORE: Formato file incompleto\n"); 
-          fclose(file); 
-          return; 
-        } 
-        int sscanf_result_Cn = sscanf(line, "%*[^<]<%d>", &Cn); 
-        if (sscanf_result_Cn == 1) {
-          /**/
-        } 
-        else { 
-          printf("ERRORE: Valore non valido in Cn\n"); 
-          fclose(file); 
-          return; 
-        } 
-        if (Cn == 0) {
-          /**/
-        } 
-        else if (Cn == 1) {
-          /**/
-        } 
-        else { 
-          printf("╔════════════════════════════════╗\n"); 
-          printf("║            ERRORE              ║\n"); 
-          printf("╠════════════════════════════════╣\n"); 
-          printf("║                                ║\n"); 
-          printf("║      Cn deve essere 0 o 1      ║\n"); 
-          printf("║                                ║\n"); 
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
+        FILE *file = fopen("input_alu32.txt", "r");
+        if (!file) {
+            file = fopen("input_alu32.txt", "w");
+            if (!file) {
+                printf("ERRORE: Impossibile creare il file input_alu32.txt\n");
+                input_valido = 0;
+            } else {
+                fprintf(file, "Operando A: <0>\n");
+                fprintf(file, "Operando B: <0>\n");
+                fprintf(file, "Cn: <0>\n");
+                fprintf(file, "M: <0>\n");
+                fprintf(file, "S0: <0>\n");
+                fprintf(file, "S1: <0>\n");
+                fprintf(file, "S2: <0>\n");
+                fprintf(file, "S3: <0>\n");
+                fclose(file);
+                printf("Creato file input_alu32.txt. Compilarlo e riavviare.\n");
+                input_valido = 0;
+            }
+        } else {
+            char line[100];
+
+            #define LEGGI_DA_FILE(var, nome, is_unsigned) do { \
+                if (!fgets(line, sizeof(line), file)) { \
+                    printf("ERRORE: Formato file incompleto (%s)\n", nome); \
+                    input_valido = 0; \
+                } else { \
+                    if (is_unsigned) { \
+                        unsigned int tmp_u; \
+                        if (sscanf(line, "%*[^<]<%u>", &tmp_u) != 1) { \
+                            printf("ERRORE: Valore non valido in %s\n", nome); \
+                            input_valido = 0; \
+                        } else { \
+                            *(var) = tmp_u; \
+                        } \
+                    } else { \
+                        int tmp_i; \
+                        if (sscanf(line, "%*[^<]<%d>", &tmp_i) != 1) { \
+                            printf("ERRORE: Valore non valido in %s\n", nome); \
+                            input_valido = 0; \
+                        } else if (tmp_i != 0 && tmp_i != 1) { \
+                            printf("╔════════════════════════════════╗\n"); \
+                            printf("║            ERRORE              ║\n"); \
+                            printf("╠════════════════════════════════╣\n"); \
+                            printf("║                                ║\n"); \
+                            printf("║   %s deve essere 0 o 1      ║\n", nome); \
+                            printf("║                                ║\n"); \
+                            printf("╚════════════════════════════════╝\n"); \
+                            input_valido = 0; \
+                        } else { \
+                            *(var) = tmp_i; \
+                        } \
+                    } \
+                } \
+            } while(0)
+
+            LEGGI_DA_FILE(&operandoA, "Operando A", 1);
+            if (input_valido) LEGGI_DA_FILE(&operandoB, "Operando B", 1);
+            if (input_valido) LEGGI_DA_FILE(&Cn, "Cn", 0);
+            if (input_valido) LEGGI_DA_FILE(&M, "M", 0);
+            if (input_valido) LEGGI_DA_FILE(&S[0], "S0", 0);
+            if (input_valido) LEGGI_DA_FILE(&S[1], "S1", 0);
+            if (input_valido) LEGGI_DA_FILE(&S[2], "S2", 0);
+            if (input_valido) LEGGI_DA_FILE(&S[3], "S3", 0);
+
+            #undef LEGGI_DA_FILE
+            fclose(file);
         }
-        if (fgets(line, sizeof(line), file) == NULL) { 
-          printf("ERRORE: Formato file incompleto\n"); 
-          fclose(file); 
-          return; 
-        } 
-        int sscanf_result_M = sscanf(line, "%*[^<]<%d>", &M); 
-        if (sscanf_result_M == 1) {
-          /**/
-        } 
-        else { 
-          printf("ERRORE: Valore non valido in M\n"); 
-          fclose(file); 
-          return; 
-        } 
-        if (M == 0) {
-          /**/
-        } 
-        else if (M == 1) {
-          /**/
-        } 
-        else { 
-          printf("╔════════════════════════════════╗\n"); 
-          printf("║            ERRORE              ║\n"); 
-          printf("╠════════════════════════════════╣\n"); 
-          printf("║                                ║\n"); 
-          printf("║       M deve essere 0 o 1      ║\n"); 
-          printf("║                                ║\n"); 
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
-        }
-        if (fgets(line, sizeof(line), file) == NULL) { 
-          printf("ERRORE: Formato file incompleto\n"); 
-          fclose(file); 
-          return; 
-        } 
-        int sscanf_result_S0 = sscanf(line, "%*[^<]<%d>", &S[0]); 
-        if (sscanf_result_S0 == 1) {
-          /**/
-        } 
-        else { 
-          printf("ERRORE: Valore non valido in S0\n"); 
-          fclose(file); 
-          return; 
-        } 
-        if (S[0] == 0) {
-          /**/
-        } 
-        else if (S[0] == 1) {
-          /**/
-        } 
-        else { 
-          printf("╔════════════════════════════════╗\n"); 
-          printf("║            ERRORE              ║\n"); 
-          printf("╠════════════════════════════════╣\n"); 
-          printf("║                                ║\n"); 
-          printf("║      S0 deve essere 0 o 1      ║\n"); 
-          printf("║                                ║\n"); 
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
-        }
-        if (fgets(line, sizeof(line), file) == NULL) { 
-          printf("ERRORE: Formato file incompleto\n"); 
-          fclose(file); 
-          return; 
-        } 
-        int sscanf_result_S1 = sscanf(line, "%*[^<]<%d>", &S[1]); 
-        if (sscanf_result_S1 == 1) {
-          /**/
-        } 
-        else { 
-          printf("ERRORE: Valore non valido in S1\n"); 
-          fclose(file); 
-          return; 
-        } 
-        if (S[1] == 0) {
-          /**/
-        } 
-        else if (S[1] == 1) {
-          /**/
-        } 
-        else { 
-          printf("╔════════════════════════════════╗\n"); 
-          printf("║            ERRORE              ║\n"); 
-          printf("╠════════════════════════════════╣\n"); 
-          printf("║                                ║\n"); 
-          printf("║      S1 deve essere 0 o 1      ║\n"); 
-          printf("║                                ║\n"); 
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
-        }
-        if (fgets(line, sizeof(line), file) == NULL) { 
-          printf("ERRORE: Formato file incompleto\n"); 
-          fclose(file); 
-          return; 
-        } 
-        int sscanf_result_S2 = sscanf(line, "%*[^<]<%d>", &S[2]); 
-        if (sscanf_result_S2 == 1) {
-          /**/
-        } 
-        else { 
-          printf("ERRORE: Valore non valido in S2\n"); 
-          fclose(file); 
-          return; 
-        } 
-        if (S[2] == 0) {
-          /**/
-        } 
-        else if (S[2] == 1) {
-          /**/
-        } 
-        else { 
-          printf("╔════════════════════════════════╗\n"); 
-          printf("║            ERRORE              ║\n"); 
-          printf("╠════════════════════════════════╣\n"); 
-          printf("║                                ║\n"); 
-          printf("║      S2 deve essere 0 o 1      ║\n"); 
-          printf("║                                ║\n"); 
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
-        }
-        if (fgets(line, sizeof(line), file) == NULL) { 
-          printf("ERRORE: Formato file incompleto\n"); 
-          fclose(file); 
-          return; 
-        } 
-        int sscanf_result_S3 = sscanf(line, "%*[^<]<%d>", &S[3]); 
-        if (sscanf_result_S3 == 1) {
-          /**/
-        } 
-        else { 
-          printf("ERRORE: Valore non valido in S3\n"); 
-          fclose(file); 
-          return; 
-        } 
-        if (S[3] == 0) {
-          /**/
-        } 
-        else if (S[3] == 1) {
-          /**/
-        } 
-        else { 
-          printf("╔════════════════════════════════╗\n"); 
-          printf("║            ERRORE              ║\n"); 
-          printf("╠════════════════════════════════╣\n"); 
-          printf("║                                ║\n"); 
-          printf("║      S3 deve essere 0 o 1      ║\n"); 
-          printf("║                                ║\n"); 
-          printf("╚════════════════════════════════╝\n"); 
-          return; 
-        } 
-        fclose(file); 
     }
-    int D_A[32], D_B[32], D_F[32]; 
-    for (int i = 0; i < 32; i++) { 
-      unsigned int tempA = operandoA; 
-      for (int i = 0; i < 32; i++) { 
-        D_A[i] = tempA % 2; tempA /= 2; 
-      } 
-      unsigned int tempB = operandoB; 
-      for (int i = 0; i < 32; i++) { 
-        D_B[i] = tempB % 2; 
-        tempB /= 2; 
-      } 
-    } 
-    int Q_A[32] = {0}, Q_bar_A[32] = {0}, prev_CLK_A[32] = {0}; 
-    int Q_B[32] = {0}, Q_bar_B[32] = {0}, prev_CLK_B[32] = {0}; 
-    int Q_F[32] = {0}, Q_bar_F[32] = {0}, prev_CLK_F[32] = {0}; 
-    int S_reg[32], R_reg[32]; 
-    for (int i = 0; i < 32; i++) { 
-      S_reg[i] = 1; 
-      R_reg[i] = 1; 
-    } 
-    int CLK = 0, prev_CLK = 0; 
-    for (int i = 0; i < 4; i++) { 
-      clock_step(&CLK, &prev_CLK, 100); 
-      reg_PIPO32(D_A, S_reg, R_reg, CLK, prev_CLK_A, Q_A, Q_bar_A);  
-      reg_PIPO32(D_B, S_reg, R_reg, CLK, prev_CLK_B, Q_B, Q_bar_B); 
-    } 
-    int result = 0; 
-    int currentCn = Cn; 
-    int F[4], A_uguale_B, P, Cn_piu_4, G;  
-    for (int nibble = 0; nibble < 8; nibble++) { 
-      int Abits[4], Bbits[4]; 
-      for (int bit = 0; bit < 4; bit++) { 
-        Abits[bit] = Q_A[nibble * 4 + bit]; 
-        Bbits[bit] = Q_B[nibble * 4 + bit]; 
-      } 
-      n_ALU74181(currentCn, M, Abits, Bbits, S, F, &A_uguale_B, &P, &Cn_piu_4, &G); 
-      unsigned int nibbleResult = F[0] + F[1]*2 + F[2]*4 + F[3]*8; 
-      int power = 1; 
-      for (int i = 0; i < nibble; i++) { 
-        power *= 16; 
-      } 
-      result += nibbleResult * power; 
-      currentCn = Cn_piu_4; 
-    } 
-    for (int i = 0; i < 32; i++) { 
-      int temp = result; 
-      for (int j = 0; j < i; j++) { 
-        temp = temp / 2; 
-      } 
-      D_F[i] = temp % 2; 
-    } 
-    for (int i = 0; i < 4; i++) { 
-      clock_step(&CLK, &prev_CLK, 100); 
-      reg_PIPO32(D_F, S_reg, R_reg, CLK, prev_CLK_F, Q_F, Q_bar_F); 
-    } 
-    printf("\n"); 
-    printf("╔═════════════════════════════════════════════╗\n"); 
-    printf("║           RISULTATI ALU 32bit               ║\n"); 
-    printf("╚═════════════════════════════════════════════╝\n"); 
-    printf("- Risultato      = %-3d",result); 
-    salva_in_memoria(result); 
-    FILE *file_out = fopen("risultati_alu32", "w"); 
-    if (file_out == NULL) { 
-      printf("╔════════════════════════════════╗\n"); 
-      printf("║            ERRORE              ║\n"); 
-      printf("╠════════════════════════════════╣\n"); 
-      printf("║                                ║\n"); 
-      printf("║    Impossibile aprire file     ║\n"); 
-      printf("║         di scrittura           ║\n"); 
-      printf("║                                ║\n"); 
-      printf("╚════════════════════════════════╝\n"); 
-      return; 
-    } 
-    fprintf(file_out, "╔═════════════════════════════════════════════╗\n");
-    fprintf(file_out, "║           RISULTATI ALU 32bit               ║\n");
-    fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
-    fprintf(file_out, "- Risultato      = %-3d\n", result); 
-    fclose(file_out); 
+
+    if (!input_valido) {
+        return;
+    }
+
+    // === SIMULAZIONE ===
+    int D_A[32], D_B[32], D_F[32];
+    for (int i = 0; i < 32; i++) {
+        D_A[i] = (operandoA >> i) & 1;
+        D_B[i] = (operandoB >> i) & 1;
+    }
+
+    int Q_A[32] = {0}, Q_bar_A[32] = {0}, prev_CLK_A[32] = {0};
+    int Q_B[32] = {0}, Q_bar_B[32] = {0}, prev_CLK_B[32] = {0};
+    int Q_F[32] = {0}, Q_bar_F[32] = {0}, prev_CLK_F[32] = {0};
+    int S_reg[32], R_reg[32];
+    for (int i = 0; i < 32; i++) {
+        S_reg[i] = 1;
+        R_reg[i] = 1;
+    }
+
+    int CLK = 0, prev_CLK = 0;
+    for (int i = 0; i < 4; i++) {
+        clock_step(&CLK, &prev_CLK, 100);
+        reg_PIPO32(D_A, S_reg, R_reg, CLK, prev_CLK_A, Q_A, Q_bar_A);
+        reg_PIPO32(D_B, S_reg, R_reg, CLK, prev_CLK_B, Q_B, Q_bar_B);
+    }
+
+    unsigned int result = 0;
+    int currentCn = Cn;
+    int F[4], A_uguale_B, P, Cn_piu_4, G;
+    for (int nibble = 0; nibble < 8; nibble++) {
+        int Abits[4], Bbits[4];
+        for (int bit = 0; bit < 4; bit++) {
+            Abits[bit] = Q_A[nibble * 4 + bit];
+            Bbits[bit] = Q_B[nibble * 4 + bit];
+        }
+        n_ALU74181(currentCn, M, Abits, Bbits, S, F, &A_uguale_B, &P, &Cn_piu_4, &G);
+        unsigned int nibbleResult = F[0] | (F[1] << 1) | (F[2] << 2) | (F[3] << 3);
+        result |= (nibbleResult << (nibble * 4));
+        currentCn = Cn_piu_4;
+    }
+
+    for (int i = 0; i < 32; i++) {
+        D_F[i] = (result >> i) & 1;
+    }
+
+    for (int i = 0; i < 4; i++) {
+        clock_step(&CLK, &prev_CLK, 100);
+        reg_PIPO32(D_F, S_reg, R_reg, CLK, prev_CLK_F, Q_F, Q_bar_F);
+    }
+
+    printf("\n");
+    printf("╔═════════════════════════════════════════════╗\n");
+    printf("║           RISULTATI ALU 32bit               ║\n");
+    printf("╚═════════════════════════════════════════════╝\n");
+    printf("- Risultato      = %u\n", result);
+    salva_in_memoria((int)result);
+
+    FILE *file_out = fopen("risultati_alu32.txt", "w");
+    if (file_out) {
+        fprintf(file_out, "╔═════════════════════════════════════════════╗\n");
+        fprintf(file_out, "║           RISULTATI ALU 32bit               ║\n");
+        fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
+        fprintf(file_out, "- Risultato      = %u\n", result);
+        fclose(file_out);
+    } else {
+        printf("╔════════════════════════════════╗\n");
+        printf("║            ERRORE              ║\n");
+        printf("╠════════════════════════════════╣\n");
+        printf("║                                ║\n");
+        printf("║    Impossibile aprire file     ║\n");
+        printf("║         di scrittura           ║\n");
+        printf("║                                ║\n");
+        printf("╚════════════════════════════════╝\n");
+    }
+
     attendi_cicli_clock_equivalenti_a_secondi(2.0);
 }
 int somma(int a, int b) { 
@@ -1602,30 +792,30 @@ void operazioni_algebriche() {
           if (strcmp(operazione, "somma") != 0) break;
           {
               int res = somma(a, b);
-              printf("╔════════════════════════════════╗\n"
-                     "║         SOMMA ALGEBRICA        ║\n"
-                     "╚════════════════════════════════╝\n"
-                     "Risultato: %d\n", res);
+              printf("╔════════════════════════════════╗\n");
+              printf("║         SOMMA ALGEBRICA        ║\n");
+              printf("╚════════════════════════════════╝\n");
+              printf("Risultato: %d\n", res);
               salva_in_memoria(res);
           }
           return;
       case 2:
           {
               int res = sottrazione(a, b);
-              printf("╔════════════════════════════════╗\n"
-                     "║      SOTTRAZIONE ALGEBRICA     ║\n"
-                     "╚════════════════════════════════╝\n"
-                     "Risultato: %d\n", res);
+              printf("╔════════════════════════════════╗\n");
+              printf("║      SOTTRAZIONE ALGEBRICA     ║\n");
+              printf("╚════════════════════════════════╝\n");
+              printf("Risultato: %d\n", res);
               salva_in_memoria(res);
           }
           return;
       case 3:
           {
               int res = moltiplicazione(a, b);
-              printf("╔════════════════════════════════╗\n"
-                     "║    MOLTIPLICAZIONE ALGEBRICA   ║\n"
-                     "╚════════════════════════════════╝\n"
-                     "Risultato: %d\n", res);
+              printf("╔════════════════════════════════╗\n");
+              printf("║    MOLTIPLICAZIONE ALGEBRICA   ║\n");
+              printf("╚════════════════════════════════╝\n");
+              printf("Risultato: %d\n", res);
               salva_in_memoria(res);
           }
           return;
@@ -1635,22 +825,22 @@ void operazioni_algebriche() {
                   printf("Errore: divisione per zero.\n");
               } else {
                   int res = divisione(a, b);
-                  printf("╔════════════════════════════════╗\n"
-                         "║        DIVISIONE ALGEBRICA     ║\n"
-                         "╚════════════════════════════════╝\n"
-                         "Risultato: %d\n", res);
+                  printf("╔════════════════════════════════╗\n");
+                  printf("║        DIVISIONE ALGEBRICA     ║\n");
+                  printf("╚════════════════════════════════╝\n");
+                  printf("Risultato: %d\n", res);
                   salva_in_memoria(res);
               }
           }
           return;
       default:
-          printf("╔════════════════════════════════╗\n"
-                 "║             ERRORE             ║\n"
-                 "╠════════════════════════════════╣\n"
-                 "║                                ║\n"
-                 "║   Operazione non riconosciuta  ║\n"
-                 "║                                ║\n"
-                 "╚════════════════════════════════╝\n");
+          printf("╔════════════════════════════════╗\n");
+          printf("║             ERRORE             ║\n");
+          printf("╠════════════════════════════════╣\n");
+          printf("║                                ║\n");
+          printf("║   Operazione non riconosciuta  ║\n");
+          printf("║                                ║\n");
+          printf("╚════════════════════════════════╝\n");
           return;
   }
   } else if (num_elementi == 3) {
@@ -1676,57 +866,63 @@ void operazioni_algebriche() {
           case 1:
               {
                   int res = somma(somma(a, b), c);
-                  printf("╔════════════════════════════════╗\n"
-                         "║         SOMMA ALGEBRICA        ║\n"
-                         "╚════════════════════════════════╝\n"
-                         "Risultato: %d\n", res);
+                  printf("╔════════════════════════════════╗\n");
+                  printf("║         SOMMA ALGEBRICA        ║\n");
+                  printf("╚════════════════════════════════╝\n");
+                  printf("Risultato: %d\n", res);
                   salva_in_memoria(res);
               }
               return;
           case 3:
               {
                   int res = moltiplicazione(moltiplicazione(a, b), c);
-                  printf("╔════════════════════════════════╗\n"
-                         "║    MOLTIPLICAZIONE ALGEBRICA   ║\n"
-                         "╚════════════════════════════════╝\n"
-                         "Risultato: %d\n", res);
+                  printf("╔════════════════════════════════╗\n");
+                  printf("║    MOLTIPLICAZIONE ALGEBRICA   ║\n");
+                  printf("╚════════════════════════════════╝\n");
+                  printf("Risultato: %d\n", res);
                   salva_in_memoria(res);
               }
               return;
           default:
-              printf("╔════════════════════════════════╗\n"
-                     "║             ERRORE             ║\n"
-                     "╠════════════════════════════════╣\n"
-                     "║                                ║\n"
-                     "║   Operazione non riconosciuta  ║\n"
-                     "║                                ║\n"
-                     "╚════════════════════════════════╝\n");
+              printf("╔════════════════════════════════╗\n");
+              printf("║             ERRORE             ║\n");
+              printf("╠════════════════════════════════╣\n");
+              printf("║                                ║\n");
+              printf("║   Operazione non riconosciuta  ║\n");
+              printf("║                                ║\n");
+              printf("╚════════════════════════════════╝\n");
               return;
       }
   } else {
-      printf("╔════════════════════════════════╗\n"
-             "║             ERRORE             ║\n"
-             "╠════════════════════════════════╣\n"
-             "║                                ║\n"
-             "║ Numero di elementi non valido. ║\n"
-             "║      Scegli tra 2 oppure 3     ║\n"
-             "║                                ║\n"
-             "╚════════════════════════════════╝\n");
+      printf("╔════════════════════════════════╗\n");
+      printf("║             ERRORE             ║\n");
+      printf("╠════════════════════════════════╣\n");
+      printf("║                                ║\n");
+      printf("║ Numero di elementi non valido. ║\n");
+      printf("║      Scegli tra 2 oppure 3     ║\n");
+      printf("║                                ║\n");
+      printf("╚════════════════════════════════╝\n");
   }
+}
 void misura_ciclo_clock() {
     printf("\n==============================\n");
     printf("  Rilevamento del sistema\n");
-    printf("==============================\n\n");
+    printf("==============================\n");
     char *cpu = rileva_cpu();
     printf("CPU rilevata: %s\n", cpu);
     long freq = ottieni_clock(cpu);
+    if (freq <= 0) {
+        freq = 1000000000L;
+    }
     printf("Frequenza di clock trovata: %ld Hz\n", freq);
-    double durata_ns = (1.0 / freq) * 1e9;
+    double durata_ns = (1.0 / (double)freq) * 1e9;
     printf("Durata stimata di un ciclo: %.3f ns\n", durata_ns);
     printf("\n==============================\n");
     printf("  Simulazione clock in corso\n");
-    printf("==============================\n\n");
-    for (int i = 0; i < 1000; i++) attendi_un_ciclo_clock();
+    printf("==============================\n");
+    for (int i = 0; i < 1000; i++) {
+        attendi_un_ciclo_clock();
+    }
     printf("\nSimulazione completata.\n");
 }
 int main() {
@@ -1777,13 +973,16 @@ int main() {
         }
         else if (scelta == 1) {
             simula_alu_74181();
+            continue;
         }
         else if (scelta == 2) {
             attendi_cicli_clock_equivalenti_a_secondi(2.0);
             simula_alu_74181();
+            continue;
         }
         else if (scelta == 3) {
             operazioni_algebriche();
+            continue;
         }
         else if (scelta == 4) {
             char bin[33];
@@ -1797,6 +996,7 @@ int main() {
                 int risultato = BIN_DEC_DECODER(bin);
                 if (risultato != -1) {
                     printf("Risultato (decimale): %d\n", risultato);
+                    continue;
                 }
             } else {
                 FILE *file = fopen("input_bin.txt", "r");
@@ -1804,10 +1004,12 @@ int main() {
                     file = fopen("input_bin.txt", "w");
                     if (!file) {
                         printf("ERRORE: Impossibile creare il file\n");
+                        continue;
                     } else {
                         fprintf(file, "Numero Binario: <0>\n");
                         fclose(file);
                         printf("Creato file input_bin.txt. Compilarlo e riavviare.\n");
+                        continue;
                     }
                 } else {
                     char line[100];
@@ -1822,11 +1024,13 @@ int main() {
                                 fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
                                 fprintf(file_out, "Risultato      = %-3d\n", risultato);
                                 fclose(file_out);
+                                continue;
                             }
                         }
                     } else {
                         fclose(file);
                         printf("ERRORE: Formato file incompleto\n");
+                        continue;
                     }
                 }
             }
@@ -1841,16 +1045,19 @@ int main() {
                 printf(">> Inserisci un numero decimale: ");
                 scanf("%d", &dec);
                 printf("Risultato (binario): %s\n", DEC_BIN_CODER(dec));
+                continue;
             } else {
                 FILE *file = fopen("input_dec.txt", "r");
                 if (!file) {
                     file = fopen("input_dec.txt", "w");
                     if (!file) {
                         printf("ERRORE: Impossibile creare il file\n");
+                        continue;
                     } else {
                         fprintf(file, "Numero Decimale: <0>\n");
                         fclose(file);
                         printf("Creato file input_dec.txt. Compilarlo e riavviare.\n");
+                        continue;
                     }
                 } else {
                     char line[100];
@@ -1866,28 +1073,34 @@ int main() {
                                 fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
                                 fprintf(file_out, "Risultato      = %-16s\n", DEC_BIN_CODER(dec));
                                 fclose(file_out);
+                                continue;
                             }
                         }
                     } else {
                         fclose(file);
                         printf("ERRORE: Formato file incompleto\n");
+                        continue;
                     }
                 }
             }
         }
         else if (scelta == 6) {
             ALU32();
+            continue;
         }
         else if (scelta == 7) {
             attendi_cicli_clock_equivalenti_a_secondi(2.0);
             ALU32();
+            continue;
         }
         else if (scelta == 8) {
             stampa_memoria();
             stato_memoria();
+            continue;
         }
         else if (scelta == 9) {
             misura_ciclo_clock();
+            continue;
         }
         else {
             printf("Scelta non valida!\n");
