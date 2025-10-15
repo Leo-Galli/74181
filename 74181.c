@@ -1837,10 +1837,10 @@ int main() {
             printf("╚════════════════════════════════╝\n"); 
             return 1; 
           } 
-          fprintf(file_out, "╔═════════════════════════════════════════════╗\n 
-          ║          RISULTATI CONVERTITORE             ║\n 
-          ╚═════════════════════════════════════════════╝\n 
-          Risultato      = %-16s", DEC_BIN_CODER(dec)); 
+          fprintf(file_out, "╔═════════════════════════════════════════════╗\n");
+          fprintf(file_out, "║          RISULTATI CONVERTITORE             ║\n"); 
+          fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
+          fprintf(file_out, "Risultato      = %-16s", DEC_BIN_CODER(dec)); 
           fclose(file_out); 
           sleep(2); 
         } 
