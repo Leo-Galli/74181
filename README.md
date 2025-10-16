@@ -23,6 +23,7 @@
 [![Issue](https://img.shields.io/github/issues/Leo-Galli/74181)](https://github.com/Leo-Galli/74181/issues)
 [![Pull Request](https://img.shields.io/github/issues-pr/Leo-Galli/74181)](https://github.com/Leo-Galli/74181/pulls)
 [![Ultimo Commit](https://img.shields.io/github/last-commit/Leo-Galli/74181)](https://github.com/Leo-Galli/74181/commits/main)
+![Visualizzazioni](https://komarev.com/ghpvc/?username=Leo-Galli-74181&label=Visualizzazioni+Repo&color=blueviolet&style=flat)
 
 ---
 
