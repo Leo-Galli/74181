@@ -129,7 +129,7 @@ static const Processore db_processori[] = {
     {"ARM Neoverse N1", 3000000000L},
     {"Qualcomm Snapdragon 8 Gen 2", 3200000000L},
     {"Apple A17 Pro", 3780000000L},
-    {"Generic", 1000000000L}
+    {"Generic", 1000000000L},
     {"Intel Core i3-1005G1", 1200000000L},
     {"Intel Core i3-1115G4", 1700000000L},
     {"Intel Core i3-1215U", 1200000000L},
@@ -248,8 +248,7 @@ static const Processore db_processori[] = {
     {"MediaTek Dimensity 8100", 2850000000L},
     {"MediaTek Dimensity 8200", 3000000000L},
     {"MediaTek Dimensity 9000", 3050000000L},
-    {"MediaTek Dimensity 9200", 3300000000L},
-
+    {"MediaTek Dimensity 9200", 3300000000L}
 };
 #define NUM_PROCESSORI (sizeof(db_processori) / sizeof(db_processori[0]))
 
