@@ -495,10 +495,9 @@ void simula_alu_74181() {
     }
 
     if (!input_valido) {
-        return; // torna al menu
+        return;
     }
 
-    // === SIMULAZIONE ===
     int A[4] = {A0, A1, A2, A3};
     int B[4] = {B0, B1, B2, B3};
     int S_arr[4] = {S0, S1, S2, S3};
@@ -659,7 +658,6 @@ void ALU32() {
         return;
     }
 
-    // === SIMULAZIONE ===
     int D_A[32], D_B[32], D_F[32];
     for (int i = 0; i < 32; i++) {
         D_A[i] = (operandoA >> i) & 1;
