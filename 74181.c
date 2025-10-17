@@ -1,3 +1,43 @@
+/*
+ *              ,----------------,              ,---------,
+ *         ,-----------------------,          ,"        ,"|
+ *       ,"                      ,"|        ,"        ,"  |
+ *      +-----------------------+  |      ,"        ,"    |
+ *      |  .-----------------.  |  |     +---------+      |
+ *      |  |                 |  |  |     | -==----'|      |
+ *      |  |  SIMULATORE!    |  |  |     |         |      |
+ *      |  |  ALU 74181      |  |  |/----|`---=    |      |
+ *      |  |  C:\>_ ./74181  |  |  |   ,/|==== ooo |      ;
+ *      |  |                 |  |  |  // |(((( [33]|    ,"
+ *      |  `-----------------'  |," .;'| |((((     |  ,"
+ *     +-----------------------+  ;;  | |         |,"     -Leonardo Galli-
+ *         /_)______________(_/  //'   | +---------+
+ *    ___________________________/___  `,
+ *   /  oooooooooooooooo  .o.  oooo /,   \,"-----------
+ *  / ==ooooooooooooooo==.o.  ooo= //   ,`\--{)B     ,"
+ * /_==__==========__==_ooo__ooo=_/'   /___________,"
+ * `-----------------------------'
+ *
+ * Simulatore avanzato di ALU (Unità Logico Aritmetica) basato sul chip 74181,
+ * con supporto per operazioni logiche, conversioni binarie/decimali,
+ * calcoli algebrici e simulazione del clock del processore.
+ *
+ * Funzionalità principali:
+ * - Simulazione logica del chip 74181 (4-bit ALU)
+ * - Estensione a 32 bit tramite cascata di 8 chip 74181
+ * - Registri PIPO (Parallel-In Parallel-Out) con flip-flop SR
+ * - Rilevamento automatico della CPU e stima della frequenza di clock
+ * - Calcolatrice avanzata con supporto a espressioni
+ * - Sistema di salvataggio in memoria e su file
+ * - Supporto multipiattaforma (Windows, Linux, macOS)
+ *
+ * Autore: Leonardo Galli
+ * Data ultimo aggiornamento:   17 ottobre 2025
+ * README: https://github.com/Leo-Galli/74181?tab=readme-ov-file
+ * Licenza: https://github.com/Leo-Galli/74181?tab=GPL-3.0-1-ov-file
+ * Codice di Condotta: https://github.com/Leo-Galli/74181?tab=coc-ov-file
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,6 +60,14 @@
 #else
 #define SISTEMA_LINUX 0
 #endif
+
+/*
+ * STRUTTURA DATI: Processore
+ * 
+ * Memorizza il nome e la frequenza di clock (in Hz) di un processore.
+ * Utilizzata per il rilevamento automatico della CPU e la simulazione
+ * temporale basata sul ciclo di clock reale.
+ */
 
 typedef struct {
     const char *nome;
@@ -252,6 +300,17 @@ static const Processore db_processori[] = {
 };
 #define NUM_PROCESSORI (sizeof(db_processori) / sizeof(db_processori[0]))
 
+/*
+ * RILEVAMENTO AUTOMATICO DELLA CPU
+ *
+ * Questa sezione implementa funzioni per identificare il modello
+ * del processore in base al sistema operativo:
+ * - Linux: legge /proc/cpuinfo
+ * - Windows: consulta il registro di sistema
+ * - macOS: esegue il comando `sysctl`
+ * Se non riesce a identificare la CPU, restituisce "Generic".
+ */
+
 char* rileva_cpu() {
     static char nome_cpu[256] = "Generic";
     if (SISTEMA_LINUX) {
@@ -302,6 +361,18 @@ long ottieni_clock(const char* nome_cpu) {
     }
     return 1000000000L;
 }
+
+/*
+ * SIMULAZIONE DEL CICLO DI CLOCK
+ *
+ * Queste funzioni emulano il passare del tempo in base alla frequenza
+ * di clock del processore rilevato. Consentono di:
+ * - Attendere un numero specifico di nanosecondi
+ * - Simulare un singolo ciclo di clock
+ * - Attendere un tempo equivalente a un numero di cicli (es. 2 secondi)
+ * Utile per sincronizzare logicamente le operazioni con l'hardware simulato.
+ */
+
 void ritardo_ns(long nanosecondi) {
 #if SISTEMA_WINDOWS
     long ms = nanosecondi / 1000000L;
@@ -324,6 +395,17 @@ void clock_step(int *CLK, int *prev_CLK, int milliseconds) {
     *prev_CLK = *CLK;
     *CLK = 1 - *CLK;
 }
+
+/*
+ * LOGICA DIGITALE DI BASE: FLIP-FLOP E REGISTRI
+ *
+ * Implementazione software di porte logiche (NAND, NOT, AND, OR, XOR)
+ * e di un flip-flop SR sincronizzato con clock, basato su NAND.
+ * Viene costruito un registro PIPO (Parallel-In Parallel-Out) a 8 bit,
+ * esteso a 32 bit per supportare operazioni su parole intere.
+ * Questa sezione simula il comportamento hardware dei registri.
+ */
+
 int NAND3(int A, int B, int C) { 
   return 1 - (A * B * C); 
 } 
@@ -346,6 +428,17 @@ void reg_PIPO32(int D[32], int S_reg[32], int R_reg[32], int CLK, int prev_CLK[3
     n_PIPO74198(&D[i * 8], &S_reg[i * 8], &R_reg[i * 8], CLK, &prev_CLK[i * 8], &Q[i * 8], &Q_bar[i * 8]);
   } 
 }
+
+/*
+ * CONVERTITORI BINARIO ↔ DECIMALE
+ *
+ * Due funzioni complementari:
+ * - BIN_DEC_DECODER: trasforma una stringa binaria in intero decimale
+ * - DEC_BIN_CODER: converte un intero decimale in stringa binaria
+ * Entrambe gestiscono input non validi e sono utilizzate nell'interfaccia utente
+ * per operazioni di conversione manuale o da file.
+ */
+
 int BIN_DEC_DECODER(const char *binario) { 
   if (binario == NULL) { 
     printf("ERRORE: input NULL non valido.\n"); 
@@ -386,6 +479,16 @@ char* DEC_BIN_CODER(int numero) {
   } 
   return binario; 
 }
+
+/*
+ * SISTEMA DI MEMORIA DINAMICA
+ *
+ * Implementa una memoria virtuale espandibile in cui vengono salvati
+ * i risultati delle operazioni ALU (es. carry, risultati).
+ * Usa realloc() per raddoppiare la capacità quando necessario.
+ * Include funzioni per stampare lo stato e il contenuto della memoria.
+ */
+
 int *memoria = NULL; 
 int capacita_memoria = 10; 
 int indice_memoria = 0;
@@ -493,6 +596,20 @@ int porta_exor_5(int a, int b, int c, int d, int e) {
   int tmp = porta_exor_4(a, b, c, d); 
   return porta_exor(tmp, e); 
 }
+
+/*
+ * SIMULAZIONE DELL'ALU 74181 (4-BIT)
+ *
+ * Implementazione logica completa del chip storico 74181,
+ * che esegue 16 funzioni logiche/aritmetiche su 4 bit.
+ * Calcola:
+ * - Output F[0..3]
+ * - Flag di uguaglianza (A == B)
+ * - Propagate (P) e Generate (G) per carry lookahead
+ * - Carry out (Cn+4)
+ * La logica è espressa tramite porte logiche software (NAND, OR, ecc.).
+ */
+
 void n_ALU74181(int Cn, int M, int A[4], int B[4], int S[4], int F[4], int *A_uguale_B, int *P, int *Cn_piu_4, int *G) { 
   F[0] = porta_exor(porta_not(porta_and(Cn, porta_not(M))), porta_and(porta_not(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))))); 
   F[1] = porta_exor(porta_not(porta_or(porta_and(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_and_3(porta_not(M), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), Cn))), porta_and(porta_not(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))))); 
@@ -522,6 +639,16 @@ static int leggi_bit_input_74181(const char* nome, int* var) {
 static int leggi_bit_input_32(const char* nome, int* var) {
     return leggi_bit_input_74181(nome, var);
 }
+
+/*
+ * INTERFACCIA UTENTE PER L'ALU 74181
+ *
+ * Gestisce l'input manuale o da file (input_alu.txt),
+ * valida i bit inseriti (0/1), esegue la simulazione,
+ * salva il risultato in memoria e su file (risultati_alu_74181.txt),
+ * e attende un tempo proporzionale al clock del processore.
+ */
+
 void simula_alu_74181() {
     int Cn, M, A0, B0, A1, B1, A2, B2, A3, B3, S0, S1, S2, S3;
     char scelta[3];
@@ -671,6 +798,17 @@ void simula_alu_74181() {
 
     attendi_cicli_clock_equivalenti_a_secondi(2.0);
 }
+
+/*
+ * ALU A 32 BIT BASATA SU 8 CHIP 74181
+ *
+ * Estende la logica del 74181 a 32 bit concatenando 8 unità da 4 bit.
+ * Simula il caricamento degli operandi nei registri PIPO,
+ * esegue l'operazione ALU con propagazione del carry tra nibble,
+ * e memorizza il risultato finale.
+ * Supporta input manuale o da file (input_alu32.txt).
+ */
+
 void ALU32() {
     unsigned int operandoA = 0, operandoB = 0;
     int Cn = 0, M = 0, S[4] = {0};
@@ -872,155 +1010,214 @@ int divisione(int a, int b) {
   } 
   return a / b; 
 }
-void operazioni_algebriche() { 
-  int num_elementi; 
-  printf(">> Quanti elementi vuoi utilizzare (2 o 3)? "); 
-  scanf("%d", &num_elementi); 
-  if (num_elementi == 2) { 
-    int a, b; 
-    printf(">> Inserisci i due numeri: "); 
-    scanf("%d %d", &a, &b); 
-    char operazione[20]; 
-    printf(">> Scegli l'operazione (1 - Somma, 2 - Sottrazione, 3 - Moltiplicazione, 4 - Divisione): "); 
-    scanf("%s", operazione); 
-    int scelta = 0; 
-    if (strlen(operazione) == 1 && isdigit(operazione[0])) { 
-      scelta = operazione[0] - '0'; 
-    } 
-    else { 
-      for (int i = 0; operazione[i]; i++) { 
-        operazione[i] = tolower(operazione[i]); 
-      } 
-      if (strcmp(operazione, "somma") == 0){ 
-        scelta = 1;
-      } 
-      else if (strcmp(operazione, "sottrazione") == 0) {
-        scelta = 2;
-      } 
-      else if (strcmp(operazione, "moltiplicazione") == 0) {
-        scelta = 3;
-      } 
-      else if (strcmp(operazione, "divisione") == 0) {
-        scelta = 4;
-      } 
-    } 
-    switch (scelta) { 
-      case 1:
-          if (strcmp(operazione, "somma") != 0) break;
-          {
-              int res = somma(a, b);
-              printf("╔════════════════════════════════╗\n");
-              printf("║         SOMMA ALGEBRICA        ║\n");
-              printf("╚════════════════════════════════╝\n");
-              printf("Risultato: %d\n", res);
-              salva_in_memoria(res);
-          }
-          return;
-      case 2:
-          {
-              int res = sottrazione(a, b);
-              printf("╔════════════════════════════════╗\n");
-              printf("║      SOTTRAZIONE ALGEBRICA     ║\n");
-              printf("╚════════════════════════════════╝\n");
-              printf("Risultato: %d\n", res);
-              salva_in_memoria(res);
-          }
-          return;
-      case 3:
-          {
-              int res = moltiplicazione(a, b);
-              printf("╔════════════════════════════════╗\n");
-              printf("║    MOLTIPLICAZIONE ALGEBRICA   ║\n");
-              printf("╚════════════════════════════════╝\n");
-              printf("Risultato: %d\n", res);
-              salva_in_memoria(res);
-          }
-          return;
-      case 4:
-          {
-              if (b == 0) {
-                  printf("Errore: divisione per zero.\n");
-              } else {
-                  int res = divisione(a, b);
-                  printf("╔════════════════════════════════╗\n");
-                  printf("║        DIVISIONE ALGEBRICA     ║\n");
-                  printf("╚════════════════════════════════╝\n");
-                  printf("Risultato: %d\n", res);
-                  salva_in_memoria(res);
-              }
-          }
-          return;
-      default:
-          printf("╔════════════════════════════════╗\n");
-          printf("║             ERRORE             ║\n");
-          printf("╠════════════════════════════════╣\n");
-          printf("║                                ║\n");
-          printf("║   Operazione non riconosciuta  ║\n");
-          printf("║                                ║\n");
-          printf("╚════════════════════════════════╝\n");
-          return;
-  }
-  } else if (num_elementi == 3) {
-      int a, b, c;
-      printf(">> Inserisci i tre numeri: ");
-      scanf("%d %d %d", &a, &b, &c);
-      char operazione[20];
-      printf(">> Scegli l'operazione (somma o moltiplicazione): ");
-      scanf("%s", operazione);
-      int scelta = 0;
-      if (strlen(operazione) == 1 && isdigit(operazione[0])) {
-          scelta = operazione[0] - '0';
-      } else {
-          for (int i = 0; operazione[i]; i++) {
-              operazione[i] = tolower(operazione[i]);
-          }
-          if (strcmp(operazione, "somma") == 0)
-              scelta = 1;
-          else if (strcmp(operazione, "moltiplicazione") == 0)
-              scelta = 3;
-      }
-      switch (scelta) {
-          case 1:
-              {
-                  int res = somma(somma(a, b), c);
-                  printf("╔════════════════════════════════╗\n");
-                  printf("║         SOMMA ALGEBRICA        ║\n");
-                  printf("╚════════════════════════════════╝\n");
-                  printf("Risultato: %d\n", res);
-                  salva_in_memoria(res);
-              }
-              return;
-          case 3:
-              {
-                  int res = moltiplicazione(moltiplicazione(a, b), c);
-                  printf("╔════════════════════════════════╗\n");
-                  printf("║    MOLTIPLICAZIONE ALGEBRICA   ║\n");
-                  printf("╚════════════════════════════════╝\n");
-                  printf("Risultato: %d\n", res);
-                  salva_in_memoria(res);
-              }
-              return;
-          default:
-              printf("╔════════════════════════════════╗\n");
-              printf("║             ERRORE             ║\n");
-              printf("╠════════════════════════════════╣\n");
-              printf("║                                ║\n");
-              printf("║   Operazione non riconosciuta  ║\n");
-              printf("║                                ║\n");
-              printf("╚════════════════════════════════╝\n");
-              return;
-      }
-  } else {
-      printf("╔════════════════════════════════╗\n");
-      printf("║             ERRORE             ║\n");
-      printf("╠════════════════════════════════╣\n");
-      printf("║                                ║\n");
-      printf("║ Numero di elementi non valido. ║\n");
-      printf("║      Scegli tra 2 oppure 3     ║\n");
-      printf("║                                ║\n");
-      printf("╚════════════════════════════════╝\n");
-  }
+
+/*
+ * CALCOLATRICE AVANZATA CON SUPPORTO A ESPRESSIONI
+ *
+ * Offre un menu interattivo per:
+ * - Somma, sottrazione, moltiplicazione, divisione sequenziale
+ * - Valutazione di espressioni complesse (es. (3+5)*2-4)
+ * Usa comandi di sistema (echo $((...)) su Unix, set /a su Windows)
+ * per calcolare le espressioni. I risultati vengono salvati su file.
+ */
+
+void operazioni_algebriche() {
+    while (1) {
+        char operazione[30];
+        int scelta = 0;
+        printf("\n╔══════════════════════════════════════════════════════╗\n");
+        printf("║                 CALCOLATRICE AVANZATA                ║\n");
+        printf("╚══════════════════════════════════════════════════════╝\n");
+        printf(">> Seleziona un'operazione:\n");
+        printf("   1 - Somma di numeri\n");
+        printf("   2 - Sottrazione sequenziale\n");
+        printf("   3 - Moltiplicazione di numeri\n");
+        printf("   4 - Divisione sequenziale\n");
+        printf("   5 - Calcola espressione (es: (3+5)*2-4)\n");
+        printf("   6 - Esci\n");
+        printf(">> Scelta (numero o parola): ");
+        scanf("%s", operazione);
+
+        if (strlen(operazione) == 1 && isdigit(operazione[0])) {
+            scelta = operazione[0] - '0';
+        } else {
+            for (int i = 0; operazione[i]; i++)
+                operazione[i] = tolower(operazione[i]);
+            if (strcmp(operazione, "somma") == 0) scelta = 1;
+            else if (strcmp(operazione, "sottrazione") == 0) scelta = 2;
+            else if (strcmp(operazione, "moltiplicazione") == 0) scelta = 3;
+            else if (strcmp(operazione, "divisione") == 0) scelta = 4;
+            else if (strcmp(operazione, "calcola") == 0) scelta = 5;
+            else if (strcmp(operazione, "esci") == 0) scelta = 6;
+        }
+
+        FILE *file = fopen("risultato_operazione.txt", "a");
+        if (!file) {
+            printf("Errore: impossibile aprire il file di output.\n");
+            continue;
+        }
+
+        switch (scelta) {
+            case 1: { 
+                double val, risultato = 0;
+                printf("\n╔══════════════════════════════════════════════════════╗\n");
+                printf("║                    SOMMA DI NUMERI                   ║\n");
+                printf("╚══════════════════════════════════════════════════════╝\n");
+                printf("Inserisci i numeri da sommare (scrivi una lettera per terminare):\n");
+                while (scanf("%lf", &val) == 1)
+                    risultato += val;
+                printf("\n────────────────────────────────────────────────────────\n");
+                printf("Risultato finale: %.2lf\n", risultato);
+                printf("────────────────────────────────────────────────────────\n");
+                fprintf(file, "\n[OPERAZIONE: SOMMA]\nRisultato: %.2lf\n", risultato);
+                salva_in_memoria(risultato);
+                fclose(file);
+                while (getchar() != '\n');
+                continue;
+            }
+            case 2: { 
+                double val, risultato;
+                int count = 0;
+                printf("\n╔══════════════════════════════════════════════════════╗\n");
+                printf("║                SOTTRAZIONE SEQUENZIALE               ║\n");
+                printf("╚══════════════════════════════════════════════════════╝\n");
+                printf("Inserisci i numeri da sottrarre (scrivi una lettera per terminare):\n");
+                while (scanf("%lf", &val) == 1) {
+                    if (count == 0) risultato = val;
+                    else risultato -= val;
+                    count++;
+                }
+                if (count == 0) {
+                    printf("Nessun numero inserito.\n");
+                    fclose(file);
+                    while (getchar() != '\n');
+                    continue;
+                }
+                printf("\n────────────────────────────────────────────────────────\n");
+                printf("Risultato finale: %.2lf\n", risultato);
+                printf("────────────────────────────────────────────────────────\n");
+                fprintf(file, "\n[OPERAZIONE: SOTTRAZIONE]\nRisultato: %.2lf\n", risultato);
+                salva_in_memoria(risultato);
+                fclose(file);
+                while (getchar() != '\n');
+                continue;
+            }
+            case 3: { 
+                double val, risultato = 1;
+                int count = 0;
+                printf("\n╔══════════════════════════════════════════════════════╗\n");
+                printf("║               MOLTIPLICAZIONE DI NUMERI              ║\n");
+                printf("╚══════════════════════════════════════════════════════╝\n");
+                printf("Inserisci i numeri da moltiplicare (scrivi una lettera per terminare):\n");
+                while (scanf("%lf", &val) == 1) {
+                    risultato *= val;
+                    count++;
+                }
+                if (count == 0) {
+                    printf("Nessun numero inserito.\n");
+                    fclose(file);
+                    while (getchar() != '\n');
+                    continue;
+                }
+                printf("\n────────────────────────────────────────────────────────\n");
+                printf("Risultato finale: %.2lf\n", risultato);
+                printf("────────────────────────────────────────────────────────\n");
+                fprintf(file, "\n[OPERAZIONE: MOLTIPLICAZIONE]\nRisultato: %.2lf\n", risultato);
+                salva_in_memoria(risultato);
+                fclose(file);
+                while (getchar() != '\n');
+                continue;
+            }
+            case 4: { 
+                double val, risultato;
+                int count = 0;
+                printf("\n╔══════════════════════════════════════════════════════╗\n");
+                printf("║                DIVISIONE SEQUENZIALE                 ║\n");
+                printf("╚══════════════════════════════════════════════════════╝\n");
+                printf("Inserisci i numeri da dividere (scrivi una lettera per terminare):\n");
+                while (scanf("%lf", &val) == 1) {
+                    if (count == 0) risultato = val;
+                    else {
+                        if (val == 0) {
+                            printf("Errore: divisione per zero!\n");
+                            break;
+                        }
+                        risultato /= val;
+                    }
+                    count++;
+                }
+                if (count < 2) {
+                    printf("Serve almeno 2 numeri.\n");
+                    fclose(file);
+                    while (getchar() != '\n');
+                    continue;
+                }
+                printf("\n────────────────────────────────────────────────────────\n");
+                printf("Risultato finale: %.2lf\n", risultato);
+                printf("────────────────────────────────────────────────────────\n");
+                fprintf(file, "\n[OPERAZIONE: DIVISIONE]\nRisultato: %.2lf\n", risultato);
+                salva_in_memoria(risultato);
+                fclose(file);
+                while (getchar() != '\n');
+                continue;
+            }
+            case 5: {
+                char input[256];
+                printf("\n╔══════════════════════════════════════════════════════╗\n");
+                printf("║               CALCOLO DI ESPRESSIONE                 ║\n");
+                printf("╚══════════════════════════════════════════════════════╝\n");
+                printf("Inserisci un'espressione (es: (3+5)*2-4): ");
+                scanf(" %[^\n]", input);
+
+                char comando[512];
+#ifdef _WIN32
+                strcpy(comando, "set /a ");
+#else
+                strcpy(comando, "echo $(( ");
+#endif
+                strcat(comando, input);
+#ifdef _WIN32
+#else
+                strcat(comando, " ))");
+#endif
+#ifdef _WIN32
+                FILE *fp = _popen(comando, "r");
+#else
+                FILE *fp = popen(comando, "r");
+#endif
+                if (!fp) {
+                    printf("Errore nell'elaborazione dell'espressione.\n");
+                    fclose(file);
+                    continue;
+                }
+                double risultato;
+                fscanf(fp, "%lf", &risultato);
+#ifdef _WIN32
+                _pclose(fp);
+#else
+                pclose(fp);
+#endif
+                printf("\n────────────────────────────────────────────────────────\n");
+                printf("Espressione: %s\n", input);
+                printf("Risultato: %.2lf\n", risultato);
+                printf("────────────────────────────────────────────────────────\n");
+                fprintf(file, "\n[OPERAZIONE: ESPRESSIONE]\nEspressione: %s\nRisultato: %.2lf\n", input, risultato);
+                salva_in_memoria(risultato);
+                fclose(file);
+                continue;
+            }
+            case 6:
+                printf("\nChiusura del programma...\n");
+                fclose(file);
+                return;
+            default:
+                printf("\nOperazione non riconosciuta.\n");
+                fclose(file);
+                continue;
+        }
+    }
 }
+
 void misura_ciclo_clock() {
     printf("\n==============================\n");
     printf("  Rilevamento del sistema\n");
@@ -1042,46 +1239,76 @@ void misura_ciclo_clock() {
     }
     printf("\nSimulazione completata.\n");
 }
+
+/*
+ * FUNZIONE PRINCIPALE (MAIN)
+ *
+ * Implementa il menu interattivo del programma con 10 opzioni:
+ * 1-2: Simulazione ALU 74181 (con/senza attesa clock)
+ * 3: Calcolatrice avanzata
+ * 4-5: Conversioni binario/decimale
+ * 6-7: ALU a 32 bit (con/senza attesa clock)
+ * 8: Visualizzazione memoria
+ * 9: Misura del ciclo di clock
+ * 0: Uscita con pulizia della memoria
+ * Gestisce input non validi e libera la memoria all'uscita.
+ */
+
 int main() {
     int scelta;
     char input[10];
-    while (1) {
-        printf("\n╔═════════════════════════════════════════════════════════╗\n");
-        printf("║                                                         ║\n");
-        printf("║                     ▄▀▀▀▄▄▄▄▄▄▄▀▀▀▄                     ║\n");
-        printf("║                     █▒▒░░░░░░░░░▒▒█                     ║\n");
-        printf("║                      █░░█░░░░░█░░█                      ║\n");
-        printf("║                   ▄▄  █░░░▀█▀░░░█  ▄▄                   ║\n");
-        printf("║                  █░░█ ▀▄░░░░░░░▄▀ █░░█                  ║\n");
-        printf("║                        ALU 74181                        ║\n");
-        printf("║                                                         ║\n");
-        printf("║                     MENU PRINCIPALE                     ║\n");
-        printf("╠═════════════════════════════════════════════════════════╣\n");
-        printf("║   1. Operazioni Logiche (ALU 74181 - Singolo)           ║\n");
-        printf("║   2. Operazioni Logiche (ALU 74181 - Singolo con clock) ║\n");
-        printf("║   3. Operazioni Algebriche                              ║\n");
-        printf("║   4. Convertitore Binario → Decimale                    ║\n");
-        printf("║   5. Convertitore Decimale → Binario                    ║\n");
-        printf("║   6. ALU in Modalità PIPO (32 bit - 8x74181)            ║\n");
-        printf("║   7. ALU in Modalità PIPO (32 bit - 8x74181 con clock)  ║\n");
-        printf("║   8. Visualizza Memoria                                 ║\n");
-        printf("║   9. Calcolo del Clock                                  ║\n");
-        printf("║   0. Esci                                               ║\n");
-        printf("╚═════════════════════════════════════════════════════════╝\n");
+    while (1) {   
+        printf("\n╔════════════════════════════════════════════════════════════╗\n");
+        printf("║                ________|          |________                ║\n");
+        printf("║               |       /   ||||||   \\       |               ║\n");
+        printf("║               |     ,'              `.     |               ║\n");
+        printf("║               |   ,'                  `.   |               ║\n");
+        printf("║               | ,'   ||||||||||||||||   `. |               ║\n");
+        printf("║               ,'  /____________________\\  `.               ║\n");
+        printf("║              /______________________________\\              ║\n");
+        printf("║             |                                |             ║\n");
+        printf("║             |                                |             ║\n");
+        printf("║             |                                |             ║\n");
+        printf("║             |________________________________|             ║\n");
+        printf("║               |____________________------__|               ║\n");
+        printf("║                                                            ║\n");
+        printf("║   ,----------------------------------------------------,   ║\n");
+        printf("║   | [][][][][]  [][][][][]  [][][][]  [][__]  [][][][] |   ║\n");
+        printf("║   |                                                    |   ║\n");
+        printf("║   |  [][][][][][][][][][][][][][_]    [][][]  [][][][] |   ║\n");
+        printf("║   |  [_][][][][][][][][][][][][][ |   [][][]  [][][][] |   ║\n");
+        printf("║   | [][_][][][][][][][][][][][][]||     []    [][][][] |   ║\n");
+        printf("║   | [__][][][][][][][][][][][][__]    [][][]  [][][]|| |   ║\n");
+        printf("║   |   [__][________________][__]              [__][]|| |   ║\n");
+        printf("║   `----------------------------------------------------'   ║\n");
+        printf("║                                                            ║\n");
+        printf("║                    SIMULATORE ALU 74181                    ║\n");
+        printf("║                                                            ║\n");
+        printf("╠════════════════════════════════════════════════════════════╣\n");
+        printf("║    1. Operazioni Logiche (ALU 74181 - Singolo)             ║\n");
+        printf("║    2. Operazioni Logiche (ALU 74181 - Singolo con clock)   ║\n");
+        printf("║    3. Operazioni Algebriche                                ║\n");
+        printf("║    4. Convertitore Binario → Decimale                      ║\n");
+        printf("║    5. Convertitore Decimale → Binario                      ║\n");
+        printf("║    6. ALU in Modalità PIPO (32 bit - 8x74181)              ║\n");
+        printf("║    7. ALU in Modalità PIPO (32 bit - 8x74181 con clock)    ║\n");
+        printf("║    8. Visualizza Memoria                                   ║\n");
+        printf("║    9. Calcolo del Clock                                    ║\n");
+        printf("║    0. Esci                                                 ║\n");
+        printf("╚════════════════════════════════════════════════════════════╝\n");
         printf(">> Inserisci la tua scelta: ");
         if (fgets(input, sizeof(input), stdin) == NULL) {
             printf("Errore di input.\n");
             continue;
         }
         if (sscanf(input, "%d", &scelta) != 1) {
-            printf("╔════════════════════════════════╗\n");
+            printf("\n╔════════════════════════════════╗\n");
             printf("║             ERRORE             ║\n");
             printf("╠════════════════════════════════╣\n");
             printf("║                                ║\n");
             printf("║   Inserisci un numero valido   ║\n");
             printf("║                                ║\n");
             printf("╚════════════════════════════════╝\n");
-            attendi_cicli_clock_equivalenti_a_secondi(2.0);
             continue;
         }
         if (scelta == 0) {
