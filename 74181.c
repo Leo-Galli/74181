@@ -2791,7 +2791,17 @@ int main() {
             printf("Errore di input.\n");
             continue;
         }
-        if (sscanf(input, "%d", &scelta) != 1) {
+        if input[0] == '\n' || input[0] == '\0') {
+            continue; // Skip error message for empty input
+        }
+        int isValid = 1;
+        for (int i = 0; input[i] != '\0' && input[i] != '\n'; i++) {
+            if (!isdigit(input[i])) {
+                isValid = 0;
+                break;
+            }
+        }
+        if (!isValid) {
             printf("\n╔════════════════════════════════╗\n");
             printf("║             ERRORE             ║\n");
             printf("╠════════════════════════════════╣\n");
@@ -2801,21 +2811,28 @@ int main() {
             printf("╚════════════════════════════════╝\n");
             continue;
         }
+        scelta = atoi(input);
         if (scelta == 0) {
             printf("Uscita dal programma...\n");
             break;
         }
         else if (scelta == 1) {
             simula_alu_74181();
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
             continue;
         }
         else if (scelta == 2) {
             attendi_cicli_clock_equivalenti_a_secondi(2.0);
             simula_alu_74181();
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
             continue;
         }
         else if (scelta == 3) {
             operazioni_algebriche();
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
             continue;
         }
         else if (scelta == 4) {
@@ -2868,6 +2885,8 @@ int main() {
                     }
                 }
             }
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
         }
         else if (scelta == 5) {
             char risposta[3];
@@ -2917,23 +2936,33 @@ int main() {
                     }
                 }
             }
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
         }
         else if (scelta == 6) {
             ALU32();
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
             continue;
         }
         else if (scelta == 7) {
             attendi_cicli_clock_equivalenti_a_secondi(2.0);
             ALU32();
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
             continue;
         }
         else if (scelta == 8) {
             stampa_memoria();
             stato_memoria();
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
             continue;
         }
         else if (scelta == 9) {
             misura_ciclo_clock();
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
             continue;
         }
         else {
