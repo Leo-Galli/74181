@@ -18,25 +18,49 @@
  * /_==__==========__==_ooo__ooo=_/'   /___________,"
  * `-----------------------------'
  *
- * Simulatore avanzato di ALU (Unità Logico Aritmetica) basato sul chip 74181,
- * con supporto per operazioni logiche, conversioni binarie/decimali,
- * calcoli algebrici e simulazione del clock del processore.
- *
- * Funzionalità principali:
- * - Simulazione logica del chip 74181 (4-bit ALU)
- * - Estensione a 32 bit tramite cascata di 8 chip 74181
- * - Registri PIPO (Parallel-In Parallel-Out) con flip-flop SR
- * - Rilevamento automatico della CPU e stima della frequenza di clock
- * - Calcolatrice avanzata con supporto a espressioni
- * - Sistema di salvataggio in memoria e su file
- * - Supporto multipiattaforma (Windows, Linux, macOS)
- *
- * Autore: Leonardo Galli
- * Data ultimo aggiornamento:   17 ottobre 2025
- * README: https://github.com/Leo-Galli/74181?tab=readme-ov-file
- * Licenza: https://github.com/Leo-Galli/74181?tab=GPL-3.0-1-ov-file
- * Codice di Condotta: https://github.com/Leo-Galli/74181?tab=coc-ov-file
+ * ┌────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                            │
+ * │  SIMULATORE ALU 74181 — UN VIAGGIO NEL CUORE DELL'ARCHITETTURA DIGITALE    │
+ * │                                                                            │
+ * │  Questo simulatore riproduce fedelmente il comportamento del chip 74181,   │
+ * │  una delle prime ALU (Arithmetic Logic Unit) integrate, progettata negli   │
+ * │  anni '70 da Texas Instruments. È considerata una pietra miliare nella     │
+ * │  storia dell'informatica, poiché ha permesso la costruzione di CPU più     │
+ * │  complesse e modulari.                                                     │
+ * │                                                                            │
+ * │  Il progetto qui presentato è molto più di una semplice emulazione:        │
+ * │  rappresenta un ambiente didattico, sperimentale e ingegneristico per      │
+ * │  comprendere a fondo il funzionamento delle operazioni logiche e           │
+ * │  aritmetiche a basso livello.                                              │
+ * │                                                                            │
+ * │  CARATTERISTICHE TECNICHE                                                  │
+ * │  ────────────────────────                                                  │
+ * │  • Simulazione completa del chip 74181 a 4 bit                             │
+ * │  • Estensione a 32 bit tramite architettura a cascata                      │
+ * │  • Implementazione di registri PIPO con flip-flop SR                       │
+ * │  • Rilevamento automatico della CPU host e stima della frequenza di clock  │
+ * │  • Calcolatrice scientifica con parser di espressioni                      │
+ * │  • Sistema di salvataggio persistente (RAM e file)                         │
+ * │  • Compatibilità multipiattaforma: Windows, Linux, macOS                   │
+ * │                                                                            │
+ * │  UTILIZZO DIDATTICO E PROFESSIONALE                                        │
+ * │  ───────────────────────────────────────                                   │
+ * │  • Ideale per corsi universitari di architettura dei calcolatori           │
+ * │  • Utile per testare microistruzioni e logiche di controllo                │
+ * │  • Strumento per makers e appassionati di retrocomputing                   │
+ * │                                                                            │
+ * │  AUTORE E LICENZE                                                          │
+ * │  ────────────────────────                                                  │
+ * │  • Autore: Leonardo Galli                                                  │
+ * │  • Ultimo aggiornamento: 20 ottobre 2025                                   │
+ * │  • Codice sorgente: GitHub ufficiale                                       │
+ * │    → README: https://github.com/Leo-Galli/74181?tab=readme-ov-file         │
+ * │    → Licenza: GPL-3.0                                                      │
+ * │    → Codice di Condotta: https://github.com/Leo-Galli/74181?tab=coc-ov-file│
+ * │                                                                            │
+ * └────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,12 +86,44 @@
 #endif
 
 /*
- * STRUTTURA DATI: Processore
- * 
- * Memorizza il nome e la frequenza di clock (in Hz) di un processore.
- * Utilizzata per il rilevamento automatico della CPU e la simulazione
- * temporale basata sul ciclo di clock reale.
+ * ┌────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                            │
+ * │  STRUTTURA DATI: Processore                                                │
+ * │                                                                            │
+ * │  Questa struttura rappresenta un'astrazione di un'unità centrale di        │
+ * │  elaborazione (CPU), memorizzando le informazioni fondamentali per la      │
+ * │  simulazione temporale e il profiling delle prestazioni.                   │
+ * │                                                                            │
+ * │  CAMPI PRINCIPALI                                                          │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • nome: stringa identificativa del processore (es. "Intel Core i7-9700K") │
+ * │  • frequenza: valore numerico in Hertz (Hz) che rappresenta la frequenza   │
+ * │    di clock del processore.                                                │
+ * │                                                                            │
+ * │  UTILIZZO                                                                  │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Rilevamento automatico della CPU host tramite interrogazione del sistema│
+ * │  • Simulazione temporale realistica basata sul ciclo di clock              │
+ * │  • Calcolo del tempo di esecuzione delle istruzioni in base alla frequenza │
+ * │  • Visualizzazione delle caratteristiche hardware nel simulatore           │
+ * │                                                                            │
+ * │  CONTESTO                                                                  │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  Questa struttura è parte integrante del simulatore ALU 74181, e consente  │
+ * │  di adattare il comportamento del sistema simulato alle caratteristiche    │
+ * │  reali della macchina ospite.                                              │
+ * │                                                                            │
+ * │  ESEMPIO                                                                   │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  struct const Processore db_processori[] = {                               │
+ * │      {"AMD Ryzen 5 3600", 4300000000L},                                    │
+ * │  };                                                                        │
+ * │                                                                            │
+ * │  AUTORE: Leonardo Galli                                                    │
+ * │  Ultimo aggiornamento: 20 ottobre 2025                                     │
+ * └────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 typedef struct {
     const char *nome;
@@ -1379,15 +1435,52 @@ static const Processore db_processori[] = {
 #define NUM_PROCESSORI (sizeof(db_processori) / sizeof(db_processori[0]))
 
 /*
- * RILEVAMENTO AUTOMATICO DELLA CPU
- *
- * Questa sezione implementa funzioni per identificare il modello
- * del processore in base al sistema operativo:
- * - Linux: legge /proc/cpuinfo
- * - Windows: consulta il registro di sistema
- * - macOS: esegue il comando `sysctl`
- * Se non riesce a identificare la CPU, restituisce "Generic".
+ * ┌────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                            │
+ * │  MODULO: RILEVAMENTO AUTOMATICO DELLA CPU                                  │
+ * │                                                                            │
+ * │  Questo modulo implementa un sistema multipiattaforma per l'identificazione│
+ * │  automatica del modello di processore in uso. È progettato per adattare    │
+ * │  dinamicamente la simulazione dell'ALU 74181 alle caratteristiche hardware │
+ * │  della macchina ospite, migliorando la precisione temporale e la           │
+ * │  compatibilità.                                                            │
+ * │                                                                            │
+ * │  FUNZIONAMENTO PER SISTEMA OPERATIVO                                       │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Linux:                                                                  │
+ * │    - Legge il file virtuale /proc/cpuinfo                                  │
+ * │    - Estrae il campo "model name" o "vendor_id"                            │
+ * │                                                                            │
+ * │  • Windows:                                                                │
+ * │    - Interroga il registro di sistema                                      │
+ * │    - Utilizza le chiavi HKEY_LOCAL_MACHINE\Hardware\Description\System\... │
+ * │                                                                            │
+ * │  • macOS:                                                                  │
+ * │    - Esegue il comando `sysctl -n machdep.cpu.brand_string`                │
+ * │    - Interpreta l'output testuale                                          │
+ * │                                                                            │
+ * │  • Fallback:                                                               │
+ * │    - Se il rilevamento fallisce o il sistema è sconosciuto,                │
+ * │      viene restituito il nome generico "Generic"                           │
+ * │                                                                            │
+ * │  UTILIZZO                                                                  │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Visualizzazione del nome CPU nell'interfaccia del simulatore            │
+ * │  • Calcolo della frequenza di clock per simulazioni temporali              │
+ * │  • Logging e profiling delle prestazioni                                   │
+ * │                                                                            │
+ * │  NOTE TECNICHE                                                             │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Il modulo è progettato per essere estendibile: nuovi OS possono essere  │
+ * │    integrati facilmente tramite wrapper specifici                          │
+ * │  • La funzione restituisce una stringa allocata dinamicamente              │
+ * │    che deve essere liberata dal chiamante                                  │
+ * │                                                                            │
+ * │  AUTORE: Leonardo Galli                                                    │
+ * │  Ultimo aggiornamento: 20 ottobre 2025                                     │
+ * └────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 char* rileva_cpu() {
     static char nome_cpu[256] = "Generic";
@@ -1441,15 +1534,51 @@ long ottieni_clock(const char* nome_cpu) {
 }
 
 /*
- * SIMULAZIONE DEL CICLO DI CLOCK
- *
- * Queste funzioni emulano il passare del tempo in base alla frequenza
- * di clock del processore rilevato. Consentono di:
- * - Attendere un numero specifico di nanosecondi
- * - Simulare un singolo ciclo di clock
- * - Attendere un tempo equivalente a un numero di cicli (es. 2 secondi)
- * Utile per sincronizzare logicamente le operazioni con l'hardware simulato.
+ * ┌────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                            │
+ * │  MODULO: SIMULAZIONE DEL CICLO DI CLOCK                                    │
+ * │                                                                            │
+ * │  Questo modulo implementa un sistema di temporizzazione virtuale che       │
+ * │  emula il comportamento del clock di un processore reale. È progettato     │
+ * │  per sincronizzare le operazioni logiche e aritmetiche del simulatore      │
+ * │  ALU 74181 con una frequenza di clock coerente con quella della CPU        │
+ * │  rilevata.                                                                 │
+ * │                                                                            │
+ * │  FUNZIONALITÀ PRINCIPALI                                                   │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Attesa temporale in nanosecondi                                         │
+ * │    - Permette di simulare ritardi precisi a livello hardware               │
+ * │                                                                            │
+ * │  • Simulazione di un singolo ciclo di clock                                │
+ * │    - Calcola la durata di un ciclo in base alla frequenza (Hz)             │
+ * │    - Utilizza funzioni di sleep ad alta risoluzione                        │
+ * │                                                                            │
+ * │  • Attesa equivalente a N cicli                                            │
+ * │    - Utile per simulare operazioni complesse che richiedono più cicli      │
+ * │    - Esempio: simulare 2 secondi di attività a 3.7 GHz = ~7.4 miliardi di  │
+ * │      cicli                                                                 │
+ * │                                                                            │
+ * │  • Sincronizzazione logica                                                 │
+ * │    - Consente di allineare operazioni simulate con il tempo reale          │
+ * │    - Migliora la coerenza tra simulazione e comportamento atteso           │
+ * │                                                                            │
+ * │  CONTESTO DI UTILIZZO                                                      │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Simulazione di microarchitetture                                        │
+ * │  • Test di performance e profiling                                         │
+ * │  • Emulazione di circuiti digitali e logiche sequenziali                   │
+ * │                                                                            │
+ * │  NOTE TECNICHE                                                             │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • La precisione dipende dal sistema operativo e dal timer disponibile     │
+ * │  • Su Linux/macOS si consiglia l'uso di `nanosleep` o `clock_nanosleep`    │
+ * │  • Su Windows si può usare `QueryPerformanceCounter` per alta precisione   │
+ * │                                                                            │
+ * │  AUTORE: Leonardo Galli                                                    │
+ * │  Ultimo aggiornamento: 20 ottobre 2025                                     │
+ * └────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 void ritardo_ns(long nanosecondi) {
 #if SISTEMA_WINDOWS
@@ -1475,14 +1604,50 @@ void clock_step(int *CLK, int *prev_CLK, int milliseconds) {
 }
 
 /*
- * LOGICA DIGITALE DI BASE: FLIP-FLOP E REGISTRI
- *
- * Implementazione software di porte logiche (NAND, NOT, AND, OR, XOR)
- * e di un flip-flop SR sincronizzato con clock, basato su NAND.
- * Viene costruito un registro PIPO (Parallel-In Parallel-Out) a 8 bit,
- * esteso a 32 bit per supportare operazioni su parole intere.
- * Questa sezione simula il comportamento hardware dei registri.
+ * ┌────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                            │
+ * │  MODULO: LOGICA DIGITALE DI BASE — FLIP-FLOP E REGISTRI                    │
+ * │                                                                            │
+ * │  Questo modulo implementa i fondamenti della logica digitale tramite       │
+ * │  simulazione software di porte logiche e registri. È pensato per           │
+ * │  riprodurre fedelmente il comportamento di circuiti hardware, offrendo     │
+ * │  un ambiente sperimentale per comprendere l'elettronica digitale a basso   │
+ * │  livello.                                                                  │
+ * │                                                                            │
+ * │  COMPONENTI IMPLEMENTATI                                                   │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Porte logiche elementari:                                               │
+ * │    - NAND: base universale per costruire qualsiasi altra porta             │
+ * │    - NOT, AND, OR, XOR: derivate da combinazioni di NAND                   │
+ * │                                                                            │
+ * │  • Flip-Flop SR (Set-Reset):                                               │
+ * │    - Costruito esclusivamente con porte NAND                               │
+ * │    - Sincronizzato con segnale di clock                                    │
+ * │    - Comportamento bistabile con memoria interna                           │
+ * │                                                                            │
+ * │  • Registro PIPO (Parallel-In Parallel-Out):                               │
+ * │    - Composto da 8 flip-flop SR in parallelo                               │
+ * │    - Permette lettura e scrittura simultanea di byte                       │
+ * │    - Esteso a 32 bit tramite concatenazione di 4 registri da 8 bit         │
+ * │                                                                            │
+ * │  FUNZIONALITÀ                                                              │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Simulazione del comportamento temporale dei registri                    │
+ * │  • Manipolazione di segnali binari in ingresso e uscita                    │
+ * │  • Visualizzazione dello stato interno dei flip-flop                       │
+ * │  • Sincronizzazione con il ciclo di clock simulato                         │
+ * │                                                                            │
+ * │  CONTESTO DIDATTICO E TECNICO                                              │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Utile per corsi di elettronica digitale e architettura dei calcolatori  │
+ * │  • Strumento per makers e progettisti di circuiti logici                   │
+ * │  • Base per costruzione di CPU virtuali e microcontrollori simulati        │
+ * │                                                                            │
+ * │  AUTORE: Leonardo Galli                                                    │
+ * │  Ultimo aggiornamento: 20 ottobre 2025                                     │
+ * └────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 int NAND3(int A, int B, int C) { 
   return 1 - (A * B * C); 
@@ -1508,14 +1673,46 @@ void reg_PIPO32(int D[32], int S_reg[32], int R_reg[32], int CLK, int prev_CLK[3
 }
 
 /*
- * CONVERTITORI BINARIO ↔ DECIMALE
- *
- * Due funzioni complementari:
- * - BIN_DEC_DECODER: trasforma una stringa binaria in intero decimale
- * - DEC_BIN_CODER: converte un intero decimale in stringa binaria
- * Entrambe gestiscono input non validi e sono utilizzate nell'interfaccia utente
- * per operazioni di conversione manuale o da file.
+ * ┌────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                            │
+ * │  MODULO: CONVERTITORI BINARIO ↔ DECIMALE                                   │
+ * │                                                                            │
+ * │  Questo modulo fornisce due funzioni fondamentali per la conversione tra   │
+ * │  rappresentazioni numeriche binarie e decimali. È progettato per essere    │
+ * │  robusto, intuitivo e integrabile nell'interfaccia utente del simulatore   │
+ * │  ALU 74181, sia per input manuali che per elaborazione da file.            │
+ * │                                                                            │
+ * │  FUNZIONI PRINCIPALI                                                       │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • BIN_DEC_DECODER                                                         │
+ * │    - Input: stringa binaria (es. "101101")                                 │
+ * │    - Output: intero decimale equivalente (es. 45)                          │
+ * │    - Gestione errori: verifica che la stringa contenga solo '0' e '1'      │
+ * │                                                                            │
+ * │  • DEC_BIN_CODER                                                           │
+ * │    - Input: intero decimale (es. 45)                                       │
+ * │    - Output: stringa binaria equivalente (es. "101101")                    │
+ * │    - Gestione errori: verifica che il numero sia non negativo              │
+ * │                                                                            │
+ * │  UTILIZZO                                                                  │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Conversione manuale tramite interfaccia grafica                         │
+ * │  • Parsing di file contenenti dati binari o decimali                       │
+ * │  • Supporto a operazioni logiche e aritmetiche nel simulatore              │
+ * │  • Visualizzazione dei risultati in formato leggibile                      │
+ * │                                                                            │
+ * │  NOTE TECNICHE                                                             │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Le funzioni sono ottimizzate per prestazioni elevate anche su input     │
+ * │    di grandi dimensioni                                                    │
+ * │  • Compatibili con sistemi a 32 e 64 bit                                   │
+ * │  • Modulari e facilmente estendibili per supportare altri formati (es. HEX)│
+ * │                                                                            │
+ * │  AUTORE: Leonardo Galli                                                    │
+ * │  Ultimo aggiornamento: 20 ottobre 2025                                     │
+ * └────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 int BIN_DEC_DECODER(const char *binario) { 
   if (binario == NULL) { 
@@ -1559,13 +1756,47 @@ char* DEC_BIN_CODER(int numero) {
 }
 
 /*
- * SISTEMA DI MEMORIA DINAMICA
- *
- * Implementa una memoria virtuale espandibile in cui vengono salvati
- * i risultati delle operazioni ALU (es. carry, risultati).
- * Usa realloc() per raddoppiare la capacità quando necessario.
- * Include funzioni per stampare lo stato e il contenuto della memoria.
+ * ┌────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                            │
+ * │  MODULO: SISTEMA DI MEMORIA DINAMICA                                       │
+ * │                                                                            │
+ * │  Questo modulo implementa una memoria virtuale espandibile, progettata     │
+ * │  per archiviare dinamicamente i risultati delle operazioni logiche e       │
+ * │  aritmetiche eseguite dall'ALU 74181 simulata.                             │
+ * │                                                                            │
+ * │  FUNZIONALITÀ PRINCIPALI                                                   │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Allocazione iniziale dinamica                                           │
+ * │    - La memoria viene inizializzata con una capacità predefinita           │
+ * │    - Ogni cella può contenere un valore intero (es. risultato, flag carry) │
+ * │                                                                            │
+ * │  • Espansione automatica                                                   │
+ * │    - Quando la capacità viene raggiunta, la memoria viene raddoppiata      │
+ * │      tramite realloc()                                                     │
+ * │    - Garantisce efficienza e scalabilità senza perdita di dati             │
+ * │                                                                            │
+ * │  • Funzioni di utilità                                                     │
+ * │    - Inserimento di nuovi valori                                           │
+ * │    - Stampa dello stato attuale (dimensione, capacità, contenuto)          │
+ * │    - Reset o svuotamento della memoria                                     │
+ * │                                                                            │
+ * │  UTILIZZO                                                                  │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Tracciamento dei risultati delle operazioni ALU                         │
+ * │  • Debug e visualizzazione dello storico delle operazioni                  │
+ * │  • Supporto a funzionalità di salvataggio e caricamento da file            │
+ * │                                                                            │
+ * │  NOTE TECNICHE                                                             │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • realloc() è utilizzato in modo sicuro, con controllo su NULL            │
+ * │  • La gestione della memoria è compatibile con ambienti a 32 e 64 bit      │
+ * │  • Il modulo è progettato per essere thread-safe se integrato con mutex    │
+ * │                                                                            │
+ * │  AUTORE: Leonardo Galli                                                    │
+ * │  Ultimo aggiornamento: 20 ottobre 2025                                     │
+ * └────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 int *memoria = NULL; 
 int capacita_memoria = 10; 
@@ -1677,17 +1908,51 @@ int porta_exor_5(int a, int b, int c, int d, int e) {
 }
 
 /*
- * SIMULAZIONE DELL'ALU 74181 (4-BIT)
- *
- * Implementazione logica completa del chip storico 74181,
- * che esegue 16 funzioni logiche/aritmetiche su 4 bit.
- * Calcola:
- * - Output F[0..3]
- * - Flag di uguaglianza (A == B)
- * - Propagate (P) e Generate (G) per carry lookahead
- * - Carry out (Cn+4)
- * La logica è espressa tramite porte logiche software (NAND, OR, ecc.).
+ * ┌────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                            │
+ * │  MODULO: SIMULAZIONE DELL'ALU 74181 (4-BIT)                                │
+ * │                                                                            │
+ * │  Questo modulo implementa la logica completa del chip storico 74181,       │
+ * │  una delle prime ALU integrate prodotte da Texas Instruments nel 1970.     │
+ * │  È in grado di eseguire 16 operazioni logiche e aritmetiche su parole      │
+ * │  da 4 bit, ed è stato utilizzato in numerosi sistemi minicomputer e        │
+ * │  mainframe dell’epoca.                                                     │
+ * │                                                                            │
+ * │  FUNZIONALITÀ PRINCIPALI                                                   │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Calcolo dell’output F[0..3]                                             │
+ * │    - Risultato dell’operazione selezionata tra A e B                       │
+ * │                                                                            │
+ * │  • Flag di uguaglianza (A == B)                                            │
+ * │    - Verifica bit a bit dell’identità tra gli operandi                     │
+ * │                                                                            │
+ * │  • Segnali di Propagate (P) e Generate (G)                                 │
+ * │    - Utilizzati per il carry lookahead                                     │
+ * │    - Ottimizzano la propagazione del riporto nei sistemi a cascata         │
+ * │                                                                            │
+ * │  • Carry out (Cn+4)                                                        │
+ * │    - Riporto finale generato dall’operazione                               │
+ * │                                                                            │
+ * │  IMPLEMENTAZIONE LOGICA                                                    │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Tutte le funzioni sono simulate tramite porte logiche software          │
+ * │    - NAND, AND, OR, XOR, NOT                                               │
+ * │    - Costruite per riflettere il comportamento elettrico reale             │
+ * │                                                                            │
+ * │  • La selezione delle operazioni è controllata da 4 bit di funzione (S0–S3)│
+ * │    e da un bit di modalità (M) per distinguere tra logica e aritmetica     │
+ * │                                                                            │
+ * │  CONTESTO DIDATTICO E TECNICO                                              │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Ideale per lo studio dell’architettura dei calcolatori                  │
+ * │  • Utile per la progettazione di CPU virtuali e simulatori hardware        │
+ * │  • Base per estensione a 8, 16, 32 bit tramite cascata di ALU              │
+ * │                                                                            │
+ * │  AUTORE: Leonardo Galli                                                    │
+ * │  Ultimo aggiornamento: 20 ottobre 2025                                     │
+ * └────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 void n_ALU74181(int Cn, int M, int A[4], int B[4], int S[4], int F[4], int *A_uguale_B, int *P, int *Cn_piu_4, int *G) { 
   F[0] = porta_exor(porta_not(porta_and(Cn, porta_not(M))), porta_and(porta_not(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))))); 
@@ -1720,13 +1985,52 @@ static int leggi_bit_input_32(const char* nome, int* var) {
 }
 
 /*
- * INTERFACCIA UTENTE PER L'ALU 74181
- *
- * Gestisce l'input manuale o da file (input_alu.txt),
- * valida i bit inseriti (0/1), esegue la simulazione,
- * salva il risultato in memoria e su file (risultati_alu_74181.txt),
- * e attende un tempo proporzionale al clock del processore.
+ * ┌────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                            │
+ * │  MODULO: INTERFACCIA UTENTE PER L'ALU 74181                                │
+ * │                                                                            │
+ * │  Questo modulo gestisce l'interazione tra l'utente e il simulatore         │
+ * │  dell'ALU 74181, consentendo l'inserimento dei dati, l'esecuzione delle    │
+ * │  operazioni e la visualizzazione dei risultati. È progettato per essere    │
+ * │  intuitivo, robusto e compatibile con input manuali e da file.             │
+ * │                                                                            │
+ * │  FUNZIONALITÀ PRINCIPALI                                                   │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Input manuale                                                           │
+ * │    - L'utente può inserire direttamente i bit A[0..3], B[0..3] e le opzioni│
+ * │      di funzione tramite tastiera                                          │
+ * │                                                                            │
+ * │  • Input da file                                                           │
+ * │    - Il modulo legge da "input_alu.txt" una sequenza di operazioni         │
+ * │    - Supporta batch processing per simulazioni multiple                    │
+ * │                                                                            │
+ * │  • Validazione dell'input                                                  │
+ * │    - Controlla che i bit siano corretti (solo '0' e '1')                   │
+ * │    - Verifica la lunghezza e la struttura dei dati                         │
+ * │                                                                            │
+ * │  • Esecuzione della simulazione                                            │
+ * │    - Invia i dati al modulo ALU                                            │
+ * │    - Riceve i risultati (F[0..3], flag, carry, ecc.)                       │
+ * │                                                                            │
+ * │  • Salvataggio dei risultati                                               │
+ * │    - I risultati vengono memorizzati nella memoria dinamica                │
+ * │    - Vengono anche scritti su "risultati_alu_74181.txt"                    │
+ * │                                                                            │
+ * │  • Temporizzazione                                                         │
+ * │    - Ogni operazione è sincronizzata con il clock simulato                 │
+ * │    - Il tempo di attesa è proporzionale alla frequenza del processore      │
+ * │                                                                            │
+ * │  UTILIZZO                                                                  │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Interfaccia testuale per utenti e sviluppatori                          │
+ * │  • Debug e verifica delle operazioni ALU                                   │
+ * │  • Simulazioni didattiche e sperimentali                                   │
+ * │                                                                            │
+ * │  AUTORE: Leonardo Galli                                                    │
+ * │  Ultimo aggiornamento: 20 ottobre 2025                                     │
+ * └────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 void simula_alu_74181() {
     int Cn, M, A0, B0, A1, B1, A2, B2, A3, B3, S0, S1, S2, S3;
@@ -1879,14 +2183,51 @@ void simula_alu_74181() {
 }
 
 /*
- * ALU A 32 BIT BASATA SU 8 CHIP 74181
- *
- * Estende la logica del 74181 a 32 bit concatenando 8 unità da 4 bit.
- * Simula il caricamento degli operandi nei registri PIPO,
- * esegue l'operazione ALU con propagazione del carry tra nibble,
- * e memorizza il risultato finale.
- * Supporta input manuale o da file (input_alu32.txt).
+ * ┌────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                            │
+ * │  MODULO: ALU A 32 BIT BASATA SU 8 CHIP 74181                               │
+ * │                                                                            │
+ * │  Questo modulo estende la logica del chip storico 74181, originariamente   │
+ * │  progettato per operazioni su 4 bit, a una configurazione a 32 bit.        │
+ * │  L'estensione è ottenuta concatenando 8 unità ALU 74181 in cascata,        │
+ * │  ciascuna responsabile di un nibble (4 bit) dell'operazione.               │
+ * │                                                                            │
+ * │  FUNZIONALITÀ PRINCIPALI                                                   │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Caricamento degli operandi                                              │
+ * │    - Gli input A e B vengono suddivisi in 8 blocchi da 4 bit               │
+ * │    - Ogni blocco viene caricato in un registro PIPO dedicato               │
+ * │                                                                            │
+ * │  • Esecuzione dell'operazione ALU                                          │
+ * │    - Ogni chip 74181 esegue la funzione logica/aritmetica selezionata      │
+ * │    - Il carry viene propagato tra le unità per garantire coerenza          │
+ * │      nei calcoli aritmetici (carry lookahead)                              │
+ * │                                                                            │
+ * │  • Memorizzazione del risultato                                            │
+ * │    - I risultati parziali vengono combinati in un'unica parola a 32 bit    │
+ * │    - Il risultato finale viene salvato nella memoria dinamica              │
+ * │                                                                            │
+ * │  • Input flessibile                                                        │
+ * │    - Supporta input manuale tramite tastiera                               │
+ * │    - Supporta input da file strutturato ("input_alu32.txt")                │
+ * │                                                                            │
+ * │  UTILIZZO                                                                  │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Simulazione di operazioni su interi a 32 bit                            │
+ * │  • Verifica della propagazione del carry tra unità ALU                     │
+ * │  • Studio dell'architettura scalabile basata su componenti discreti        │
+ * │                                                                            │
+ * │  NOTE TECNICHE                                                             │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Ogni unità ALU è indipendente ma sincronizzata tramite clock simulato   │
+ * │  • Il sistema è progettato per essere estendibile a 64 bit o oltre         │
+ * │  • La gestione del carry è conforme al comportamento del chip originale    │
+ * │                                                                            │
+ * │  AUTORE: Leonardo Galli                                                    │
+ * │  Ultimo aggiornamento: 20 ottobre 2025                                     │
+ * └────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 void ALU32() {
     unsigned int operandoA = 0, operandoB = 0;
@@ -2091,14 +2432,50 @@ int divisione(int a, int b) {
 }
 
 /*
- * CALCOLATRICE AVANZATA CON SUPPORTO A ESPRESSIONI
- *
- * Offre un menu interattivo per:
- * - Somma, sottrazione, moltiplicazione, divisione sequenziale
- * - Valutazione di espressioni complesse (es. (3+5)*2-4)
- * Usa comandi di sistema (echo $((...)) su Unix, set /a su Windows)
- * per calcolare le espressioni. I risultati vengono salvati su file.
+ * ┌────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                            │
+ * │  MODULO: CALCOLATRICE AVANZATA CON SUPPORTO A ESPRESSIONI                  │
+ * │                                                                            │
+ * │  Questo modulo fornisce un'interfaccia interattiva per l'esecuzione di     │
+ * │  operazioni matematiche, sia semplici che complesse, all'interno del       │
+ * │  simulatore ALU 74181. È progettato per offrire flessibilità e precisione  │
+ * │  nell'elaborazione di espressioni numeriche.                               │
+ * │                                                                            │
+ * │  FUNZIONALITÀ PRINCIPALI                                                   │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Operazioni sequenziali                                                  │
+ * │    - Somma, sottrazione, moltiplicazione, divisione                        │
+ * │    - Esecuzione passo-passo con visualizzazione intermedia dei risultati   │
+ * │                                                                            │
+ * │  • Valutazione di espressioni complesse                                    │
+ * │    - Supporta parentesi e operatori multipli                               │
+ * │    - Esempio: (3 + 5) * 2 - 4 = 12                                         │
+ * │                                                                            │
+ * │  • Compatibilità multipiattaforma                                          │
+ * │    - Unix/Linux/macOS: utilizza `echo $((...))` per valutare espressioni   │
+ * │    - Windows: utilizza `set /a` per eseguire calcoli                       │
+ * │                                                                            │
+ * │  • Salvataggio dei risultati                                               │
+ * │    - I risultati vengono scritti su file ("risultati_calcolatrice.txt")    │
+ * │    - Supporta log cronologico delle operazioni                             │
+ * │                                                                            │
+ * │  UTILIZZO                                                                  │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Interfaccia testuale per utenti finali                                  │
+ * │  • Supporto a test e simulazioni numeriche                                 │
+ * │  • Integrazione con moduli ALU per verifica dei risultati                  │
+ * │                                                                            │
+ * │  NOTE TECNICHE                                                             │
+ * │  ────────────────────────────────────────────────────────────────────────  │
+ * │  • Le espressioni vengono validate prima dell'esecuzione                   │
+ * │  • Il modulo è estendibile per supportare floating point e funzioni        │
+ * │    matematiche avanzate (es. potenze, radici, moduli)                      │
+ * │                                                                            │
+ * │  AUTORE: Leonardo Galli                                                    │
+ * │  Ultimo aggiornamento: 20 ottobre 2025                                     │
+ * └────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 void operazioni_algebriche() {
     while (1) {
@@ -2320,18 +2697,52 @@ void misura_ciclo_clock() {
 }
 
 /*
- * FUNZIONE PRINCIPALE (MAIN)
- *
- * Implementa il menu interattivo del programma con 10 opzioni:
- * 1-2: Simulazione ALU 74181 (con/senza attesa clock)
- * 3: Calcolatrice avanzata
- * 4-5: Conversioni binario/decimale
- * 6-7: ALU a 32 bit (con/senza attesa clock)
- * 8: Visualizzazione memoria
- * 9: Misura del ciclo di clock
- * 0: Uscita con pulizia della memoria
- * Gestisce input non validi e libera la memoria all'uscita.
+ * ┌─────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                             │
+ * │  FUNZIONE PRINCIPALE (MAIN)                                                 │
+ * │                                                                             │
+ * │  Punto di ingresso del simulatore ALU 74181. Questa funzione implementa un  │
+ * │  menu interattivo testuale che consente all'utente di accedere a tutte le   │
+ * │  funzionalità del programma. Gestisce il flusso di controllo, la validazione│
+ * │  dell'input e la corretta terminazione del sistema.                         │
+ * │                                                                             │
+ * │  STRUTTURA DEL MENU                                                         │
+ * │  ────────────────────────────────────────────────────────────────────────   │
+ * │  • Opzione 1: Simulazione ALU 74181 con attesa temporale                    │
+ * │  • Opzione 2: Simulazione ALU 74181 senza attesa                            │
+ * │  • Opzione 3: Calcolatrice avanzata con supporto a espressioni              │
+ * │  • Opzione 4: Conversione binario → decimale                                │
+ * │  • Opzione 5: Conversione decimale → binario                                │
+ * │  • Opzione 6: Simulazione ALU a 32 bit con attesa temporale                 │
+ * │  • Opzione 7: Simulazione ALU a 32 bit senza attesa                         │
+ * │  • Opzione 8: Visualizzazione dello stato e contenuto della memoria         │
+ * │  • Opzione 9: Misurazione del ciclo di clock del processore                 │
+ * │  • Opzione 0: Uscita dal programma con pulizia della memoria allocata       │
+ * │                                                                             │
+ * │  FUNZIONALITÀ DI CONTROLLO                                                  │
+ * │  ────────────────────────────────────────────────────────────────────────   │
+ * │  • Validazione dell'input utente                                            │
+ * │    - Controlla che l'opzione selezionata sia compresa tra 0 e 9             │
+ * │    - Gestisce input non numerici o fuori range                              │
+ * │                                                                             │
+ * │  • Gestione della memoria                                                   │
+ * │    - All'uscita, libera tutte le risorse allocate dinamicamente             │
+ * │    - Garantisce una chiusura pulita e sicura del programma                  │
+ * │                                                                             │
+ * │  • Loop interattivo                                                         │
+ * │    - Il menu viene ripresentato dopo ogni operazione                        │
+ * │    - L'utente può eseguire più simulazioni senza riavviare il programma     │
+ * │                                                                             │
+ * │  UTILIZZO                                                                   │
+ * │  ────────────────────────────────────────────────────────────────────────   │
+ * │  • Interfaccia principale per accedere a tutte le funzionalità del sistema  │
+ * │  • Pensata per utenti didattici, sviluppatori e appassionati di logica      │
+ * │                                                                             │
+ * │  AUTORE: Leonardo Galli                                                     │
+ * │  Ultimo aggiornamento: 20 ottobre 2025                                      │
+ * └─────────────────────────────────────────────────────────────────────────────┘
  */
+
 
 int main() {
     int scelta;
