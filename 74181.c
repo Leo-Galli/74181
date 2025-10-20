@@ -1601,15 +1601,16 @@ void attendi_un_ciclo_clock() {
     ritardo_ns(ciclo_ns);
 }
 void attendi_cicli_clock_equivalenti_a_secondi(double secondi) {
+    if (secondi <= 0.0) return;
     char *cpu = rileva_cpu();
     long freq = ottieni_clock(cpu);
-    long num_cicli = (long)(freq * secondi);
-    if (num_cicli > 1000000000L) {
-        num_cicli = 1000000000L;
+    if (freq <= 0) freq = 1000000000L;
+    double nanosecondi_totali = secondi * 1e9;
+    long ns = (long)nanosecondi_totali;
+    if (ns > 5000000000L) {
+        ns = 5000000000L;
     }
-    for (long i = 0; i < num_cicli; i++) {
-        attendi_un_ciclo_clock();
-    }
+    ritardo_ns(ns);
 }
 void stampa_memoria() { 
   printf("Contenuto della memoria:\n"); 
@@ -2526,8 +2527,8 @@ int main() {
         }
         else {
             printf("Scelta non valida!\n");
+            continue;
         }
-        attendi_cicli_clock_equivalenti_a_secondi(2.0);
     }
     if (memoria != NULL) {
         free(memoria);
