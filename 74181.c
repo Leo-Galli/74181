@@ -2791,7 +2791,7 @@ int main() {
             printf("Errore di input.\n");
             continue;
         }
-        if input[0] == '\n' || input[0] == '\0') {
+        if (input[0] == '\n' || input[0] == '\0') {
             continue; // Skip error message for empty input
         }
         int isValid = 1;
