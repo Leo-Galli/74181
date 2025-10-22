@@ -1,4 +1,4 @@
-# Contribuire a CONTRIBUTING.md
+# Come Contribuire
 
 Innanzitutto, grazie per dedicare del tempo a contribuire!
 
