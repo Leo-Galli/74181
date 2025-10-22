@@ -2792,7 +2792,7 @@ int main() {
             continue;
         }
         if (input[0] == '\n' || input[0] == '\0') {
-            continue; // Skip error message for empty input
+            continue;
         }
         int isValid = 1;
         for (int i = 0; input[i] != '\0' && input[i] != '\n'; i++) {
