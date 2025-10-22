@@ -1,0 +1,3 @@
+
+[OPERAZIONE: SOMMA]
+Risultato: 170.00
