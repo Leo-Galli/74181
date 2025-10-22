@@ -2847,6 +2847,8 @@ int main() {
                 int risultato = BIN_DEC_DECODER(bin);
                 if (risultato != -1) {
                     printf("Risultato (decimale): %d\n", risultato);
+                    int c;
+                    while ((c = getchar()) != '\n' && c != EOF);
                     continue;
                 }
             } else {
@@ -2860,6 +2862,8 @@ int main() {
                         fprintf(file, "Numero Binario: <0>\n");
                         fclose(file);
                         printf("Creato file input_bin.txt. Compilarlo e riavviare.\n");
+                        int c;
+                        while ((c = getchar()) != '\n' && c != EOF);
                         continue;
                     }
                 } else {
@@ -2875,12 +2879,16 @@ int main() {
                                 fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
                                 fprintf(file_out, "Risultato      = %-3d\n", risultato);
                                 fclose(file_out);
+                                int c;
+                                while ((c = getchar()) != '\n' && c != EOF);
                                 continue;
                             }
                         }
                     } else {
                         fclose(file);
                         printf("ERRORE: Formato file incompleto\n");
+                        int c;
+                        while ((c = getchar()) != '\n' && c != EOF);
                         continue;
                     }
                 }
@@ -2898,6 +2906,8 @@ int main() {
                 printf(">> Inserisci un numero decimale: ");
                 scanf("%d", &dec);
                 printf("Risultato (binario): %s\n", DEC_BIN_CODER(dec));
+                int c;
+                while ((c = getchar()) != '\n' && c != EOF);
                 continue;
             } else {
                 FILE *file = fopen("input_dec.txt", "r");
@@ -2905,11 +2915,15 @@ int main() {
                     file = fopen("input_dec.txt", "w");
                     if (!file) {
                         printf("ERRORE: Impossibile creare il file\n");
+                        int c;
+                        while ((c = getchar()) != '\n' && c != EOF);
                         continue;
                     } else {
                         fprintf(file, "Numero Decimale: <0>\n");
                         fclose(file);
                         printf("Creato file input_dec.txt. Compilarlo e riavviare.\n");
+                        int c;
+                        while ((c = getchar()) != '\n' && c != EOF);
                         continue;
                     }
                 } else {
@@ -2926,12 +2940,16 @@ int main() {
                                 fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
                                 fprintf(file_out, "Risultato      = %-16s\n", DEC_BIN_CODER(dec));
                                 fclose(file_out);
+                                int c;
+                                while ((c = getchar()) != '\n' && c != EOF);
                                 continue;
                             }
                         }
                     } else {
                         fclose(file);
                         printf("ERRORE: Formato file incompleto\n");
+                        int c;
+                        while ((c = getchar()) != '\n' && c != EOF);
                         continue;
                     }
                 }
@@ -2956,17 +2974,16 @@ int main() {
             stampa_memoria();
             stato_memoria();
             int c;
-            while ((c = getchar()) != '\n' && c != EOF);
             continue;
         }
         else if (scelta == 9) {
             misura_ciclo_clock();
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
             continue;
         }
         else {
             printf("Scelta non valida!\n");
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
             continue;
         }
     }
