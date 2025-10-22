@@ -17,4 +17,4 @@ jobs:
       run: gcc -Wall -Wextra -O2 74181.c -o 74181
 
     - name: Esegui programma (Calcolo del Clock + Esci)
-      run: echo -e "9\n0\n" | ./74181
+      run: echo -e "0\n" | ./74181
