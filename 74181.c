@@ -2651,24 +2651,41 @@ void operazioni_algebriche() {
             }
             case 5: {
                 char input[256];
+                int c;
+                while ((c = getchar()) != '\n' && c != EOF);
                 printf("\n╔══════════════════════════════════════════════════════╗\n");
                 printf("║               CALCOLO DI ESPRESSIONE                 ║\n");
                 printf("╚══════════════════════════════════════════════════════╝\n");
                 printf("Inserisci un'espressione (es: (3+5)*2-4): ");
-                scanf(" %[^\n]", input);
-
+                if (!fgets(input, sizeof(input), stdin)) {
+                  fprintf(stderr, "Input error.\n");
+                  fclose(file);
+                  continue;
+                }
+                size_t len = strlen(input);
+                if (len > 0 && input[len-1] == '\n') input[len-1] = '\0';
+                if (strlen(input) == 0) {
+                    printf("Espressione vuota.\n");
+                    fclose(file);
+                    continue;
+                }
+                if (!is_safe_expr(input)) {
+                    printf("Espressione non valida: contiene caratteri non permessi o parentesi sbilanciate.\n");
+                    fclose(file);
+                    continue;
+                }
                 char comando[512];
 
 #ifdef _WIN32
-                strcpy(comando, "set /a ");
+                int n = snprintf(comando, sizeof(comando), "set /a %s", input);
 #else
-                strcpy(comando, "echo $(( ");
+                int n = snprintf(comando, sizeof(comando), "echo $(( %s ))", input);
 #endif
-                strcat(comando, input);
-#ifdef _WIN32
-#else
-                strcat(comando, " ))");
-#endif
+                if (n < 0 || n >= (int)sizeof(comando)) {
+                    fprintf(stderr, "Espresssione troppo lunga.\n");
+                    fclose(file);
+                    continue;
+                }
 #ifdef _WIN32
                 FILE *fp = _popen(comando, "r");
 #else
@@ -2679,13 +2696,20 @@ void operazioni_algebriche() {
                     fclose(file);
                     continue;
                 }
-                double risultato;
-                fscanf(fp, "%lf", &risultato);
+                long long int_res = 0;
+                int scan_ok = fscanf(fp, "%lld", &int_res);
 #ifdef _WIN32
                 _pclose(fp);
 #else
                 pclose(fp);
 #endif
+                if (scan_ok != 1) {
+                    printf("Impossibile leggere il risultato (output inatteso).\n");
+                    fclose(file);
+                    continue;
+                }
+                double risultato = (double)int_res;
+
                 printf("\n────────────────────────────────────────────────────────\n");
                 printf("Espressione: %s\n", input);
                 printf("Risultato: %.2lf\n", risultato);

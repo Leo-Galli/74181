@@ -1,0 +1,16 @@
+
+[OPERAZIONE: ESPRESSIONE]
+Espressione: 3+4
+Risultato: 7.00
+
+[OPERAZIONE: ESPRESSIONE]
+Espressione: 3+4
+Risultato: 7.00
+
+[OPERAZIONE: ESPRESSIONE]
+Espressione: 3+4
+Risultato: 7.00
+
+[OPERAZIONE: ESPRESSIONE]
+Espressione: 3+4
+Risultato: 7.00
