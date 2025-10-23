@@ -68,6 +68,7 @@
 #include <time.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <stdbool.h>
 #if defined(_WIN32)
 #define SISTEMA_WINDOWS 1
 #include <windows.h>
@@ -1671,6 +1672,37 @@ void reg_PIPO32(int D[32], int S_reg[32], int R_reg[32], int CLK, int prev_CLK[3
     n_PIPO74198(&D[i * 8], &S_reg[i * 8], &R_reg[i * 8], CLK, &prev_CLK[i * 8], &Q[i * 8], &Q_bar[i * 8]);
   } 
 }
+static bool parentesi(const char *s) {
+    int profondita = 0;
+    for (; *s; ++s) {
+        if (*s == '(') profondita++;
+        else if (*s == ')') {
+            profondita--;
+            if (profondita < 0) return false;
+        }
+    }
+    return profondita == 0;
+}
+
+static bool is_safe_expr(const char *s) {
+    if (!s) return false;
+
+    const char *p = s;
+    while (*p && isspace((unsigned char)*p)) p++;
+    if (*p == '\0') return false;
+
+    for (; *s; ++s) {
+        unsigned char c = (unsigned char)*s;
+        if (isdigit(c) || isspace(c)) continue;
+        if (c == '+' || c == '-' || c == '*' || c == '/' || c == '%' ||
+            c == '(' || c == ')' || c == '.' ) continue;
+        return false;
+    }
+
+    if (!parentesi(p)) return false;
+
+    return true;
+}
 
 /*
  * ┌────────────────────────────────────────────────────────────────────────────┐
@@ -2626,6 +2658,7 @@ void operazioni_algebriche() {
                 scanf(" %[^\n]", input);
 
                 char comando[512];
+
 #ifdef _WIN32
                 strcpy(comando, "set /a ");
 #else
