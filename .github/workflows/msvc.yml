@@ -38,7 +38,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure CMake
-        run: cmake -S .github/workflows -B ${{ env.build }}
+        run: cmake -S ${{ github.workspace }} -B ${{ env.build }}
+
 
       - name: Build Project
         run: cmake --build ${{ env.build }} --config Release
