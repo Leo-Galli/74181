@@ -68,6 +68,7 @@
 #include <time.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <limits.h>
 #ifdef _WIN32
 #include <io.h>
 #include <process.h>
@@ -1537,7 +1538,7 @@ char* rileva_cpu() {
 }
 long long ottieni_clock(const char* nome_cpu) {
     if (!nome_cpu) return 1000000000LL;
-    for (int i = 0; i < NUM_PROCESSORI; i++) {
+    for (size_t i = 0; i < NUM_PROCESSORI; i++) {
         if (strstr(nome_cpu, db_processori[i].nome) != NULL) {
             return db_processori[i].clock_hz; 
         }
@@ -1868,7 +1869,9 @@ void salva_in_memoria(int valore) {
 void attendi_un_ciclo_clock() {
     char *cpu = rileva_cpu();
     long long freq = ottieni_clock(cpu);
-    long long ciclo_ns_ll = (long long)(1e9 / (double)freq);
+    if (freq <= 0) freq = 1000000000LL;
+    double ciclo_s = 1.0 / (double)freq;
+    long long ciclo_ns_ll = (long long)(ciclo_s * 1e9);
     long ciclo_ns = (ciclo_ns_ll > LONG_MAX) ? LONG_MAX : (long)ciclo_ns_ll;
     if (ciclo_ns < 1000) {
         ciclo_ns = 1000;
@@ -2749,11 +2752,11 @@ void misura_ciclo_clock() {
     printf("==============================\n");
     char *cpu = rileva_cpu();
     printf("CPU rilevata: %s\n", cpu);
-    long freq = ottieni_clock(cpu);
+    long long freq = ottieni_clock(cpu);
     if (freq <= 0) {
-        freq = 1000000000L;
+        freq = 1000000000LL;
     }
-    printf("Frequenza di clock trovata: %ld Hz\n", freq);
+    printf("Frequenza di clock trovata: %lld Hz\n", freq);
     double durata_ns = (1.0 / (double)freq) * 1e9;
     printf("Durata stimata di un ciclo: %.3f ns\n", durata_ns);
     printf("\n==============================\n");
