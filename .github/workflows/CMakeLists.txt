@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 add_executable(74181
-    ../../../74181.c
+    74181.c
 )
 
 if (MSVC)
