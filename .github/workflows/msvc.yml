@@ -57,4 +57,4 @@ jobs:
           sarif_file: ${{ steps.run-analysis.outputs.sarif }}
           
       - name: Run Executable
-        run: .\build\Release\74181.exe
+        run: echo 0 | .\build\Release\74181.exe
