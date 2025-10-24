@@ -1528,7 +1528,11 @@ char* rileva_cpu() {
     if (SISTEMA_MAC) {
         FILE *p = popen("sysctl -n machdep.cpu.brand_string", "r");
         if (p) {
-            fgets(nome_cpu, sizeof(nome_cpu), p);
+            if (fgets(nome_cpu, sizeof(nome_cpu), p) != NULL) {
+                nome_cpu[strcspn(nome_cpu, "\n")] = '\0';
+            } else {
+                nome_cpu[0] = '\0';
+            }
             nome_cpu[strcspn(nome_cpu, "\n")] = '\0';
             pclose(p);
             return nome_cpu;
@@ -2089,9 +2093,12 @@ void simula_alu_74181() {
     int input_valido = 1;
 
     printf("Inserire dati manualmente? (S/N): ");
-    scanf("%2s", scelta);
+    if (scanf("%2s", scelta) != 1) {
+        scelta[0] = '\0';
+        pulisci_input();n
+        return;
+    }
     scelta[0] = (char) toupper((unsigned char)scelta[0]);
-
     if (scelta[0] == 'S') {
         if (!leggi_bit_input_74181("Cn", &Cn)) input_valido = 0;
         if (input_valido && !leggi_bit_input_74181("M", &M)) input_valido = 0;
@@ -2287,7 +2294,11 @@ void ALU32() {
     int input_valido = 1;
 
     printf("Inserire dati manualmente? (S/N): ");
-    scanf("%2s", scelta);
+    if (scanf("%2s", scelta) != 1) {
+        scelta[0] = '\0';
+        pulisci_input();
+        return;
+    }
     scelta[0] = (char) toupper((unsigned char)scelta[0]);
 
     if (scelta[0] == 'S') {
@@ -2543,7 +2554,10 @@ void operazioni_algebriche() {
         printf("   5 - Calcola espressione (es: (3+5)*2-4)\n");
         printf("   6 - Esci\n");
         printf(">> Scelta (numero o parola): ");
-        scanf("%s", operazione);
+        if (scanf("%29s", operazione) != 1) { 
+            pulisci_input();
+            continue;
+        }
 
         if (strlen(operazione) == 1 && isdigit(operazione[0])) {
             scelta = operazione[0] - '0';
@@ -2635,66 +2649,95 @@ void operazioni_algebriche() {
                 while (getchar() != '\n');
                 continue;
             }
-            case 4: { 
-                double val, risultato;
+            case 4: {
+                char token[64];
+                double val;
+                double risultato = 0.0;
                 int count = 0;
+                int errore_div_zero = 0;
+
                 printf("\n╔══════════════════════════════════════════════════════╗\n");
                 printf("║                DIVISIONE SEQUENZIALE                 ║\n");
                 printf("╚══════════════════════════════════════════════════════╝\n");
-                printf("Inserisci i numeri da dividere (scrivi una lettera per terminare):\n");
-                while (scanf("%lf", &val) == 1) {
-                    if (count == 0) risultato = val;
-                    else {
-                        if (val == 0) {
+                printf("Inserisci i numeri da dividere (separa con spazi o invii). Per terminare scrivi una lettera e premi invio.\n");
+
+                while (1) {
+                    if (scanf("%63s", token) != 1) {
+                        pulisci_input();
+                        break;
+                    }
+                    char *endptr = NULL;
+                    val = strtod(token, &endptr);
+                    if (endptr == token) {
+                        break;
+                    }
+
+                    if (count == 0) {
+                        risultato = val;
+                    } else {
+                        if (val == 0.0) {
                             printf("Errore: divisione per zero!\n");
+                            errore_div_zero = 1;
                             break;
                         }
                         risultato /= val;
                     }
                     count++;
                 }
-                if (count < 2) {
+                pulisci_input();
+
+                if (count < 2 && !errore_div_zero) {
                     printf("Serve almeno 2 numeri.\n");
                     fclose(file);
-                    while (getchar() != '\n');
                     continue;
                 }
+
+                if (errore_div_zero) {
+                    fclose(file);
+                    continue;
+                }
+
                 printf("\n────────────────────────────────────────────────────────\n");
                 printf("Risultato finale: %.2lf\n", risultato);
                 printf("────────────────────────────────────────────────────────\n");
                 fprintf(file, "\n[OPERAZIONE: DIVISIONE]\nRisultato: %.2lf\n", risultato);
                 salva_in_memoria((int)risultato);
                 fclose(file);
-                while (getchar() != '\n');
+
                 continue;
             }
             case 5: {
                 char input[256];
                 int c;
+
                 while ((c = getchar()) != '\n' && c != EOF);
+
                 printf("\n╔══════════════════════════════════════════════════════╗\n");
                 printf("║               CALCOLO DI ESPRESSIONE                 ║\n");
                 printf("╚══════════════════════════════════════════════════════╝\n");
                 printf("Inserisci un'espressione (es: (3+5)*2-4): ");
-                if (!fgets(input, sizeof(input), stdin)) {
-                  fprintf(stderr, "Input error.\n");
-                  fclose(file);
-                  continue;
+
+                if (fgets(input, sizeof(input), stdin) == NULL) {
+                    fprintf(stderr, "Input error.\n");
+                    fclose(file);
+                    continue;
                 }
                 size_t len = strlen(input);
-                if (len > 0 && input[len-1] == '\n') input[len-1] = '\0';
-                if (strlen(input) == 0) {
+                if (len > 0 && input[len - 1] == '\n') input[len - 1] = '\0';
+
+                if (input[0] == '\0') {
                     printf("Espressione vuota.\n");
                     fclose(file);
                     continue;
                 }
+
                 if (!is_safe_expr(input)) {
                     printf("Espressione non valida: contiene caratteri non permessi o parentesi sbilanciate.\n");
                     fclose(file);
                     continue;
                 }
-                char comando[512];
 
+                char comando[512];
 #ifdef _WIN32
                 int n = snprintf(comando, sizeof(comando), "set /a %s", input);
 #else
@@ -2705,6 +2748,7 @@ void operazioni_algebriche() {
                     fclose(file);
                     continue;
                 }
+
 #ifdef _WIN32
                 FILE *fp = _popen(comando, "r");
 #else
@@ -2715,6 +2759,7 @@ void operazioni_algebriche() {
                     fclose(file);
                     continue;
                 }
+
                 long long int_res = 0;
                 int scan_ok = fscanf(fp, "%lld", &int_res);
 #ifdef _WIN32
@@ -2727,6 +2772,7 @@ void operazioni_algebriche() {
                     fclose(file);
                     continue;
                 }
+
                 double risultato = (double)int_res;
 
                 printf("\n────────────────────────────────────────────────────────\n");
@@ -2916,7 +2962,7 @@ int main() {
             char risposta[3];
             printf("Inserire dati manualmente? (S/N): ");
             scanf("%2s", risposta);
-            risposta[0] = toupper(risposta[0]);
+            risposta[0] = (char) toupper((unsigned char)risposta[0]);
             if (risposta[0] == 'S') {
                 printf(">> Inserisci un numero binario: ");
                 scanf("%32s", bin);
@@ -2972,7 +3018,7 @@ int main() {
             int dec;
             printf("Inserire dati manualmente? (S/N): ");
             scanf("%2s", risposta);
-            risposta[0] = toupper(risposta[0]);
+            risposta[0] = (char) toupper((unsigned char)risposta[0]);
             if (risposta[0] == 'S') {
                 printf(">> Inserisci un numero decimale: ");
                 scanf("%d", &dec);
