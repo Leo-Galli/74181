@@ -2747,9 +2747,9 @@ void operazioni_algebriche() {
 }
 
 void misura_ciclo_clock() {
-    printf("\n==============================\n");
-    printf("  Rilevamento del sistema\n");
-    printf("==============================\n");
+    printf("\n==============================");
+    printf("  Rilevamento del sistema");
+    printf("==============================");
     char *cpu = rileva_cpu();
     printf("CPU rilevata: %s\n", cpu);
     long long freq = ottieni_clock(cpu);
@@ -2759,9 +2759,9 @@ void misura_ciclo_clock() {
     printf("Frequenza di clock trovata: %lld Hz\n", freq);
     double durata_ns = (1.0 / (double)freq) * 1e9;
     printf("Durata stimata di un ciclo: %.3f ns\n", durata_ns);
-    printf("\n==============================\n");
-    printf("  Simulazione clock in corso\n");
-    printf("==============================\n");
+    printf("\n==============================");
+    printf("  Simulazione clock in corso");
+    printf("==============================");
     for (int i = 0; i < 1000; i++) {
         attendi_un_ciclo_clock();
     }
