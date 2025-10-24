@@ -1593,18 +1593,25 @@ long long ottieni_clock(const char* nome_cpu) {
  */
 
 
-void ritardo_ns(long nanosecondi) {
+void ritardo_ns(long long nanosecondi) {
 #if SISTEMA_WINDOWS
-    long ms = nanosecondi / 1000000L;
+    long long ms = nanosecondi / 1000000LL;
     if (ms <= 0 && nanosecondi > 0) ms = 1;
     Sleep((DWORD)ms);
 #else
     struct timespec inizio, attuale;
     clock_gettime(CLOCK_MONOTONIC, &inizio);
-    do {
+    for (;;) {
         clock_gettime(CLOCK_MONOTONIC, &attuale);
-    } while ((attuale.tv_sec - inizio.tv_sec) * 1000000000L + (attuale.tv_nsec - inizio.tv_nsec) < nanosecondi);
+        long long elapsed = (long long)(attuale.tv_sec - inizio.tv_sec) * 1000000000LL
+                            + (long long)(attuale.tv_nsec - inizio.tv_nsec);
+        if (elapsed >= nanosecondi) break;
+    }
 #endif
+}
+void delay(int milliseconds) {
+    long long ns = (long long)milliseconds * 1000000LL;
+    ritardo_ns(ns);
 }
 void delay(int milliseconds) {
     long ns = (long)milliseconds * 1000000L;
@@ -1871,11 +1878,8 @@ void attendi_un_ciclo_clock() {
     long long freq = ottieni_clock(cpu);
     if (freq <= 0) freq = 1000000000LL;
     double ciclo_s = 1.0 / (double)freq;
-    long long ciclo_ns_ll = (long long)(ciclo_s * 1e9);
-    long ciclo_ns = (ciclo_ns_ll > LONG_MAX) ? LONG_MAX : (long)ciclo_ns_ll;
-    if (ciclo_ns < 1000) {
-        ciclo_ns = 1000;
-    }
+    long long ciclo_ns = (long long)(ciclo_s * 1e9);
+    if (ciclo_ns < 1000LL) ciclo_ns = 1000LL;
     ritardo_ns(ciclo_ns);
 }
 void attendi_cicli_clock_equivalenti_a_secondi(double secondi) {
@@ -1884,9 +1888,9 @@ void attendi_cicli_clock_equivalenti_a_secondi(double secondi) {
     long long freq = ottieni_clock(cpu);
     if (freq <= 0) freq = 1000000000L;
     double nanosecondi_totali = secondi * 1e9;
-    long ns = (long)nanosecondi_totali;
-    if (ns > 5000000000L) {
-        ns = 5000000000L;
+    long long ns = (long long)nanosecondi_totali;
+    if (ns > 5000000000LL) {
+        ns = 5000000000LL;
     }
     ritardo_ns(ns);
 }
@@ -2086,7 +2090,7 @@ void simula_alu_74181() {
 
     printf("Inserire dati manualmente? (S/N): ");
     scanf("%2s", scelta);
-    scelta[0] = toupper(scelta[0]);
+    scelta[0] = (char) toupper((unsigned char)scelta[0]);
 
     if (scelta[0] == 'S') {
         if (!leggi_bit_input_74181("Cn", &Cn)) input_valido = 0;
@@ -2284,7 +2288,7 @@ void ALU32() {
 
     printf("Inserire dati manualmente? (S/N): ");
     scanf("%2s", scelta);
-    scelta[0] = toupper(scelta[0]);
+    scelta[0] = (char) toupper((unsigned char)scelta[0]);
 
     if (scelta[0] == 'S') {
         printf(">> Inserisci il primo operando (numero decimale a 32 bit): ");
@@ -2545,7 +2549,7 @@ void operazioni_algebriche() {
             scelta = operazione[0] - '0';
         } else {
             for (int i = 0; operazione[i]; i++)
-                operazione[i] = tolower(operazione[i]);
+                operazione[i] = (char) tolower((unsigned char)operazione[i]);
             if (strcmp(operazione, "somma") == 0) scelta = 1;
             else if (strcmp(operazione, "sottrazione") == 0) scelta = 2;
             else if (strcmp(operazione, "moltiplicazione") == 0) scelta = 3;
