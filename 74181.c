@@ -1535,14 +1535,14 @@ char* rileva_cpu() {
     }
     return nome_cpu;
 }
-long ottieni_clock(const char* nome_cpu) {
-    if (!nome_cpu) return 1000000000L;
+long long ottieni_clock(const char* nome_cpu) {
+    if (!nome_cpu) return 1000000000LL;
     for (int i = 0; i < NUM_PROCESSORI; i++) {
         if (strstr(nome_cpu, db_processori[i].nome) != NULL) {
-            return db_processori[i].clock_hz;
+            return db_processori[i].clock_hz; 
         }
     }
-    return 1000000000L;
+    return 1000000000LL;
 }
 
 /*
@@ -1763,7 +1763,7 @@ int BIN_DEC_DECODER(const char *binario) {
     return -1; 
   } 
   int decimale = 0; 
-  int lunghezza = strlen(binario); 
+  size_t lunghezza = strlen(binario); 
   for (int i = 0; i < lunghezza; i++) { 
     if (binario[i] == '1') { 
       decimale = decimale * 2 + 1; 
@@ -1779,23 +1779,23 @@ int BIN_DEC_DECODER(const char *binario) {
   return decimale; 
 }
 char* DEC_BIN_CODER(int numero) { 
-  static char binario[33]; 
-  int i = 0; 
-  if (numero == 0) { 
-    strcpy(binario, "0"); 
+    static char binario[33]; 
+    int i = 0; 
+    if (numero == 0) { 
+        strcpy(binario, "0"); 
+        return binario; 
+    } 
+    while (numero > 0) { 
+        binario[i++] = (char)('0' + (numero % 2));
+        numero /= 2; 
+    } 
+    binario[i] = '\0'; 
+    for (int j = 0; j < i / 2; j++) { 
+        char temp = binario[j]; 
+        binario[j] = binario[i - 1 - j]; 
+        binario[i - 1 - j] = temp; 
+    } 
     return binario; 
-  } 
-  while (numero > 0) { 
-    binario[i++] = '0' + (numero % 2); 
-    numero /= 2; 
-  } 
-  binario[i] = '\0'; 
-  for (int j = 0; j < i / 2; j++) { 
-    char temp = binario[j]; 
-    binario[j] = binario[i - 1 - j]; 
-    binario[i - 1 - j] = temp; 
-  } 
-  return binario; 
 }
 
 /*
@@ -1867,8 +1867,9 @@ void salva_in_memoria(int valore) {
 }
 void attendi_un_ciclo_clock() {
     char *cpu = rileva_cpu();
-    long freq = ottieni_clock(cpu);
-    long ciclo_ns = (long)(1e9 / freq);
+    long long freq = ottieni_clock(cpu);
+    long long ciclo_ns_ll = (long long)(1e9 / (double)freq);
+    long ciclo_ns = (ciclo_ns_ll > LONG_MAX) ? LONG_MAX : (long)ciclo_ns_ll;
     if (ciclo_ns < 1000) {
         ciclo_ns = 1000;
     }
@@ -1877,7 +1878,7 @@ void attendi_un_ciclo_clock() {
 void attendi_cicli_clock_equivalenti_a_secondi(double secondi) {
     if (secondi <= 0.0) return;
     char *cpu = rileva_cpu();
-    long freq = ottieni_clock(cpu);
+    long long freq = ottieni_clock(cpu);
     if (freq <= 0) freq = 1000000000L;
     double nanosecondi_totali = secondi * 1e9;
     long ns = (long)nanosecondi_totali;
@@ -2569,7 +2570,7 @@ void operazioni_algebriche() {
                 printf("Risultato finale: %.2lf\n", risultato);
                 printf("────────────────────────────────────────────────────────\n");
                 fprintf(file, "\n[OPERAZIONE: SOMMA]\nRisultato: %.2lf\n", risultato);
-                salva_in_memoria(risultato);
+                salva_in_memoria((int)risultato);
                 fclose(file);
                 while (getchar() != '\n');
                 continue;
@@ -2596,7 +2597,7 @@ void operazioni_algebriche() {
                 printf("Risultato finale: %.2lf\n", risultato);
                 printf("────────────────────────────────────────────────────────\n");
                 fprintf(file, "\n[OPERAZIONE: SOTTRAZIONE]\nRisultato: %.2lf\n", risultato);
-                salva_in_memoria(risultato);
+                salva_in_memoria((int)risultato);
                 fclose(file);
                 while (getchar() != '\n');
                 continue;
@@ -2622,7 +2623,7 @@ void operazioni_algebriche() {
                 printf("Risultato finale: %.2lf\n", risultato);
                 printf("────────────────────────────────────────────────────────\n");
                 fprintf(file, "\n[OPERAZIONE: MOLTIPLICAZIONE]\nRisultato: %.2lf\n", risultato);
-                salva_in_memoria(risultato);
+                salva_in_memoria((int)risultato);;
                 fclose(file);
                 while (getchar() != '\n');
                 continue;
@@ -2655,7 +2656,7 @@ void operazioni_algebriche() {
                 printf("Risultato finale: %.2lf\n", risultato);
                 printf("────────────────────────────────────────────────────────\n");
                 fprintf(file, "\n[OPERAZIONE: DIVISIONE]\nRisultato: %.2lf\n", risultato);
-                salva_in_memoria(risultato);
+                salva_in_memoria((int)risultato);
                 fclose(file);
                 while (getchar() != '\n');
                 continue;
@@ -2726,7 +2727,7 @@ void operazioni_algebriche() {
                 printf("Risultato: %.2lf\n", risultato);
                 printf("────────────────────────────────────────────────────────\n");
                 fprintf(file, "\n[OPERAZIONE: ESPRESSIONE]\nEspressione: %s\nRisultato: %.2lf\n", input, risultato);
-                salva_in_memoria(risultato);
+                salva_in_memoria((int)risultato);
                 fclose(file);
                 continue;
             }
@@ -2810,7 +2811,10 @@ void misura_ciclo_clock() {
  * │  Ultimo aggiornamento: 20 ottobre 2025                                      │
  * └─────────────────────────────────────────────────────────────────────────────┘
  */
-
+void pulisci_input() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
 
 int main() {
     int scelta;
@@ -2886,21 +2890,18 @@ int main() {
         }
         else if (scelta == 1) {
             simula_alu_74181();
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+            pulisci_input();
             continue;
         }
         else if (scelta == 2) {
             attendi_cicli_clock_equivalenti_a_secondi(2.0);
             simula_alu_74181();
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+            pulisci_input();
             continue;
         }
         else if (scelta == 3) {
             operazioni_algebriche();
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+            pulisci_input();
             continue;
         }
         else if (scelta == 4) {
@@ -2915,8 +2916,7 @@ int main() {
                 int risultato = BIN_DEC_DECODER(bin);
                 if (risultato != -1) {
                     printf("Risultato (decimale): %d\n", risultato);
-                    int c;
-                    while ((c = getchar()) != '\n' && c != EOF);
+                    pulisci_input();
                     continue;
                 }
             } else {
@@ -2930,8 +2930,7 @@ int main() {
                         fprintf(file, "Numero Binario: <0>\n");
                         fclose(file);
                         printf("Creato file input_bin.txt. Compilarlo e riavviare.\n");
-                        int c;
-                        while ((c = getchar()) != '\n' && c != EOF);
+                        pulisci_input();
                         continue;
                     }
                 } else {
@@ -2947,22 +2946,19 @@ int main() {
                                 fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
                                 fprintf(file_out, "Risultato      = %-3d\n", risultato);
                                 fclose(file_out);
-                                int c;
-                                while ((c = getchar()) != '\n' && c != EOF);
+                                pulisci_input();
                                 continue;
                             }
                         }
                     } else {
                         fclose(file);
                         printf("ERRORE: Formato file incompleto\n");
-                        int c;
-                        while ((c = getchar()) != '\n' && c != EOF);
+                        pulisci_input();
                         continue;
                     }
                 }
             }
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+            pulisci_input();
         }
         else if (scelta == 5) {
             char risposta[3];
@@ -2974,8 +2970,7 @@ int main() {
                 printf(">> Inserisci un numero decimale: ");
                 scanf("%d", &dec);
                 printf("Risultato (binario): %s\n", DEC_BIN_CODER(dec));
-                int c;
-                while ((c = getchar()) != '\n' && c != EOF);
+                pulisci_input();
                 continue;
             } else {
                 FILE *file = fopen("input_dec.txt", "r");
@@ -2983,15 +2978,13 @@ int main() {
                     file = fopen("input_dec.txt", "w");
                     if (!file) {
                         printf("ERRORE: Impossibile creare il file\n");
-                        int c;
-                        while ((c = getchar()) != '\n' && c != EOF);
+                        pulisci_input();
                         continue;
                     } else {
                         fprintf(file, "Numero Decimale: <0>\n");
                         fclose(file);
                         printf("Creato file input_dec.txt. Compilarlo e riavviare.\n");
-                        int c;
-                        while ((c = getchar()) != '\n' && c != EOF);
+                        pulisci_input();
                         continue;
                     }
                 } else {
@@ -3008,40 +3001,34 @@ int main() {
                                 fprintf(file_out, "╚═════════════════════════════════════════════╝\n");
                                 fprintf(file_out, "Risultato      = %-16s\n", DEC_BIN_CODER(dec));
                                 fclose(file_out);
-                                int c;
-                                while ((c = getchar()) != '\n' && c != EOF);
+                                pulisci_input();
                                 continue;
                             }
                         }
                     } else {
                         fclose(file);
                         printf("ERRORE: Formato file incompleto\n");
-                        int c;
-                        while ((c = getchar()) != '\n' && c != EOF);
+                        pulisci_input();
                         continue;
                     }
                 }
             }
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+            pulisci_input();
         }
         else if (scelta == 6) {
             ALU32();
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+            pulisci_input();
             continue;
         }
         else if (scelta == 7) {
             attendi_cicli_clock_equivalenti_a_secondi(2.0);
             ALU32();
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+            pulisci_input();
             continue;
         }
         else if (scelta == 8) {
             stampa_memoria();
             stato_memoria();
-            int c;
             continue;
         }
         else if (scelta == 9) {
@@ -3050,8 +3037,7 @@ int main() {
         }
         else {
             printf("Scelta non valida!\n");
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF);
+            pulisci_input();
             continue;
         }
     }
