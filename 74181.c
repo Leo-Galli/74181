@@ -2085,7 +2085,7 @@ static int leggi_bit_input_32(const char* nome, int* var) {
 
 
 void simula_alu_74181() {
-    int Cn, M, A0, B0, A1, B1, A2, B2, A3, B3, S0, S1, S2, S3;
+    int Cn = 0, M = 0, A0 = 0, B0 = 0, A1 = 0, B1 = 0, A2 = 0, B2 = 0, A3 = 0, B3 = 0, S0 = 0, S1 = 0, S2 = 0, S3 = 0;
     char scelta[3];
     int input_valido = 1;
 
@@ -2577,7 +2577,7 @@ void operazioni_algebriche() {
 
         switch (scelta) {
             case 1: { 
-                double val, risultato = 0;
+                double val, risultato = 0.0;
                 printf("\n╔══════════════════════════════════════════════════════╗\n");
                 printf("║                    SOMMA DI NUMERI                   ║\n");
                 printf("╚══════════════════════════════════════════════════════╝\n");
@@ -2594,7 +2594,7 @@ void operazioni_algebriche() {
                 continue;
             }
             case 2: { 
-                double val, risultato;
+                double val, risultato = 0.0;
                 int count = 0;
                 printf("\n╔══════════════════════════════════════════════════════╗\n");
                 printf("║                SOTTRAZIONE SEQUENZIALE               ║\n");
@@ -2621,7 +2621,7 @@ void operazioni_algebriche() {
                 continue;
             }
             case 3: { 
-                double val, risultato = 1;
+                double val, risultato = 1.0;
                 int count = 0;
                 printf("\n╔══════════════════════════════════════════════════════╗\n");
                 printf("║               MOLTIPLICAZIONE DI NUMERI              ║\n");
@@ -2647,8 +2647,6 @@ void operazioni_algebriche() {
                 continue;
             }
             case 4: {
-                /* DIVISIONE SEQUENZIALE: leggere token uno per uno in modo sicuro,
-                   controllare il return di scanf e gestire correttamente lo stdin. */
                 char token[64];
                 double val;
                 double risultato = 0.0;
@@ -2661,18 +2659,14 @@ void operazioni_algebriche() {
                 printf("Inserisci i numeri da dividere (separa con spazi o invii). Per terminare scrivi una lettera e premi invio.\n");
 
                 while (1) {
-                    /* leggi il prossimo token; proteggi il buffer e controlla il risultato */
                     if (scanf("%63s", token) != 1) {
-                        /* EOF o errore: svuota eventuale input residuo e termina il loop */
                         pulisci_input();
                         break;
                     }
 
-                    /* converti il token in double in modo sicuro */
                     char *endptr = NULL;
                     val = strtod(token, &endptr);
                     if (endptr == token) {
-                        /* token non numerico → terminatore volontario dell'input */
                         break;
                     }
 
@@ -2689,7 +2683,6 @@ void operazioni_algebriche() {
                     count++;
                 }
 
-                /* assicurati di rimuovere eventuale resto della linea */
                 pulisci_input();
 
                 if (count < 2 && !errore_div_zero) {
@@ -2713,11 +2706,8 @@ void operazioni_algebriche() {
                 continue;
             }
             case 5: {
-                /* CALCOLO DI ESPRESSIONE: leggere la riga con fgets, validare e valutare */
                 char input[256];
                 int c;
-
-                /* elimina newline residuo prima di fgets */
                 while ((c = getchar()) != '\n' && c != EOF);
 
                 printf("\n╔══════════════════════════════════════════════════════╗\n");
@@ -2730,7 +2720,6 @@ void operazioni_algebriche() {
                     fclose(file);
                     continue;
                 }
-                /* rimuovi newline finale */
                 size_t len = strlen(input);
                 if (len > 0 && input[len - 1] == '\n') input[len - 1] = '\0';
 
