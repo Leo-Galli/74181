@@ -92,6 +92,10 @@
 #else
 #define SISTEMA_LINUX 0
 #endif
+#ifdef _WIN32
+    #define popen _popen
+    #define pclose _pclose
+#endif
 
 /*
  * ┌────────────────────────────────────────────────────────────────────────────┐
@@ -135,7 +139,7 @@
 
 typedef struct {
     const char *nome;
-    long clock_hz;
+    long long clock_hz;
 } Processore;
 static int leggi_bit_input_74181(const char* nome, int* var);
 static int leggi_bit_input_32(const char* nome, int* var);
