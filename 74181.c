@@ -2756,7 +2756,7 @@ void misura_ciclo_clock() {
     if (freq <= 0) {
         freq = 1000000000LL;
     }
-    printf("Frequenza di clock trovata: %lld Hz\n", freq);
+    printf("Frequenza di clock trovata: %lld Hz\n", freq); 
     double durata_ns = (1.0 / (double)freq) * 1e9;
     printf("Durata stimata di un ciclo: %.3f ns\n", durata_ns);
     printf("\n==============================");
