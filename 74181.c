@@ -138,6 +138,7 @@
  */
 
 
+void pulisci_input(void);
 typedef struct {
     const char *nome;
     long long clock_hz;
@@ -1596,7 +1597,6 @@ long long ottieni_clock(const char* nome_cpu) {
  * └────────────────────────────────────────────────────────────────────────────┘
  */
 
-
 void ritardo_ns(long long nanosecondi) {
 #if SISTEMA_WINDOWS
     long long ms = nanosecondi / 1000000LL;
@@ -1613,12 +1613,9 @@ void ritardo_ns(long long nanosecondi) {
     }
 #endif
 }
+
 void delay(int milliseconds) {
     long long ns = (long long)milliseconds * 1000000LL;
-    ritardo_ns(ns);
-}
-void delay(int milliseconds) {
-    long ns = (long)milliseconds * 1000000L;
     ritardo_ns(ns);
 }
 void clock_step(int *CLK, int *prev_CLK, int milliseconds) {
@@ -1776,7 +1773,7 @@ int BIN_DEC_DECODER(const char *binario) {
   } 
   int decimale = 0; 
   size_t lunghezza = strlen(binario); 
-  for (int i = 0; i < lunghezza; i++) { 
+  for (size_t i = 0; i < lunghezza; i++) { 
     if (binario[i] == '1') { 
       decimale = decimale * 2 + 1; 
     } 
@@ -2095,7 +2092,7 @@ void simula_alu_74181() {
     printf("Inserire dati manualmente? (S/N): ");
     if (scanf("%2s", scelta) != 1) {
         scelta[0] = '\0';
-        pulisci_input();n
+        pulisci_input();
         return;
     }
     scelta[0] = (char) toupper((unsigned char)scelta[0]);
@@ -2650,6 +2647,8 @@ void operazioni_algebriche() {
                 continue;
             }
             case 4: {
+                /* DIVISIONE SEQUENZIALE: leggere token uno per uno in modo sicuro,
+                   controllare il return di scanf e gestire correttamente lo stdin. */
                 char token[64];
                 double val;
                 double risultato = 0.0;
@@ -2662,13 +2661,18 @@ void operazioni_algebriche() {
                 printf("Inserisci i numeri da dividere (separa con spazi o invii). Per terminare scrivi una lettera e premi invio.\n");
 
                 while (1) {
+                    /* leggi il prossimo token; proteggi il buffer e controlla il risultato */
                     if (scanf("%63s", token) != 1) {
+                        /* EOF o errore: svuota eventuale input residuo e termina il loop */
                         pulisci_input();
                         break;
                     }
+
+                    /* converti il token in double in modo sicuro */
                     char *endptr = NULL;
                     val = strtod(token, &endptr);
                     if (endptr == token) {
+                        /* token non numerico → terminatore volontario dell'input */
                         break;
                     }
 
@@ -2684,6 +2688,8 @@ void operazioni_algebriche() {
                     }
                     count++;
                 }
+
+                /* assicurati di rimuovere eventuale resto della linea */
                 pulisci_input();
 
                 if (count < 2 && !errore_div_zero) {
@@ -2707,9 +2713,11 @@ void operazioni_algebriche() {
                 continue;
             }
             case 5: {
+                /* CALCOLO DI ESPRESSIONE: leggere la riga con fgets, validare e valutare */
                 char input[256];
                 int c;
 
+                /* elimina newline residuo prima di fgets */
                 while ((c = getchar()) != '\n' && c != EOF);
 
                 printf("\n╔══════════════════════════════════════════════════════╗\n");
@@ -2722,6 +2730,7 @@ void operazioni_algebriche() {
                     fclose(file);
                     continue;
                 }
+                /* rimuovi newline finale */
                 size_t len = strlen(input);
                 if (len > 0 && input[len - 1] == '\n') input[len - 1] = '\0';
 
