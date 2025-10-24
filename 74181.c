@@ -67,8 +67,15 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
-#include <unistd.h>
 #include <stdbool.h>
+#ifdef _WIN32
+#include <io.h>
+#include <process.h>
+#include <windows.h>
+#define sleep(x) Sleep(1000 * (x))  // Sleep usa millisecondi
+#else
+#include <unistd.h>
+#endif
 #if defined(_WIN32)
 #define SISTEMA_WINDOWS 1
 #include <windows.h>
