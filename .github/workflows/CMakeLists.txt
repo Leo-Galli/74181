@@ -6,12 +6,11 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 add_executable(74181
-    ../../74181.c
+    ../../../74181.c
 )
 
 if (MSVC)
     target_compile_options(74181 PRIVATE /W4 /WX)
-
     target_compile_definitions(74181 PRIVATE _CRT_SECURE_NO_WARNINGS WIN32_LEAN_AND_MEAN PLATFORM_WINDOWS)
 else()
     target_compile_options(74181 PRIVATE -Wall -Wextra -Werror)
