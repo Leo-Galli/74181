@@ -30,7 +30,7 @@
 [![CodeQL](https://github.com/Leo-Galli/74181/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql)
 [![Security Policy](https://img.shields.io/badge/Security-Policy-blueviolet)](https://github.com/Leo-Galli/74181/security/policy)
 [![Dependabot](https://img.shields.io/badge/Dependabot-Enabled-success)](https://github.com/Leo-Galli/74181/network/updates)
-[![Code Scanning Alerts](https://img.shields.io/badge/CodeQL-Alerts-orange)](https://github.com/Leo-Galli/74181/security/code-scanning)
+[![CodeQL](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql)
 [![License Scan](https://img.shields.io/badge/License-Scan-green)](https://github.com/Leo-Galli/74181/blob/main/LICENSE)
 
 ---
