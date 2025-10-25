@@ -2868,22 +2868,17 @@ void pulisci_input() {
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
 int main() {
     int scelta;
     char input[10];
 
     while (1) {
         printf("\n╔══════════════════════════════════════════════════════════╗\n");
-        printf("║                ________|          |________                ║\n");
+        printf("║                ________|          |________               ║\n");
         printf("║               |       /   ||||||   \\       |              ║\n");
-        printf("║               |     ,'              `.     |               ║\n");
-        printf("║               |   ,'                  `.   |               ║\n");
-        printf("║               | ,'   ||||||||||||||||   `. |               ║\n");
+        printf("║               |     ,'              `.     |              ║\n");
+        printf("║               |   ,'                  `.   |              ║\n");
+        printf("║               | ,'   ||||||||||||||||   `. |              ║\n");
         printf("║               ,'  /____________________\\  `.              ║\n");
         printf("║              /______________________________\\             ║\n");
         printf("║             |                                |             ║\n");
@@ -2935,9 +2930,7 @@ int main() {
             printf("\n╔════════════════════════════════╗\n");
             printf("║             ERRORE             ║\n");
             printf("╠════════════════════════════════╣\n");
-            printf("║                                ║\n");
             printf("║   Inserisci un numero valido   ║\n");
-            printf("║                                ║\n");
             printf("╚════════════════════════════════╝\n");
             continue;
         }
@@ -2969,7 +2962,7 @@ int main() {
                 pulisci_input();
                 continue;
             }
-            risposta[0] = (char) toupper((unsigned char)risposta[0]);
+            risposta[0] = (char)toupper((unsigned char)risposta[0]);
             if (risposta[0] == 'S') {
                 printf(">> Inserisci un numero binario: ");
                 if (scanf("%32s", bin) != 1) {
@@ -3001,8 +2994,10 @@ int main() {
                     char line[100];
                     if (fgets(line, sizeof(line), file)) {
                         fclose(file);
-                        if (sscanf(line, "%*[^<]<%32[^>]>", bin) == 1) {
-                            int risultato = BIN_DEC_DECODER(bin);
+                        char buffer[33] = {0};
+                        if (sscanf(line, "%*[^<]<%32[^>]>", buffer) == 1) {
+                            buffer[32] = '\0';
+                            int risultato = BIN_DEC_DECODER(buffer);
                             FILE *file_out = fopen("risultati_dec.txt", "w");
                             if (file_out) {
                                 fprintf(file_out, "╔═════════════════════════════════════════════╗\n");
@@ -3032,7 +3027,7 @@ int main() {
                 pulisci_input();
                 continue;
             }
-            risposta[0] = (char) toupper((unsigned char)risposta[0]);
+            risposta[0] = (char)toupper((unsigned char)risposta[0]);
             if (risposta[0] == 'S') {
                 printf(">> Inserisci un numero decimale: ");
                 if (scanf("%d", &dec) != 1) {
@@ -3077,13 +3072,6 @@ int main() {
                                 continue;
                             }
                         }
-                    } else {
-                        fclose(file);
-                        printf("ERRORE: Formato file incompleto\n");
-                        pulisci_input();
-                        continue;
-                    }
-                }
                     } else {
                         fclose(file);
                         printf("ERRORE: Formato file incompleto\n");
