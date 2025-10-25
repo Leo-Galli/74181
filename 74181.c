@@ -2538,7 +2538,7 @@ int divisione(int a, int b) {
 
 void operazioni_algebriche() {
     while (1) {
-        char operazione[30];
+        char operazione[64] = {0};
         int scelta = 0;
         printf("\n╔══════════════════════════════════════════════════════╗\n");
         printf("║                 CALCOLATRICE AVANZATA                ║\n");
@@ -2551,23 +2551,24 @@ void operazioni_algebriche() {
         printf("   5 - Calcola espressione (es: (3+5)*2-4)\n");
         printf("   6 - Esci\n");
         printf(">> Scelta (numero o parola): ");
-        if (scanf("%29s", operazione) != 1) { 
+        if (fgets(operazione, sizeof(operazione), stdin) == NULL) {
             pulisci_input();
             continue;
         }
+        operazione[strcspn(operazione, "\n")] = '\0';
 
         if (strlen(operazione) == 1 && isdigit(operazione[0])) {
-            scelta = operazione[0] - '0';
-        } else {
-            for (int i = 0; operazione[i]; i++)
-                operazione[i] = (char) tolower((unsigned char)operazione[i]);
-            if (strcmp(operazione, "somma") == 0) scelta = 1;
-            else if (strcmp(operazione, "sottrazione") == 0) scelta = 2;
-            else if (strcmp(operazione, "moltiplicazione") == 0) scelta = 3;
-            else if (strcmp(operazione, "divisione") == 0) scelta = 4;
-            else if (strcmp(operazione, "calcola") == 0) scelta = 5;
-            else if (strcmp(operazione, "esci") == 0) scelta = 6;
-        }
+    scelta = operazione[0] - '0';
+    } else {
+        for (int i = 0; operazione[i]; i++)
+            operazione[i] = (char) tolower((unsigned char)operazione[i]);
+        if (strcmp(operazione, "somma") == 0) scelta = 1;
+        else if (strcmp(operazione, "sottrazione") == 0) scelta = 2;
+        else if (strcmp(operazione, "moltiplicazione") == 0) scelta = 3;
+        else if (strcmp(operazione, "divisione") == 0) scelta = 4;
+        else if (strcmp(operazione, "calcola") == 0) scelta = 5;
+        else if (strcmp(operazione, "esci") == 0) scelta = 6;
+    }
 
         FILE *file = fopen("risultato_operazione.txt", "a");
         if (!file) {
