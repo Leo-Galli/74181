@@ -12,8 +12,8 @@ permissions:
 
 jobs:
   checkmarx-scan:
-    name: Checkmarx Scan
     runs-on: ubuntu-latest
+    name: Checkmarx Scan
 
     steps:
       - name: Checkout repository
