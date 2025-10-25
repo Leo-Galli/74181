@@ -2868,18 +2868,24 @@ void pulisci_input() {
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
 int main() {
     int scelta;
     char input[10];
-    while (1) {   
-        printf("\n╔════════════════════════════════════════════════════════════╗\n");
+
+    while (1) {
+        printf("\n╔══════════════════════════════════════════════════════════╗\n");
         printf("║                ________|          |________                ║\n");
-        printf("║               |       /   ||||||   \\       |               ║\n");
+        printf("║               |       /   ||||||   \\       |              ║\n");
         printf("║               |     ,'              `.     |               ║\n");
         printf("║               |   ,'                  `.   |               ║\n");
         printf("║               | ,'   ||||||||||||||||   `. |               ║\n");
-        printf("║               ,'  /____________________\\  `.               ║\n");
-        printf("║              /______________________________\\              ║\n");
+        printf("║               ,'  /____________________\\  `.              ║\n");
+        printf("║              /______________________________\\             ║\n");
         printf("║             |                                |             ║\n");
         printf("║             |                                |             ║\n");
         printf("║             |                                |             ║\n");
@@ -2911,16 +2917,16 @@ int main() {
         printf("║    0. Esci                                                 ║\n");
         printf("╚════════════════════════════════════════════════════════════╝\n");
         printf(">> Inserisci la tua scelta: ");
+
         if (fgets(input, sizeof(input), stdin) == NULL) {
             printf("Errore di input.\n");
             continue;
         }
-        if (input[0] == '\n' || input[0] == '\0') {
-            continue;
-        }
+        if (input[0] == '\n' || input[0] == '\0') continue;
+
         int isValid = 1;
         for (int i = 0; input[i] != '\0' && input[i] != '\n'; i++) {
-            if (!isdigit(input[i])) {
+            if (!isdigit((unsigned char)input[i])) {
                 isValid = 0;
                 break;
             }
@@ -2935,36 +2941,42 @@ int main() {
             printf("╚════════════════════════════════╝\n");
             continue;
         }
+
         scelta = atoi(input);
+
         if (scelta == 0) {
             printf("Uscita dal programma...\n");
             break;
-        }
-        else if (scelta == 1) {
+        } else if (scelta == 1) {
             simula_alu_74181();
             pulisci_input();
             continue;
-        }
-        else if (scelta == 2) {
+        } else if (scelta == 2) {
             attendi_cicli_clock_equivalenti_a_secondi(2.0);
             simula_alu_74181();
             pulisci_input();
             continue;
-        }
-        else if (scelta == 3) {
+        } else if (scelta == 3) {
             operazioni_algebriche();
             pulisci_input();
             continue;
-        }
-        else if (scelta == 4) {
+        } else if (scelta == 4) {
             char bin[33];
             char risposta[3];
             printf("Inserire dati manualmente? (S/N): ");
-            scanf("%2s", risposta);
+            if (scanf("%2s", risposta) != 1) {
+                printf("Input non valido.\n");
+                pulisci_input();
+                continue;
+            }
             risposta[0] = (char) toupper((unsigned char)risposta[0]);
             if (risposta[0] == 'S') {
                 printf(">> Inserisci un numero binario: ");
-                scanf("%32s", bin);
+                if (scanf("%32s", bin) != 1) {
+                    printf("Input non valido.\n");
+                    pulisci_input();
+                    continue;
+                }
                 int risultato = BIN_DEC_DECODER(bin);
                 if (risultato != -1) {
                     printf("Risultato (decimale): %d\n", risultato);
@@ -3011,16 +3023,23 @@ int main() {
                 }
             }
             pulisci_input();
-        }
-        else if (scelta == 5) {
+        } else if (scelta == 5) {
             char risposta[3];
             int dec;
             printf("Inserire dati manualmente? (S/N): ");
-            scanf("%2s", risposta);
+            if (scanf("%2s", risposta) != 1) {
+                printf("Input non valido.\n");
+                pulisci_input();
+                continue;
+            }
             risposta[0] = (char) toupper((unsigned char)risposta[0]);
             if (risposta[0] == 'S') {
                 printf(">> Inserisci un numero decimale: ");
-                scanf("%d", &dec);
+                if (scanf("%d", &dec) != 1) {
+                    printf("Input non valido.\n");
+                    pulisci_input();
+                    continue;
+                }
                 printf("Risultato (binario): %s\n", DEC_BIN_CODER(dec));
                 pulisci_input();
                 continue;
@@ -3066,33 +3085,29 @@ int main() {
                 }
             }
             pulisci_input();
-        }
-        else if (scelta == 6) {
+        } else if (scelta == 6) {
             ALU32();
             pulisci_input();
             continue;
-        }
-        else if (scelta == 7) {
+        } else if (scelta == 7) {
             attendi_cicli_clock_equivalenti_a_secondi(2.0);
             ALU32();
             pulisci_input();
             continue;
-        }
-        else if (scelta == 8) {
+        } else if (scelta == 8) {
             stampa_memoria();
             stato_memoria();
             continue;
-        }
-        else if (scelta == 9) {
+        } else if (scelta == 9) {
             misura_ciclo_clock();
             continue;
-        }
-        else {
+        } else {
             printf("Scelta non valida!\n");
             pulisci_input();
             continue;
         }
     }
+
     if (memoria != NULL) {
         free(memoria);
         memoria = NULL;
