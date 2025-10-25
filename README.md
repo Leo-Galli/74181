@@ -27,10 +27,10 @@
 [![Ultimo Commit](https://img.shields.io/github/last-commit/Leo-Galli/74181)](https://github.com/Leo-Galli/74181/commits/main)
 ![Visualizzazioni](https://komarev.com/ghpvc/?username=Leo-Galli-74181&label=Visualizzazioni+Repository&color=blueviolet&style=flat)
 
-[![CodeQL](https://github.com/Leo-Galli/74181/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql)
+[![C/C++ CI](https://github.com/Leo-Galli/74181/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/Leo-Galli/74181/actions/workflows/c-cpp.yml)
+[![CodeQL](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql)
 [![Security Policy](https://img.shields.io/badge/Security-Policy-blueviolet)](https://github.com/Leo-Galli/74181/security/policy)
 [![Dependabot](https://img.shields.io/badge/Dependabot-Enabled-success)](https://github.com/Leo-Galli/74181/network/updates)
-[![CodeQL](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql)
 [![License Scan](https://img.shields.io/badge/License-Scan-green)](https://github.com/Leo-Galli/74181/blob/main/LICENSE)
 
 ---
