@@ -32,6 +32,8 @@
 [![Microsoft C Code Analysis (74181)](https://github.com/Leo-Galli/74181/actions/workflows/msvc.yml/badge.svg)](https://github.com/Leo-Galli/74181/actions/workflows/msvc.yml)
 
 [![Dependency review](https://github.com/Leo-Galli/74181/actions/workflows/dependency-review.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/dependency-review.yml)
+[![Checkmarx Scan](https://github.com/Leo-Galli/74181/actions/workflows/checkmarx-one.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/checkmarx-one.yml)
+
 [![Security Policy](https://img.shields.io/badge/Security-Policy-blueviolet)](https://github.com/Leo-Galli/74181/security/policy)
 [![Dependabot](https://img.shields.io/badge/Dependabot-Enabled-success)](https://github.com/Leo-Galli/74181/network/updates)
 [![License Scan](https://img.shields.io/badge/License-Scan-green)](https://github.com/Leo-Galli/74181/blob/main/LICENSE)
