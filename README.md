@@ -31,6 +31,9 @@
 [![CodeQL](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql)
 [![Microsoft C Code Analysis (74181)](https://github.com/Leo-Galli/74181/actions/workflows/msvc.yml/badge.svg)](https://github.com/Leo-Galli/74181/actions/workflows/msvc.yml)
 
+[![CMake on a single platform](https://github.com/Leo-Galli/74181/actions/workflows/cmake-single-platform.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/cmake-single-platform.yml)
+[![CMake on multiple platforms](https://github.com/Leo-Galli/74181/actions/workflows/cmake-multi-platform.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/cmake-multi-platform.yml)
+
 [![Dependency review](https://github.com/Leo-Galli/74181/actions/workflows/dependency-review.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/dependency-review.yml)
 [![Checkmarx Scan](https://github.com/Leo-Galli/74181/actions/workflows/checkmarx-one.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/checkmarx-one.yml)
 
