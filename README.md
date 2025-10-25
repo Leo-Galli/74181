@@ -7,6 +7,8 @@
 
 ![Simulator](https://img.shields.io/badge/Simulatore-74181-blue)
 ![Simulator](https://img.shields.io/badge/Simulatore-74198-blue)
+![GitHub Release](https://img.shields.io/github/v/release/Leo-Galli/74181)
+![GitHub Tag](https://img.shields.io/github/v/tag/Leo-Galli/74181)
 
 [![Allegati](https://img.shields.io/badge/Allegato-Report_Tecnico-yellow)](https://docs.google.com/document/d/1t80KM4RDQKBMuIQoPLAFnJRQeKX5ISx1Id5GahRIR-E/edit?usp=sharing)
 [![Allegati](https://img.shields.io/badge/Allegato-Circuito_Logico-yellow)](https://circuitverse.org/users/311719/projects/alu-74181-final)
@@ -27,7 +29,6 @@
 
 [![CodeQL](https://github.com/Leo-Galli/74181/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql)
 [![Security Policy](https://img.shields.io/badge/Security-Policy-blueviolet)](https://github.com/Leo-Galli/74181/security/policy)
-[![Vulnerabilities](https://img.shields.io/github/vulnerabilities/Leo-Galli/74181)](https://github.com/Leo-Galli/74181/security/dependabot)
 [![Dependabot](https://img.shields.io/badge/Dependabot-Enabled-success)](https://github.com/Leo-Galli/74181/network/updates)
 [![Code Scanning Alerts](https://img.shields.io/badge/CodeQL-Alerts-orange)](https://github.com/Leo-Galli/74181/security/code-scanning)
 [![License Scan](https://img.shields.io/badge/License-Scan-green)](https://github.com/Leo-Galli/74181/blob/main/LICENSE)
