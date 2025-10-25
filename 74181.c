@@ -3062,8 +3062,9 @@ int main() {
                     char line[100];
                     if (fgets(line, sizeof(line), file)) {
                         fclose(file);
-                        char buffer[33];
+                        char buffer[33] = {0};
                         if (sscanf(line, "%*[^<]<%32[^>]>", buffer) == 1) {
+                            buffer[32] = '\0';
                             dec = atoi(buffer);
                             FILE *file_out = fopen("risultati_bin.txt", "w");
                             if (file_out) {
@@ -3076,6 +3077,13 @@ int main() {
                                 continue;
                             }
                         }
+                    } else {
+                        fclose(file);
+                        printf("ERRORE: Formato file incompleto\n");
+                        pulisci_input();
+                        continue;
+                    }
+                }
                     } else {
                         fclose(file);
                         printf("ERRORE: Formato file incompleto\n");
