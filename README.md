@@ -36,6 +36,19 @@
 
 [![Dependency review](https://github.com/Leo-Galli/74181/actions/workflows/dependency-review.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/dependency-review.yml)
 
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
+
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
+
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
+
 [![Security Policy](https://img.shields.io/badge/Security-Policy-blueviolet)](https://github.com/Leo-Galli/74181/security/policy)
 [![Dependabot](https://img.shields.io/badge/Dependabot-Enabled-success)](https://github.com/Leo-Galli/74181/network/updates)
 [![License Scan](https://img.shields.io/badge/License-Scan-green)](https://github.com/Leo-Galli/74181/blob/main/LICENSE)
