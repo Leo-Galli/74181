@@ -1,22 +1,19 @@
-# Configurazioni locali
 .vscode/
 .github/
 
-# File temporanei
 *.log
 *.tmp
 *.swp
 
-# Output compilazione
 *.out
 *.o
 *.exe
 *.obj
 
-# Cartelle build
 /build/
 /dist/
 
-# File sistema
 .DS_Store
 Thumbs.db
+
+CMakeLists.txt
