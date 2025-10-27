@@ -34,8 +34,6 @@
 [![CMake on a single platform](https://github.com/Leo-Galli/74181/actions/workflows/cmake-single-platform.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/cmake-single-platform.yml)
 [![CMake on multiple platforms](https://github.com/Leo-Galli/74181/actions/workflows/cmake-multi-platform.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/cmake-multi-platform.yml)
 
-[![Dependency review](https://github.com/Leo-Galli/74181/actions/workflows/dependency-review.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/dependency-review.yml)
-
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
