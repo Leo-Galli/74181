@@ -2083,11 +2083,13 @@ static int leggi_bit_input_32(const char* nome, int* var) {
  * └────────────────────────────────────────────────────────────────────────────┘
  */
 
-
 void simula_alu_74181() {
     int Cn = 0, M = 0, A0 = 0, B0 = 0, A1 = 0, B1 = 0, A2 = 0, B2 = 0, A3 = 0, B3 = 0, S0 = 0, S1 = 0, S2 = 0, S3 = 0;
     char scelta[3];
     int input_valido = 1;
+
+    const char* nomi[] = {"Cn", "M", "A0", "B0", "A1", "B1", "A2", "B2", "A3", "B3", "S0", "S1", "S2", "S3"};
+    int* valori[] = {&Cn, &M, &A0, &B0, &A1, &B1, &A2, &B2, &A3, &B3, &S0, &S1, &S2, &S3};
 
     printf("Inserire dati manualmente? (S/N): ");
     if (scanf("%2s", scelta) != 1) {
@@ -2096,21 +2098,13 @@ void simula_alu_74181() {
         return;
     }
     scelta[0] = (char) toupper((unsigned char)scelta[0]);
+
     if (scelta[0] == 'S') {
-        if (!leggi_bit_input_74181("Cn", &Cn)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("M", &M)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("A0", &A0)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("B0", &B0)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("A1", &A1)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("B1", &B1)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("A2", &A2)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("B2", &B2)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("A3", &A3)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("B3", &B3)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("S0", &S0)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("S1", &S1)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("S2", &S2)) input_valido = 0;
-        if (input_valido && !leggi_bit_input_74181("S3", &S3)) input_valido = 0;
+        for (int i = 0; i < 14 && input_valido; i++) {
+            if (!leggi_bit_input_74181(nomi[i], valori[i])) {
+                input_valido = 0;
+            }
+        }
     } else {
         FILE *file = fopen("input_alu.txt", "r");
         if (!file) {
@@ -2119,61 +2113,31 @@ void simula_alu_74181() {
                 printf("ERRORE: Impossibile creare il file input_alu.txt\n");
                 input_valido = 0;
             } else {
-                fprintf(file, "Cn: <0>\n");
-                fprintf(file, "M: <0>\n");
-                fprintf(file, "A0: <0>\n");
-                fprintf(file, "B0: <0>\n");
-                fprintf(file, "A1: <0>\n");
-                fprintf(file, "B1: <0>\n");
-                fprintf(file, "A2: <0>\n");
-                fprintf(file, "B2: <0>\n");
-                fprintf(file, "A3: <0>\n");
-                fprintf(file, "B3: <0>\n");
-                fprintf(file, "S0: <0>\n");
-                fprintf(file, "S1: <0>\n");
-                fprintf(file, "S2: <0>\n");
-                fprintf(file, "S3: <0>\n");
+                for (int i = 0; i < 14; i++) {
+                    fprintf(file, "%s: <0>\n", nomi[i]);
+                }
                 fclose(file);
                 printf("Creato file input_alu.txt. Compilarlo e riavviare.\n");
                 input_valido = 0;
             }
         } else {
             char line[100];
-            #define LEGGI_BIT_FILE(var, nome) do { \
-                if (!fgets(line, sizeof(line), file)) { \
-                    printf("ERRORE: Formato file incompleto (%s)\n", nome); \
-                    input_valido = 0; \
-                } else if (sscanf(line, "%*[^<]<%d>", &(var)) != 1) { \
-                    printf("ERRORE: Valore non valido in %s\n", nome); \
-                    input_valido = 0; \
-                } else if ((var) != 0 && (var) != 1) { \
-                    printf("╔════════════════════════════════╗\n"); \
-                    printf("║            ERRORE              ║\n"); \
-                    printf("╠════════════════════════════════╣\n"); \
-                    printf("║                                ║\n"); \
-                    printf("║   %s deve essere 0 o 1      ║\n", nome); \
-                    printf("║                                ║\n"); \
-                    printf("╚════════════════════════════════╝\n"); \
-                    input_valido = 0; \
-                } \
-            } while(0)
-
-            LEGGI_BIT_FILE(Cn, "Cn");
-            if (input_valido) LEGGI_BIT_FILE(M, "M");
-            if (input_valido) LEGGI_BIT_FILE(A0, "A0");
-            if (input_valido) LEGGI_BIT_FILE(B0, "B0");
-            if (input_valido) LEGGI_BIT_FILE(A1, "A1");
-            if (input_valido) LEGGI_BIT_FILE(B1, "B1");
-            if (input_valido) LEGGI_BIT_FILE(A2, "A2");
-            if (input_valido) LEGGI_BIT_FILE(B2, "B2");
-            if (input_valido) LEGGI_BIT_FILE(A3, "A3");
-            if (input_valido) LEGGI_BIT_FILE(B3, "B3");
-            if (input_valido) LEGGI_BIT_FILE(S0, "S0");
-            if (input_valido) LEGGI_BIT_FILE(S1, "S1");
-            if (input_valido) LEGGI_BIT_FILE(S2, "S2");
-            if (input_valido) LEGGI_BIT_FILE(S3, "S3");
-
-            #undef LEGGI_BIT_FILE
+            for (int i = 0; i < 14 && input_valido; i++) {
+                if (!fgets(line, sizeof(line), file)) {
+                    printf("ERRORE: Formato file incompleto (%s)\n", nomi[i]);
+                    input_valido = 0;
+                } else if (sscanf(line, "%*[^<]<%d>", valori[i]) != 1) {
+                    printf("ERRORE: Valore non valido in %s\n", nomi[i]);
+                    input_valido = 0;
+                } else if (*valori[i] != 0 && *valori[i] != 1) {
+                    printf("╔════════════════════════════════╗\n");
+                    printf("║            ERRORE              ║\n");
+                    printf("╠════════════════════════════════╣\n");
+                    printf("║   %s deve essere 0 o 1      ║\n", nomi[i]);
+                    printf("╚════════════════════════════════╝\n");
+                    input_valido = 0;
+                }
+            }
             fclose(file);
         }
     }
@@ -2227,10 +2191,8 @@ void simula_alu_74181() {
         printf("╔════════════════════════════════╗\n");
         printf("║            ERRORE              ║\n");
         printf("╠════════════════════════════════╣\n");
-        printf("║                                ║\n");
         printf("║    Impossibile aprire file     ║\n");
         printf("║         di scrittura           ║\n");
-        printf("║                                ║\n");
         printf("╚════════════════════════════════╝\n");
     }
 
