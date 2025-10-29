@@ -126,7 +126,9 @@ gcc 74181.c -o simulatore_74181
 
 ## Licenza
 
-Distribuito sotto licenza **GPL v3.0**.
+Distribuito sotto licenza 
+![Licenza](https://www.gnu.org/graphics/gplv3-88x31.png)
+
 Vedi [LICENSE](LICENSE) per i dettagli.
 
 ---
