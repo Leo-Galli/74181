@@ -132,7 +132,9 @@ Distribuito sotto licenza
 Vedi [LICENSE](LICENSE) per i dettagli.
 
 ---
+## [Scarica l'ultima versione](https://github.com/Leo-Galli/74181/archive/refs/tags/v1.0.zip)
 
+---
 ## Contributors
 
 <a href="https://github.com/Leo-Galli/74181/graphs/contributors">
