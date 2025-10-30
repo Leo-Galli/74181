@@ -1,0 +1,61 @@
+Questo documento fornisce una spiegazione concisa per ogni funzione presente nel codice principale del progetto, che simula l'ALU 74181, registri 74198 e la gestione del clock del sistema.
+
+1. Macro di Riconoscimento del Sistema Operativo
+Queste macro sono usate per l'inclusione condizionale delle librerie e l'implementazione del ritardo specifico per il sistema operativo in uso (ritardo_ns).
+  - SISTEMA_WINDOWS - Definisce se il compilatore sta operando su un ambiente Windows (basato su _WIN32). È usata per includere windows.h e utilizzare la funzione Sleep per i ritardi. Valore: 1 (Windows) o 0 (Non Windows)
+  - SISTEMA_MAC - Definisce se il compilatore sta operando su un sistema operativo macOS (basato su __APPLE__). Valore: 1 (macOS) o 0 (Non macOS)
+  - SISTEMA_LINUX - Definisce se il compilatore sta operando su un sistema operativo Linux (basato su __linux__). Valore: 1 (Linux) o 0 (Non Linux)
+
+2. Funzioni di Gestione del Clock e del Tempo
+Queste funzioni sono fondamentali per la simulazione temporale e l'introduzione di ritardi che imitano il funzionamento hardware.
+  - void ritardo_ns(long long nanosecondi) - Implementa un ritardo in nanosecondi (ns). Utilizza Sleep su Windows e un ciclo attivo di confronto del tempo (clock_gettime) sui sistemi Unix-like (Mac/Linux) per ottenere una pausa il più precisa possibile
+  - void delay(int milliseconds) - Funzione wrapper che introduce un ritardo espresso in millisecondi (ms), convertendo l'input in nanosecondi e chiamando ritardo_ns
+  - void clock_step(int *CLK, int *prev_CLK, int milliseconds) - Simula un singolo passo di clock. Inverte lo stato del clock (*CLK) e imposta il *prev_CLK allo stato precedente, introducendo un ritardo specificato in millisecondi
+  - void attendi_un_ciclo_clock() - Calcola e attende la durata di un ciclo di clock in base alla CPU rilevata
+  - void attendi_cicli_clock_equivalenti_a_secondi(double secondi) - Mette in pausa il programma per un numero specificato di secondi, limitato a 5 secondi per evitare blocchi
+
+3. Funzioni di Validazione e I/O
+Queste funzioni gestiscono l'interazione con l'utente (lettura e pulizia dell'input) e la verifica dei dati.
+  - void pulisci_input(void) - Svuota il buffer di input standard (stdin). È essenziale per prevenire che caratteri indesiderati (come il newline \n lasciato da scanf) vengano letti nelle successive chiamate di input
+  - static int leggi_bit_input_74181(const char* nome, int* var) - Legge l'input dell'utente e lo valida per assicurarsi che sia un valore numerico binario (0 o 1). Il parametro nome viene usato per il prompt (printf), e var è il puntatore alla variabile dove salvare il bit letto. Restituisce 1 in caso di successo, 0 in caso di errore
+  - static int leggi_bit_input_32(const char* nome, int* var) - Alias di leggi_bit_input_74181, usata per leggere e validare l'input binario a 32 bit per le operazioni dell'ALU a 32 bit
+  - static bool is_safe_expr(const char *s) - Valida un’espressione matematica: permette solo cifre, operatori aritmetici (+ - * / %), parentesi e spazi. Verifica anche il bilanciamento delle parentesi
+  - static bool parentesi(const char *s) - Controlla che le parentesi in una stringa siano bilanciate
+
+4. Funzioni Porte Logiche
+Queste funzioni implementano la logica delle porte booleane attraverso gli analoghi algebrici. Accettano valori 0 o 1 e restituiscono 0 o 1.
+  - int porta_not(int A) - Implementa la porta NOT. Inverte il segnale di input A - Analogo: 1 - A
+  - int porta_and(int A, int B) - Implementa la porta AND a 2 ingressi A e B - Analogo: A*B
+  - int porta_or(int A, int B) - Implementa la porta OR a 2 ingressi A e B - Analogo: A+B-A*B
+  - int porta_exor(int A, int B) - Implementa la porta EXOR (OR esclusivo) a 2 ingressi A e B - Analogo: A+B-2*A*B
+  - int porta_or_3(int A, int B, int C) - Implementa la porta OR a 3 ingressi A, B e C
+  - int porta_or_4(int A, int B, int C, int D) - Implementa la porta OR a 4 ingressi A, B, C e D
+  - int porta_or_5(int A, int B, int C, int D, int E) - Implementa la porta OR a 5 ingressi A, B, C, D e E
+  - int porta_and_3(int A, int B, int C) - Implementa la porta AND a 3 ingressi A, B e C
+  - int porta_and_4(int A, int B, int C, int D) - Implementa la porta AND a 4 ingressi A, B, C e D
+  - int porta_and_5(int A, int B, int C, int D, int E) - Implementa la porta AND a 5 ingressi A, B, C, D e E
+  - int porta_exor_3(int A, int B, int C) - Implementa la porta EXOR a 3 ingressi A, B e C
+  - int porta_exor_4(int A, int B, int C, int D) - Implementa la porta EXOR a 4 ingressi A, B, C e D
+  - int porta_exor_5(int A, int B, int C, int D, int E) - Implementa la porta EXOR a 5 ingressi A, B, C, D e E
+  - int NAND3(int A, int B, int C) - Implementa la porta NAND a 3 ingressi A, B e C
+
+5. Funzioni di Logica Complessa (Chip e Decoder)
+Queste funzioni simulano componenti digitali più complessi utilizzando le porte logiche
+  - void n_SR_FLIP_FLOP(int D, int S_reg, int R_reg, int CLK, int *prev_CLK, int *Q, int *Q_bar) - Simula un Flip-Flop SR (Set-Reset) a livello di porta logica. Prende in ingresso lo stato corrente Q (puntatore), Qn (uscita negata, puntatore), S (Set) e R (Reset)
+  - void n_PIPO74198(int D[8], int S_reg[8], int R_reg[8], int CLK, int prev_CLK[8], int Q[8], int Q_bar[8]) - Simula un registro PIPO (Parallel-In, Parallel-Out) basato sul chip 74198. Gestisce le operazioni di clock, shift, load e clear sui dati
+  - void reg_PIPO32(int D[32], int S_reg[32], int R_reg[32], int CLK, int prev_CLK[32], int Q[32], int Q_bar[32]) - Implementa un registro PIPO a 32 bit, utilizzabile per l'ALU a 32 bit, aggregando 32 blocchi di Flip-Flop
+  - int BIN_DEC_DECODER(const char *binario) - Simula un Decodificatore Binario-Decimale  
+  - char* DEC_BIN_CODER(int numero) - Simula un Codificatore Decimale-Binario 
+
+6. Funzioni Principali
+  - void n_ALU74181(int Cn, int M, int A[4], int B[4], int S[4], int F[4], int *A_uguale_B, int *P, int *Cn_piu_4, int *G) - Simula un blocco base di ALU 74181 a 4 bit. Esegue 16 operazioni logiche e 16 aritmetiche. Prende 12 ingressi/uscite inclusi i bit di input A, B, il Carry-In Cn, il pin di Modo M, i 4 bit di selezione S0-S3, e i puntatori ai bit di Output F, Carry-Out Cout, Propagate P e Generate G
+  - void simula_alu_74181() - Funzione wrapper che richiede all'utente gli input per l'ALU 74181 (A, B, S, M, Cn) e ne visualizza il risultato
+  - void ALU32() - Simula una ALU a 32 bit completa usando 8 chip 74181 in cascata
+  - void operazioni_algebriche() - Calcolatrice avanzata con supporto a espressioni complesse, validazione sicura e valutazione tramite shell
+  - char* rileva_cpu() - Rileva automaticamente il modello della CPU host (Linux, Windows, macOS)
+  - long long ottieni_clock(const char* nome_cpu) - Restituisce la frequenza di clock (Hz) associata al nome CPU, usando un database interno
+  - void misura_ciclo_clock() - Mostra CPU rilevata, frequenza stimata e simula 1000 cicli di clock
+  - void salva_in_memoria(int valore) - Memorizza dinamicamente i risultati in un array espandibile
+  - void stampa_memoria() - Stampa il contenuto della memoria dinamica
+  - void stato_memoria() - Mostra capacità allocata e celle occupate
+  - int main() - La funzione principale e punto di ingresso del programma. Gestisce il menu di navigazione (scelta dell'utente), le chiamate alle funzioni di simulazione (Decoder, ALU), e la logica di temporizzazione del clock per mantenere il programma in esecuzione
