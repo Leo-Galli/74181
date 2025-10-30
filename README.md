@@ -17,6 +17,7 @@
 [![Allegati](https://img.shields.io/badge/Allegato-Circuito_Logico-yellow)](https://circuitverse.org/users/354132/projects/74181-d57739bf-87e5-4dac-9cbf-8b862b98e69b)
 [![Allegati](https://img.shields.io/badge/Allegato-Licenza-yellow)](https://github.com/Leo-Galli/74181/blob/main/LICENSE)
 [![Allegati](https://img.shields.io/badge/Allegato-Codice_di_Condotta-yellow)](https://github.com/Leo-Galli/74181/blob/main/CODE_OF_CONDUCT.md)
+
 [![Allegati](https://img.shields.io/badge/Allegato-Wiki_|_HomePage-yellow)](https://github.com/Leo-Galli/74181/wiki)
 [![Allegati](https://img.shields.io/badge/Allegato-Wiki_|_Manuale_Utente-yellow)](https://github.com/Leo-Galli/74181/wiki/Manuale)
 [![Allegati](https://img.shields.io/badge/Allegato-Wiki_|_Accenni_Storici-yellow)](https://github.com/Leo-Galli/74181/wiki/Storia)
