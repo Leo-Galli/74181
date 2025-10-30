@@ -115,15 +115,6 @@ gcc 74181.c -o simulatore_74181
 
 ---
 
-## Risorse
-
-* [Report tecnico](https://docs.google.com/document/d/1t80KM4RDQKBMuIQoPLAFnJRQeKX5ISx1Id5GahRIR-E/edit?usp=sharing)
-* [Schema CircuitVerse](https://circuitverse.org/users/311719/projects/alu-74181-final)
-* [Lista bug](https://github.com/Leo-Galli/74181/blob/main/bugs.txt)
-* [Simulazione Wokwi](https://wokwi.com/projects/439836726113417217)
-
----
-
 ## Licenza
 
 Distribuito sotto licenza 
