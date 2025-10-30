@@ -16,6 +16,7 @@
 [![Allegati](https://img.shields.io/badge/Allegato-Codice_di_Condotta-yellow)](https://github.com/Leo-Galli/74181/blob/main/CODE_OF_CONDUCT.md)
 [![Allegati](https://img.shields.io/badge/Allegato-Wiki-yellow)](https://github.com/Leo-Galli/74181/wiki)
 [![Allegati](https://img.shields.io/badge/Allegato-Manuale_Utente-yellow)](https://github.com/Leo-Galli/74181/wiki/Manuale)
+[![Allegati](https://img.shields.io/badge/Allegato-Accenni_Storici-yellow)](https://github.com/Leo-Galli/74181/wiki/Storia)
 
 ![file or directory count](https://img.shields.io/github/directory-file-count/Leo-Galli/74181)
 [![Repo Size](https://img.shields.io/github/repo-size/Leo-Galli/74181)](https://github.com/Leo-Galli/74181)
