@@ -11,7 +11,7 @@
 ![GitHub Tag](https://img.shields.io/github/v/tag/Leo-Galli/74181)
 
 [![Allegati](https://img.shields.io/badge/Allegato-Report_Tecnico-yellow)](https://docs.google.com/document/d/1t80KM4RDQKBMuIQoPLAFnJRQeKX5ISx1Id5GahRIR-E/edit?usp=sharing)
-[![Allegati](https://img.shields.io/badge/Allegato-Circuito_Logico-yellow)](https://circuitverse.org/users/311719/projects/alu-74181-final)
+[![Allegati](https://img.shields.io/badge/Allegato-Circuito_Logico-yellow)](https://circuitverse.org/users/354132/projects/74181-d57739bf-87e5-4dac-9cbf-8b862b98e69b)
 [![Allegati](https://img.shields.io/badge/Allegato-Licenza-yellow)](https://github.com/Leo-Galli/74181/blob/main/LICENSE)
 [![Allegati](https://img.shields.io/badge/Allegato-Codice_di_Condotta-yellow)](https://github.com/Leo-Galli/74181/blob/main/CODE_OF_CONDUCT.md)
 [![Allegati](https://img.shields.io/badge/Allegato-Wiki-yellow)](https://github.com/Leo-Galli/74181/wiki)
