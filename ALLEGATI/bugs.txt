@@ -1,0 +1,41 @@
+BUG RISOLTI - Simulatore ALU 74181
+=================================
+
+1. [BUG #001] Errore nel riporto del valore di Cn
+   - Descrizione: La funzione applicava la tabella di verità errata.
+   - Risoluzione: Cambiato approccio e funzione.
+
+2. [BUG #002] Comportamento errato della ALU74181 su operazioni logiche
+   - Descrizione: L'ALU restituiva risultati sbagliati nelle operazioni OR e AND a causa di un errore nei bit di controllo.
+   - Risoluzione: Corretto il decoding dei segnali di controllo e la logica interna per ciascuna operazione.
+
+3. [BUG #003] Overflow non rilevato in ALU32()
+   - Descrizione: In alcune somme con numeri grandi, il simulatore non segnalava overflow.
+   - Risoluzione: Aggiunta logica di rilevamento overflow tramite confronto dei bit di segno.
+
+4. [BUG #004] I registri non aggiornavano correttamente l'uscita
+   - Descrizione: I registri a scorrimento mantenevano valori errati tra due cicli consecutivi.
+   - Risoluzione: Corretto il clock interno e l'aggiornamento dei registri.
+
+5. [BUG #005] Interfaccia utente bloccata in caso di input non numerico
+   - Descrizione: Inserendo un carattere alfanumerico dove era previsto un numero, il simulatore andava in loop.
+   - Risoluzione: Implementata la validazione dell’input e gestione degli errori.
+
+------------------------------------------------
+
+NOTE FINALI:
+Tutti i bug noti sono stati risolti. 
+Al momento non sono presenti malfunzionamenti critici rilevati nei test standard.
+
+------------------------------------------------
+
+COME CONTRIBUIRE:
+- È possibile segnalare nuovi bug aprendo una Issue su GitHub:
+  https://github.com/Leo-Galli/74181/issues
+
+- In alternativa, è possibile aggiungere direttamente il bug a questo file
+  seguendo il formato:
+
+  [BUG #XXX] Titolo bug
+   - Descrizione: ...
+   - Risoluzione: ...
