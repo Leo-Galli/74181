@@ -61,7 +61,6 @@
  * └────────────────────────────────────────────────────────────────────────────┘
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,33 +68,37 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <limits.h>
+
 #ifdef _WIN32
-#include <io.h>
-#include <process.h>
-#include <windows.h>
-#define sleep(x) Sleep(1000 * (x))
+  #include <io.h>
+  #include <process.h>
+  #include <windows.h>
+  #define sleep(x) Sleep(1000 * (x))
 #else
-#include <unistd.h>
+  #include <unistd.h>
 #endif
+
 #if defined(_WIN32)
-#define SISTEMA_WINDOWS 1
-#include <windows.h>
+  #define SISTEMA_WINDOWS 1
 #else
-#define SISTEMA_WINDOWS 0
+  #define SISTEMA_WINDOWS 0
 #endif
-#ifdef __APPLE__
-#define SISTEMA_MAC 1
+
+#if defined(__APPLE__)
+  #define SISTEMA_MAC 1
 #else
-#define SISTEMA_MAC 0
+  #define SISTEMA_MAC 0
 #endif
-#ifdef __linux__
-#define SISTEMA_LINUX 1
+
+#if defined(__linux__)
+  #define SISTEMA_LINUX 1
 #else
-#define SISTEMA_LINUX 0
+  #define SISTEMA_LINUX 0
 #endif
+
 #ifdef _WIN32
-    #define popen _popen
-    #define pclose _pclose
+  #define popen _popen
+  #define pclose _pclose
 #endif
 
 /*
