@@ -57,36 +57,26 @@
 
 ## Descrizione
 
-Simulatore didattico in **C (C99)** dell’unità aritmetico-logica **74181**.  
-Supporta operazioni a 4 bit e un’estensione a **32 bit** mediante concatenazione di più ALU.  
-Pensato per studio e analisi dei flag **Carry, Overflow, Zero, Negative**.
+Questo progetto rappresenta un **simulatore didattico in linguaggio C (standard C99)** dedicato all’unità aritmetico-logica **74181**, un componente fondamentale dei sistemi digitali classici.  
+L’obiettivo principale è fornire agli studenti, agli appassionati di elettronica digitale e ai programmatori una piattaforma chiara, modulare e facilmente eseguibile per comprendere a fondo il funzionamento logico di un’ALU reale.
 
----
+Il simulatore riproduce con precisione il comportamento della 74181 a **4 bit**, estendendo le sue capacità fino a **32 bit** attraverso una concatenazione virtuale di più unità.  
+Tale implementazione consente di osservare in modo dettagliato come operazioni complesse vengano scomposte e gestite internamente, simulando con fedeltà i meccanismi di calcolo di un’ALU hardware, inclusi i segnali di **Carry**, **Overflow**, **Zero** e **Negative**.
 
-## Funzionalità
+Il programma è progettato per essere leggero, portabile e di facile utilizzo su qualunque sistema operativo dotato di compilatore C compatibile.  
+È particolarmente indicato per ambienti didattici, esercitazioni di laboratorio, dimostrazioni accademiche o sperimentazioni personali nel campo dell’informatica di basso livello e dell’architettura dei calcolatori.
 
-- Operazioni logiche: AND, OR, XOR, NOT  
-- Operazioni aritmetiche: somma, sottrazione, incremento, decremento  
-- Conversione binario ↔ decimale  
-- ALU a 32 bit con propagazione carry look-ahead  
-- Input/output da file e generazione automatica risultati  
-- Clock simulato per studio di latenze  
+Tra le funzionalità offerte:
+- Esecuzione di **operazioni aritmetiche e logiche** su registri di 4 o 32 bit.
+- Simulazione completa dei **flag di stato** con aggiornamento dinamico dopo ogni operazione.
+- Possibilità di **visualizzare passo per passo** le fasi di calcolo.
+- Supporto per modalità di input interattive e automatizzate.
+- Output leggibile e chiaro, pensato per facilitare la comprensione del processo interno.
 
----
+Grazie alla struttura modulare, il codice può essere facilmente esteso o adattato a scopi specifici, come l’integrazione con interfacce grafiche, debugger educativi o emulatori di CPU.  
+Il progetto si presta inoltre come base per studi di microarchitettura, simulazioni di pipeline, o comparazioni tra modelli logici differenti.
 
-## File
-
-**Input**  
-`input_alu.txt` – Operazioni 74181  
-`input_alu32.txt` – Operazioni 32 bit  
-`input_bin.txt` – Binario → Decimale  
-`input_dec.txt` – Decimale → Binario  
-
-**Output**  
-`risultati_alu_74181.txt`  
-`risultati_alu32.txt`  
-`risultati_bin.txt`  
-`risultati_dec.txt`  
+In sintesi, **il Simulatore ALU 74181 è uno strumento didattico completo e aperto**, realizzato per permettere a chiunque di comprendere nel dettaglio come una CPU elabora le istruzioni aritmetico-logiche, rendendo visibile ciò che normalmente avviene all’interno dei circuiti elettronici.
 
 ---
 
@@ -117,15 +107,17 @@ gcc 74181.c -o simulatore_74181
 
 ## Licenza
 
-Distribuito sotto licenza 
+Distribuito sotto licenza
 ![Licenza](https://www.gnu.org/graphics/gplv3-88x31.png)
 
 Vedi [LICENSE](LICENSE) per i dettagli.
 
 ---
+
 ## [Scarica l'ultima versione](https://github.com/Leo-Galli/74181/archive/refs/tags/v1.0.zip)
 
 ---
+
 ## Contributors
 
 <a href="https://github.com/Leo-Galli/74181/graphs/contributors">
