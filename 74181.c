@@ -2763,7 +2763,7 @@ void operazioni_algebriche() {
 void misura_ciclo_clock() {
     printf("\n==============================");
     printf("  Rilevamento del sistema");
-    printf("==============================");
+    printf("==============================\n");
     char *cpu = rileva_cpu();
     printf("CPU rilevata: %s\n", cpu);
     long long freq = ottieni_clock(cpu);
@@ -2838,12 +2838,12 @@ int main() {
     char input[10];
 
     while (1) {
-        printf("\n╔══════════════════════════════════════════════════════════╗\n");
-        printf("║                ________|          |________               ║\n");
+        printf("\n╔════════════════════════════════════════════════════════════╗\n");
+        printf("║                ________|          |________                ║\n");
         printf("║               |       /   ||||||   \\       |              ║\n");
-        printf("║               |     ,'              `.     |              ║\n");
-        printf("║               |   ,'                  `.   |              ║\n");
-        printf("║               | ,'   ||||||||||||||||   `. |              ║\n");
+        printf("║               |     ,'              `.     |               ║\n");
+        printf("║               |   ,'                  `.   |               ║\n");
+        printf("║               | ,'   ||||||||||||||||   `. |               ║\n");
         printf("║               ,'  /____________________\\  `.              ║\n");
         printf("║              /______________________________\\             ║\n");
         printf("║             |                                |             ║\n");
