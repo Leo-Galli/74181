@@ -7,6 +7,7 @@ Questa sezione indica quali versioni del progetto ricevono aggiornamenti di sicu
 | Versione | Supportata |
 |----------|------------|
 | 1.0.0    | ✅         |
+| 2.0.0    | ✅         |
 
 ## 🐞 Segnalazione di una Vulnerabilità
 
