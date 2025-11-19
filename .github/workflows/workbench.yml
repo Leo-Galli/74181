@@ -1,0 +1,48 @@
+name: 74181 Workbench
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential valgrind linux-tools-common linux-tools-generic
+
+    - name: Compile 74181.c
+      run: |
+        gcc -Wall -O2 74181.c -o 74181
+
+    - name: Run program
+      run: |
+        ./74181 || true
+
+    - name: Memory check (Valgrind)
+      run: |
+        valgrind --leak-check=full --error-exitcode=1 ./74181 || true
+
+    - name: CPU/Performance stats (perf)
+      run: |
+        perf stat ./74181 || true
+
+    - name: Time and resource usage
+      run: |
+        /usr/bin/time -v ./74181 || true
+
+    - name: Save logs as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: profiling-results
+        path: |
+          *.out
+          *.log
