@@ -6,8 +6,11 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: write   # serve per committare i badge nel repo
+
 jobs:
-  build-and-test:
+  build-and-profile:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,15 +20,16 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential valgrind linux-tools-common linux-tools-generic jq curl
+        sudo apt-get install -y build-essential valgrind linux-tools-common linux-tools-generic curl
 
     - name: Compile 74181.c
-      run: |
-        gcc -Wall -O2 74181.c -o 74181
+      run: gcc -Wall -Wextra -O2 74181.c -o 74181
 
-    - name: Run with resource usage
-      run: |
-        /usr/bin/time -v ./74181 > time.log 2>&1 || true
+    - name: Run program with input (avoid block)
+      run: echo -e "0\n" | ./74181 > run.log 2>&1 || true
+
+    - name: Resource usage with time
+      run: timeout 5s /usr/bin/time -v ./74181 < <(echo "0") > time.log 2>&1 || true
 
     - name: Extract metrics
       run: |
@@ -34,15 +38,16 @@ jobs:
         echo "MAX_MEM=$MAX_MEM" >> $GITHUB_ENV
         echo "USER_TIME=$USER_TIME" >> $GITHUB_ENV
 
-    - name: Generate badge
+    - name: Generate badges
       run: |
-        curl "https://img.shields.io/badge/memory-${MAX_MEM}KB-blue" > memory-badge.svg
-        curl "https://img.shields.io/badge/cpu-${USER_TIME}s-green" > cpu-badge.svg
+        mkdir -p badges
+        curl -s "https://img.shields.io/badge/memory-${MAX_MEM}KB-blue" -o badges/memory-badge.svg
+        curl -s "https://img.shields.io/badge/cpu-${USER_TIME}s-green" -o badges/cpu-badge.svg
 
-    - name: Upload badges
-      uses: actions/upload-artifact@v4
-      with:
-        name: resource-badges
-        path: |
-          memory-badge.svg
-          cpu-badge.svg
+    - name: Commit badges to repo
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add badges/*.svg
+        git commit -m "Update resource badges [skip ci]" || echo "No changes to commit"
+        git push
