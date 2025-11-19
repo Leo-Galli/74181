@@ -23,9 +23,9 @@ jobs:
       run: |
         gcc -Wall -O2 74181.c -o 74181
 
-    - name: Run program and save log
+    - name: Run program (show output in logs)
       run: |
-        ./74181 > run.log 2>&1 || true
+        ./74181 || true
 
     - name: Memory check (Valgrind)
       run: |
@@ -44,7 +44,6 @@ jobs:
       with:
         name: profiling-results
         path: |
-          run.log
           valgrind.log
           perf.log
           time.log
