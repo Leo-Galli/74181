@@ -58,6 +58,9 @@
 [![Dependabot](https://img.shields.io/badge/Dependabot-Enabled-success)](https://github.com/Leo-Galli/74181/network/updates)
 [![License Scan](https://img.shields.io/badge/License-Scan-green)](https://github.com/Leo-Galli/74181/blob/main/LICENSE)
 
+![Memory](badges/memory-badge.svg)
+![CPU](badges/cpu-badge.svg)
+
 ---
 
 ## Descrizione
