@@ -7,11 +7,12 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: write   # Per committare i badge
+  contents: write
 
 jobs:
   build-and-profile:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
     - name: Checkout repository
@@ -20,124 +21,165 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential valgrind linux-tools-common linux-tools-generic curl
+        sudo apt-get install -y build-essential linux-tools-common linux-tools-generic curl
 
     - name: Compile 74181.c
-      run: gcc -Wall -Wextra -O2 74181.c -o 74181
+      run: gcc -Wall -Wextra -O2 -std=c99 74181.c -o 74181
 
-    - name: Create output directories
+    - name: Prepare directories
       run: |
-        mkdir -p runs badges logs
+        mkdir -p runs logs badges
 
-    - name: Define all menu test cases
+    - name: Define comprehensive test cases
       run: |
-        cat > test_cases.txt <<EOF
-        0
-        1,S,0,0,0,0,0,0,0,0,0,0,0,0,0
-        2,S,0,0,0,0,0,0,0,0,0,0,0,0,0
-        3,1,3,5,2,x
-        3,2,10,4,x
-        3,3,2,3,4,x
-        3,4,100,4,x
-        3,5,(10+6)*2-4
-        3,6
-        4,S,1101
-        5,S,13
-        6,S,255,15,0,0,1,1,0,0
-        7,S,65535,1,0,0,1,1,0,0
-        8
-        9
-        EOF
+        cat > test_cases.txt <<'EOF'
+# Opzione 1: ALU 74181 (senza clock)
+1,S,0,0,0,0,0,0,0,0,0,0,0,0,0
+1,S,1,0,1,1,0,1,1,0,1,0,1,1,0
+1,N,1,1,1,1,1,1,1,1,1,1,1,1,1
+# Opzione 3: Calcolatrice
+3,1,10,20,30,x
+3,2,100,10,5,x
+3,3,7,8,x
+3,4,1000,2,5,x
+3,5,(10+2)*5-3
+3,5,2*(3+4)
+# Opzione 4: Bin → Dec
+4,S,101010
+4,S,11111111
+4,S,0
+# Opzione 5: Dec → Bin
+5,S,42
+5,S,255
+5,S,0
+# Opzione 6: ALU32
+6,S,100,200
+6,S,4294967295,1
+6,S,0,0
+# Opzione 7: ALU32 con clock
+7,S,12345,67890
+7,S,1,1
+# Opzione 8: Memoria (solo visualizza, non richiede input)
+8
+# Opzione 9: Clock (non richiede input interattivo)
+9
+EOF
 
-    - name: Run all menu options and collect metrics
+    - name: Run all test cases and collect metrics
       run: |
-        INPUT_FILE="test_cases.txt"
-        LOG_DIR="logs"
-        while IFS=',' read -r line_type args; do
-          if [[ "$line_type" == "0" || "$line_type" == "8" || "$line_type" == "9" ]]; then
-            echo "Skipping exit or passive command: $line_type"
+        while IFS=',' read -r line_type mode rest; do
+          if [[ -z "$line_type" || "$line_type" =~ ^[[:space:]]*# ]]; then continue; fi
+
+          if [[ "$line_type" == "8" || "$line_type" == "9" ]]; then
+            # Nessun input richiesto
+            input="$line_type"
+            full_input="$input"$'\n0\n'
+          elif [[ "$line_type" == "1" ]]; then
+            IFS=',' read -ra bits <<< "$rest"
+            full_input=$(printf "%s\nS\n%s\n0\n" "$line_type" "$(IFS=$'\n'; echo "${bits[*]}")")
+          elif [[ "$line_type" == "3" ]]; then
+            op=${mode}
+            case "$op" in
+              1|2|3|4)
+                IFS=',' read -ra nums <<< "$rest"
+                full_input=$(printf "%s\n%s\n%s\nx\n0\n" "$line_type" "$op" "$(IFS=$'\n'; echo "${nums[*]}")")
+                ;;
+              5)
+                expr=${rest%,x}
+                full_input=$(printf "%s\n5\n%s\n0\n" "$line_type" "$expr")
+                ;;
+            esac
+          elif [[ "$line_type" == "4" || "$line_type" == "5" ]]; then
+            val=${rest%,x}
+            full_input=$(printf "%s\nS\n%s\n0\n" "$line_type" "$val")
+          elif [[ "$line_type" == "6" || "$line_type" == "7" ]]; then
+            IFS=',' read -ra nums <<< "$rest"
+            full_input=$(printf "%s\nS\n%s\n%s\n0\n0\n0\n0\n0\n0\n" "$line_type" "${nums[0]}" "${nums[1]}")
+          else
             continue
           fi
 
-          case "$line_type" in
-            1|2|6|7)
-              # ALU 74181 or ALU32: expects (S/N) then 14/8 bits
-              mode=${args%%,*}
-              rest=${args#*,}
-              IFS=',' read -ra bits <<< "$rest"
-              input="N"  # We skip file creation; use direct echo
-              echo "$line_type,$mode,${bits[*]}"
-              ;;
-            3)
-              op=${args%%,*}
-              operands=${args#*,}
-              case "$op" in
-                1|2|3|4)
-                  IFS=',' read -ra nums <<< "$operands"
-                  input=$(printf "%s\n" "$op" "${nums[@]}" "x")
-                  ;;
-                5)
-                  expr=${operands%,x}
-                  input=$(printf "5\n%s\n" "$expr")
-                  ;;
-                6)
-                  input="6"
-                  ;;
-                *) continue ;;
-              esac
-              ;;
-            4|5)
-              mode=${args%%,*}
-              value=${args#*,}
-              input=$(printf "S\n%s\n" "$value")
-              ;;
-            *) continue ;;
-          esac
+          echo "Running test: $line_type ($mode, $rest)"
+          timeout 15s /usr/bin/time -v ./74181 > "logs/run_$line_type.log" 2>&1 <<< "$full_input" || true
 
-          # Construct full input for the program
-          full_input=$(printf "%s\n0\n" "$line_type" "$input")
+          mem_kb=$(grep -oP 'Maximum resident set size.*:\s*\K[0-9]+' "logs/run_$line_type.log" || echo "0")
+          cpu_s=$(grep -oP 'User time.*:\s*\K[0-9.]+([0-9]*)' "logs/run_$line_type.log" || echo "0.00")
 
-          # Measure with /usr/bin/time -v
-          timeout 10s /usr/bin/time -v ./74181 > "$LOG_DIR/run_$line_type.log" 2>&1 <<< "$full_input" || true
+          if [[ "$mem_kb" != "0" || "$cpu_s" != "0.00" ]]; then
+            echo "$line_type,$cpu_s,$mem_kb" >> runs/metrics.csv
+          fi
+        done < test_cases.txt
 
-          # Extract metrics
-          mem_kb=$(grep "Maximum resident set size" "$LOG_DIR/run_$line_type.log" | awk '{print $6}')
-          cpu_s=$(grep "User time" "$LOG_DIR/run_$line_type.log" | awk '{print $4}')
-          echo "$line_type,$cpu_s,$mem_kb" >> runs/metrics.csv
-
-        done < "$INPUT_FILE"
-
-    - name: Compute stats (min/max/avg)
+    - name: Compute min/max/avg statistics
       run: |
         echo "metric,value" > runs/stats.csv
 
-        # CPU time
-        awk -F',' 'NR>1 && $2 != "" && $2 != "0.00" {sum+=$2; if(NR==2||$2<min) min=$2; if($2>max) max=$2; count++} END {if(count>0) {avg=sum/count; print "cpu_avg,"avg; print "cpu_min,"min; print "cpu_max,"max}}' runs/metrics.csv >> runs/stats.csv
+        if [ -f runs/metrics.csv ] && [ -s runs/metrics.csv ]; then
+          # CPU
+          awk -F',' '
+            $2+0 == $2 && $2 >= 0 {
+              sum += $2; count++;
+              if (NR==1 || $2 < min) min = $2;
+              if ($2 > max) max = $2;
+            }
+            END {
+              if (count > 0) {
+                avg = sum / count;
+                printf "cpu_avg,%.3f\ncpu_min,%.3f\ncpu_max,%.3f\n", avg, min, max
+              }
+            }' runs/metrics.csv >> runs/stats.csv
 
-        # Memory
-        awk -F',' 'NR>1 && $3 != "" && $3 != "0" {sum+=$3; if(NR==2||$3<min) min=$3; if($3>max) max=$3; count++} END {if(count>0) {avg=sum/count; print "mem_avg,"avg; print "mem_min,"min; print "mem_max,"max}}' runs/metrics.csv >> runs/stats.csv
+          # Memory
+          awk -F',' '
+            $3+0 == $3 && $3 >= 0 {
+              sum += $3; count++;
+              if (NR==1 || $3 < min) min = $3;
+              if ($3 > max) max = $3;
+            }
+            END {
+              if (count > 0) {
+                avg = sum / count;
+                printf "mem_avg,%.0f\nmem_min,%.0f\nmem_max,%.0f\n", avg, min, max
+              }
+            }' runs/metrics.csv >> runs/stats.csv
+        else
+          echo "cpu_avg,0.000" >> runs/stats.csv
+          echo "cpu_min,0.000" >> runs/stats.csv
+          echo "cpu_max,0.000" >> runs/stats.csv
+          echo "mem_avg,0" >> runs/stats.csv
+          echo "mem_min,0" >> runs/stats.csv
+          echo "mem_max,0" >> runs/stats.csv
+        fi
 
-    - name: Generate enhanced badges
+    - name: Generate beautiful badges
       run: |
         mkdir -p badges
-        while IFS=',' read -r metric value; do
-          if [[ "$metric" == "metric" ]]; then continue; fi
-          color="lightgray"
-          case "$metric" in
-            cpu_*) color="green" ;;
-            mem_*) color="blue" ;;
-          esac
-          label="${metric//_/ }"
+        tail -n +2 runs/stats.csv | while IFS=',' read -r metric value; do
+          if [[ -z "$value" ]]; then value="0"; fi
+
+          # Colori
+          if [[ "$metric" == cpu_* ]]; then color="success"; else color="informational"; fi
+
+          # Etichette leggibili
+          label="${metric//_ / }"
+          label="${label//_/-}"
+          suffix=""
           if [[ "$metric" == *"_avg" ]]; then suffix=" (avg)"; fi
           if [[ "$metric" == *"_min" ]]; then suffix=" (min)"; fi
           if [[ "$metric" == *"_max" ]]; then suffix=" (max)"; fi
-          curl -s "https://img.shields.io/badge/${label}${suffix}-${value}-${color}?logo=github" -o "badges/${metric}.svg"
-        done < runs/stats.csv
 
-    - name: Commit badges and logs to repo
+          # URL encoding (spazi → %20, parentesi → %28%29)
+          label_enc=$(printf "%s" "${label}${suffix}" | sed 's/ /%20/g; s/(/%28/g; s/)/%29/g')
+          value_enc=$(printf "%s" "$value" | sed 's/ /%20/g')
+
+          curl -fsSL "https://img.shields.io/badge/${label_enc}-${value_enc}-${color}?logo=github&logoColor=white&style=for-the-badge" \
+            -o "badges/${metric}.svg"
+        done
+
+    - name: Commit all artifacts
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git add badges/ runs/ logs/
-        git commit -m "Update 74181 Workbench metrics and badges [skip ci]" || echo "No changes to commit"
+        git commit -m "✅ Update 74181 Workbench badges & metrics [skip ci]" || echo "No changes to commit"
         git push
