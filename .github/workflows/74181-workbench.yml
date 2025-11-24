@@ -78,7 +78,6 @@ EOF
       run: |
         while IFS=',' read -r line_type args; do
           [[ -z "$line_type" || "$line_type" =~ ^# ]] && continue
-
           input=""
           case "$line_type" in
             8|9)
@@ -93,7 +92,6 @@ EOF
               rest=${args#*,}
               case "$op" in
                 1|2|3|4)
-                  # Estrai numeri fintanto che sono validi
                   IFS=',' read -ra nums <<< "$rest"
                   input=$(printf "3\n%s\n%s\nx\n0\n" "$op" "$(IFS=$'\n'; echo "${nums[*]}")")
                   ;;
@@ -113,13 +111,10 @@ EOF
               ;;
             *) continue ;;
           esac
-
           echo "🧪 Running test: $line_type (args: $args)"
           timeout 15s /usr/bin/time -v ./74181 > "logs/run_$line_type.log" 2>&1 <<< "$input" || true
-
           mem_kb=$(grep -oP 'Maximum resident set size.*:\s*\K[0-9]+' "logs/run_$line_type.log" || echo "0")
-          cpu_s=$(grep -oP 'User time.*:\s*\K[0-9.]+([0-9]*)' "logs/run_$line_type.log" || echo "0.00")
-
+          cpu_s=$(grep -oP 'User time.*:\s*\K[0-9.]+' "logs/run_$line_type.log" || echo "0.00")
           if [[ "$mem_kb" != "0" || "$cpu_s" != "0.00" ]]; then
             echo "$line_type,$cpu_s,$mem_kb" >> runs/metrics.csv
           fi
@@ -160,16 +155,13 @@ EOF
           color="lightgray"
           [[ "$metric" == cpu_* ]] && color="success"
           [[ "$metric" == mem_* ]] && color="informational"
-
           label="${metric//_ / }"
           suffix=""
           [[ "$metric" == *"_avg" ]] && suffix=" (avg)"
           [[ "$metric" == *"_min" ]] && suffix=" (min)"
           [[ "$metric" == *"_max" ]] && suffix=" (max)"
-
           label_enc=$(printf "%s" "${label}${suffix}" | sed 's/ /%20/g; s/(/%28/g; s/)/%29/g')
           value_enc=$(printf "%s" "$value" | sed 's/ /%20/g')
-
           curl -fsSL "https://img.shields.io/badge/${label_enc}-${value_enc}-${color}?logo=github&logoColor=white&style=for-the-badge" \
             -o "badges/${metric}.svg"
         done
