@@ -1,0 +1,162 @@
+name: 74181 Workbench
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential linux-tools-common linux-tools-generic curl
+
+    - name: Compile 74181.c
+      run: gcc -Wall -Wextra -O2 -std=c99 74181.c -o 74181
+
+    - name: Prepare directories
+      run: mkdir -p runs logs badges
+
+    - name: Define comprehensive test cases
+      run: |
+        cat > test_cases.txt <<'EOF'
+# ALU 74181
+1,S,0,0,0,0,0,0,0,0,0,0,0,0,0
+1,S,1,1,1,1,0,0,0,0,1,0,1,0,1
+# Calcolatrice
+3,1,10,20,30,x
+3,2,100,10,x
+3,3,7,8,x
+3,4,1000,4,x
+3,5,(10+2)*3-6
+# Bin → Dec
+4,S,101010
+4,S,1111
+# Dec → Bin
+5,S,42
+5,S,255
+# ALU32
+6,S,100,200
+6,S,4294967295,1
+# ALU32 con clock
+7,S,12345,67890
+# Opzioni passive (non interattive)
+8
+9
+EOF
+
+    - name: Run test cases and collect metrics
+      run: |
+        while IFS=',' read -r line_type args; do
+          [[ -z "$line_type" || "$line_type" =~ ^# ]] && continue
+
+          case "$line_type" in
+            8|9)
+              full_input="$line_type"$'\n0\n'
+              ;;
+            1)
+              IFS=',' read -ra bits <<< "$args"
+              full_input=$(printf "1\nS\n%s\n0\n" "$(IFS=$'\n'; echo "${bits[*]}")")
+              ;;
+            3)
+              op=${args%%,*}
+              rest=${args#*,}
+              case "$op" in
+                1|2|3|4)
+                  IFS=',' read -ra nums <<< "$rest"
+                  full_input=$(printf "3\n%s\n%s\nx\n0\n" "$op" "$(IFS=$'\n'; echo "${nums[*]}")")
+                  ;;
+                5)
+                  expr=${rest%,x}
+                  full_input=$(printf "3\n5\n%s\n0\n" "$expr")
+                  ;;
+              esac
+              ;;
+            4|5)
+              val=${args#*,}
+              full_input=$(printf "%s\nS\n%s\n0\n" "$line_type" "$val")
+              ;;
+            6|7)
+              IFS=',' read -ra nums <<< "$args"
+              full_input=$(printf "%s\nS\n%s\n%s\n0\n0\n0\n0\n0\n0\n" "$line_type" "${nums[0]}" "${nums[1]}")
+              ;;
+            *) continue ;;
+          esac
+
+          echo "Running test: $line_type"
+          timeout 15s /usr/bin/time -v ./74181 > "logs/run_$line_type.log" 2>&1 <<< "$full_input" || true
+
+          mem_kb=$(grep -oP 'Maximum resident set size.*:\s*\K[0-9]+' "logs/run_$line_type.log" || echo "0")
+          cpu_s=$(grep -oP 'User time.*:\s*\K[0-9.]+([0-9]*)' "logs/run_$line_type.log" || echo "0.00")
+
+          [[ "$mem_kb" != "0" || "$cpu_s" != "0.00" ]] && echo "$line_type,$cpu_s,$mem_kb" >> runs/metrics.csv
+        done < test_cases.txt
+
+    - name: Compute statistics (min / max / avg)
+      run: |
+        echo "metric,value" > runs/stats.csv
+        if [ -f runs/metrics.csv ] && [ -s runs/metrics.csv ]; then
+          # CPU
+          awk -F',' '
+            $2+0 == $2 && $2 >= 0 {
+              s+=$2; n++; if(NR==1||$2<m) m=$2; if($2>M) M=$2
+            } END {
+              if(n>0) { a=s/n; printf "cpu_avg,%.3f\ncpu_min,%.3f\ncpu_max,%.3f\n", a, m, M }
+            }' runs/metrics.csv >> runs/stats.csv
+          # Memory
+          awk -F',' '
+            $3+0 == $3 && $3 >= 0 {
+              s+=$3; n++; if(NR==1||$3<m) m=$3; if($3>M) M=$3
+            } END {
+              if(n>0) { a=s/n; printf "mem_avg,%.0f\nmem_min,%.0f\nmem_max,%.0f\n", a, m, M }
+            }' runs/metrics.csv >> runs/stats.csv
+        else
+          echo "cpu_avg,0.000" >> runs/stats.csv
+          echo "cpu_min,0.000" >> runs/stats.csv
+          echo "cpu_max,0.000" >> runs/stats.csv
+          echo "mem_avg,0" >> runs/stats.csv
+          echo "mem_min,0" >> runs/stats.csv
+          echo "mem_max,0" >> runs/stats.csv
+        fi
+
+    - name: Generate beautiful badges
+      run: |
+        mkdir -p badges
+        tail -n +2 runs/stats.csv | while IFS=',' read -r metric value; do
+          [[ -z "$value" ]] && value="0"
+          color="lightgray"
+          [[ "$metric" == cpu_* ]] && color="success"
+          [[ "$metric" == mem_* ]] && color="informational"
+
+          label="${metric//_ / }"
+          suffix=""
+          [[ "$metric" == *"_avg" ]] && suffix=" (avg)"
+          [[ "$metric" == *"_min" ]] && suffix=" (min)"
+          [[ "$metric" == *"_max" ]] && suffix=" (max)"
+
+          label_enc=$(printf "%s" "${label}${suffix}" | sed 's/ /%20/g; s/(/%28/g; s/)/%29/g')
+          value_enc=$(printf "%s" "$value" | sed 's/ /%20/g')
+
+          curl -fsSL "https://img.shields.io/badge/${label_enc}-${value_enc}-${color}?logo=github&logoColor=white&style=for-the-badge" \
+            -o "badges/${metric}.svg"
+        done
+
+    - name: Commit badges and logs
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add badges/ runs/ logs/
+        git commit -m "✅ Update 74181 Workbench badges & metrics [skip ci]" || echo "No changes"
+        git push
