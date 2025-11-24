@@ -26,12 +26,10 @@ jobs:
     - name: Compile 74181.c
       run: gcc -Wall -Wextra -O2 -std=c99 74181.c -o 74181
 
-    - name: Prepare directories
-      run: mkdir -p runs logs badges
-
-    - name: Generate test cases
+    - name: Run test cases and collect metrics
       run: |
-        cat <<'EOF' > test_cases.txt
+        metrics=""
+        tests="
 1,S,0,0,0,0,0,0,0,0,0,0,0,0,0
 1,S,1,0,1,1,0,1,0,1,1,0,1,0,1
 1,N,1,1,1,1,1,1,1,1,1,1,1,1,1
@@ -65,89 +63,63 @@ jobs:
 7,S,abc,123
 8
 9
-EOF
-
-    - name: Run all test cases
-      run: |
-        > runs/metrics.csv
-        while IFS= read -r line; do
-          [[ -z "$line" || "$line" =~ ^# ]] && continue
+"
+        for line in $tests; do
+          [[ -z "$line" ]] && continue
           input=""
           case "$line" in
-            8|9)
-              input="$line"$'\n0\n'
-              ;;
-            1,*)
-              vals=$(echo "$line" | cut -d',' -f3-)
-              input=$(printf "1\nS\n%s\n0\n" "$(echo "$vals" | tr ',' '\n')")
-              ;;
-            3,*)
-              op=$(echo "$line" | cut -d',' -f2)
-              rest=$(echo "$line" | cut -d',' -f3-)
-              if [[ "$op" =~ ^[1-4]$ ]]; then
-                input=$(printf "3\n%s\n%s\nx\n0\n" "$op" "$(echo "$rest" | tr ',' '\n')")
-              else
-                input=$(printf "3\n5\n%s\n0\n" "$rest")
-              fi
-              ;;
-            4,*|5,*)
-              val=$(echo "$line" | cut -d',' -f3)
-              input=$(printf "%s\nS\n%s\n0\n" "$(echo "$line" | cut -d',' -f1)" "$val")
-              ;;
-            6,*|7,*)
-              a=$(echo "$line" | cut -d',' -f3)
-              b=$(echo "$line" | cut -d',' -f4)
-              input=$(printf "%s\nS\n%s\n%s\n0\n0\n0\n0\n0\n0\n" "$(echo "$line" | cut -d',' -f1)" "$a" "$b")
-              ;;
+            8|9) input="$line"$'\n0\n' ;;
+            1,*) vals=$(echo "$line" | cut -d',' -f3-) ; input=$(printf "1\nS\n%s\n0\n" "$(echo "$vals" | tr ',' '\n')") ;;
+            3,*) op=$(echo "$line" | cut -d',' -f2) ; rest=$(echo "$line" | cut -d',' -f3-) ; 
+                 if [[ "$op" =~ ^[1-4]$ ]]; then input=$(printf "3\n%s\n%s\nx\n0\n" "$op" "$(echo "$rest" | tr ',' '\n')") ; else input=$(printf "3\n5\n%s\n0\n" "$rest") ; fi ;;
+            4,*|5,*) val=$(echo "$line" | cut -d',' -f3) ; input=$(printf "%s\nS\n%s\n0\n" "$(echo "$line" | cut -d',' -f1)" "$val") ;;
+            6,*|7,*) a=$(echo "$line" | cut -d',' -f3) ; b=$(echo "$line" | cut -d',' -f4) ; input=$(printf "%s\nS\n%s\n%s\n0\n0\n0\n0\n0\n0\n" "$(echo "$line" | cut -d',' -f1)" "$a" "$b") ;;
           esac
-
-          echo "🧪 Running: $line"
-          echo "$input" | timeout 15s /usr/bin/time -v ./74181 > "logs/run_${line%%,*}.log" 2>&1 || true
-
-          mem_kb=$(awk '/Maximum resident set size/ {print $6}' "logs/run_${line%%,*}.log")
-          cpu_s=$(awk '/User time/ {print $4}' "logs/run_${line%%,*}.log")
+          echo "$input" | timeout 10s /usr/bin/time -v ./74181 > tmp.log 2>&1 || true
+          mem_kb=$(awk '/Maximum resident set size/ {print $6}' tmp.log)
+          cpu_s=$(awk '/User time/ {print $4}' tmp.log)
           [[ -z "$mem_kb" ]] && mem_kb=0
           [[ -z "$cpu_s" ]] && cpu_s=0.00
-          echo "${line%%,*},$cpu_s,$mem_kb" >> runs/metrics.csv
-        done < test_cases.txt
+          metrics="$metrics\n${line%%,*},$cpu_s,$mem_kb"
+        done
+        echo -e "$metrics" > metrics.csv
 
     - name: Compute statistics
       run: |
-        echo "metric,value" > runs/stats.csv
-        if [ -s runs/metrics.csv ]; then
+        echo "metric,value" > stats.csv
+        if [ -s metrics.csv ]; then
           awk -F',' '
+            NR==1 {min_cpu=$2; max_cpu=$2; min_mem=$3; max_mem=$3}
             {cpu+=$2; mem+=$3; n++}
+            $2<min_cpu {min_cpu=$2}
+            $2>max_cpu {max_cpu=$2}
+            $3<min_mem {min_mem=$3}
+            $3>max_mem {max_mem=$3}
             END {
               if(n>0){
                 printf "cpu_avg,%.3f\ncpu_min,%.3f\ncpu_max,%.3f\n", cpu/n, min_cpu, max_cpu
                 printf "mem_avg,%.0f\nmem_min,%.0f\nmem_max,%.0f\n", mem/n, min_mem, max_mem
               }
             }
-            NR==1 {min_cpu=$2; max_cpu=$2; min_mem=$3; max_mem=$3}
-            $2<min_cpu {min_cpu=$2}
-            $2>max_cpu {max_cpu=$2}
-            $3<min_mem {min_mem=$3}
-            $3>max_mem {max_mem=$3}
-          ' runs/metrics.csv >> runs/stats.csv
+          ' metrics.csv >> stats.csv
         fi
 
     - name: Generate badges
       run: |
         mkdir -p badges
-        tail -n +2 runs/stats.csv | while IFS=',' read -r metric value; do
+        tail -n +2 stats.csv | while IFS=',' read -r metric value; do
           [[ -z "$value" ]] && value="0"
           color="lightgray"
           [[ "$metric" == cpu_* ]] && color="success"
           [[ "$metric" == mem_* ]] && color="informational"
-          label="${metric}"
-          curl -fsSL "https://img.shields.io/badge/${label}-${value}-${color}?logo=github&logoColor=white&style=for-the-badge" \
+          curl -fsSL "https://img.shields.io/badge/${metric}-${value}-${color}?logo=github&logoColor=white&style=for-the-badge" \
             -o "badges/${metric}.svg"
         done
 
-    - name: Commit outputs
+    - name: Commit badges
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git add badges/ runs/ logs/
+        git add badges/
         git diff --cached --quiet || git commit -m "✅ Update 74181 Workbench: CPU & Memory badges [skip ci]"
         git push
