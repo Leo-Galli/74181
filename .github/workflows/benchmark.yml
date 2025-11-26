@@ -41,10 +41,8 @@ test_id = int("${{ matrix.test_id }}")
 is_win = os.name == 'nt'
 exe = "simulator.exe" if is_win else "./simulator"
 
-# ~105 test diversi
 inputs = []
 
-# ALU 4-bit: 16 funzioni (M=0 o 1, S0-S3 da 0000 a 1111)
 for M in [0,1]:
   for i in range(16):
     S3 = (i>>3)&1
@@ -54,7 +52,6 @@ for M in [0,1]:
     inp = f"1\nN\n{S3}\n{S2}\n{S1}\n{S0}\n{M}\n0\n0\n0\n0\n0\n0\n0\n0\n"
     inputs.append(inp)
 
-# ALU 32-bit: 16 funzioni sui massimi valori
 for M in [0,1]:
   for i in range(16):
     S3 = (i>>3)&1
@@ -64,35 +61,30 @@ for M in [0,1]:
     inp = f"6\nN\n4294967295\n4294967295\n{S3}\n{S2}\n{S1}\n{S0}\n{M}\n"
     inputs.append(inp)
 
-# Edge cases ALU 4-bit
 edge4 = [
-  "1\nN\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n", # zero
-  "1\nN\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n", # all 1
-  "1\nN\n0\n0\n0\n1\n0\n0\n1\n1\n0\n0\n1\n1\n", # mixed
+  "1\nN\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n",
+  "1\nN\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n",
+  "1\nN\n0\n0\n0\n1\n0\n0\n1\n1\n0\n0\n1\n1\n",
 ]
 inputs.extend(edge4)
 
-# Edge cases ALU 32-bit
 edge32 = [
-  "6\nN\n0\n0\n0\n0\n0\n0\n",      # zero
-  "6\nN\n4294967295\n0\n0\n0\n0\n0\n", # max A
-  "6\nN\n0\n4294967295\n0\n0\n0\n0\n", # max B
-  "6\nN\n2147483647\n2147483647\n0\n0\n1\n0\n0\n", # overflow
+  "6\nN\n0\n0\n0\n0\n0\n0\n",
+  "6\nN\n4294967295\n0\n0\n0\n0\n0\n",
+  "6\nN\n0\n4294967295\n0\n0\n0\n0\n",
+  "6\nN\n2147483647\n2147483647\n0\n0\n1\n0\n0\n",
 ]
 inputs.extend(edge32)
 
-# Calcolatrice: 20 espressioni
 exprs = ["2+2", "10-5", "3*7", "15/3", "(2+3)*4", "2**10", "100%7", "1+2+3+4+5",
          "1000000+2000000", "0/1", "1<<5", "0xFF+1", "2147483647+1", "-5+10",
          "(10*(2+3))-7", "((2+2)*2)+2", "100/0", "2+2*2", "1+1", "999999999"]
 for e in exprs:
   inputs.append(f"5\n{e}\n6\n")
 
-# Conversioni
 conv = ["4\nN\n", "5\nN\n"]
 inputs.extend(conv)
 
-# Limita a 105 test
 if test_id >= len(inputs):
   sys.exit(0)
 
@@ -119,7 +111,6 @@ duration_ms = duration * 1000
 
 os.makedirs("badges", exist_ok=True)
 
-# Badge per ogni test
 test_name = f"test-{test_id}"
 Badge("CPU " + test_name, cpu_avg, {0: "green", 10: "yellow", 30: "orange", 70: "red"}, value_format="%.1f").write_badge(f"badges/cpu-{test_name}.svg", overwrite=True)
 Badge("RAM " + test_name, ram_avg, {0: "green", 20: "yellow", 50: "orange", 100: "red"}, value_format="%.1f").write_badge(f"badges/ram-{test_name}.svg", overwrite=True)
