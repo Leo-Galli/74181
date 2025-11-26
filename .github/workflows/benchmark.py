@@ -1,7 +1,6 @@
 import sys, os, subprocess, psutil, time, json
 from anybadge import Badge
 
-# Parametri passati dal workflow
 test_id = int(sys.argv[1])
 os_name = sys.argv[2]
 
@@ -10,7 +9,6 @@ exe = "simulator.exe" if is_win else "./simulator"
 
 inputs = []
 
-# ALU 4-bit: 32 test
 for M in [0, 1]:
     for i in range(16):
         S3 = (i >> 3) & 1
@@ -20,7 +18,6 @@ for M in [0, 1]:
         inp = "1\nN\n" + f"{S3}\n{S2}\n{S1}\n{S0}\n{M}\n0\n0\n0\n0\n0\n0\n0\n0\n"
         inputs.append(inp)
 
-# ALU 32-bit: 32 test
 for M in [0, 1]:
     for i in range(16):
         S3 = (i >> 3) & 1
@@ -30,7 +27,6 @@ for M in [0, 1]:
         inp = "6\nN\n4294967295\n4294967295\n" + f"{S3}\n{S2}\n{S1}\n{S0}\n{M}\n"
         inputs.append(inp)
 
-# Edge cases 4-bit
 edge4 = [
     "1\nN\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n",
     "1\nN\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n",
@@ -38,7 +34,6 @@ edge4 = [
 ]
 inputs.extend(edge4)
 
-# Edge cases 32-bit
 edge32 = [
     "6\nN\n0\n0\n0\n0\n0\n0\n",
     "6\nN\n4294967295\n0\n0\n0\n0\n0\n",
@@ -47,7 +42,6 @@ edge32 = [
 ]
 inputs.extend(edge32)
 
-# Calcolatrice
 exprs = [
     "2+2", "10-5", "3*7", "15/3", "(2+3)*4", "2**10", "100%7", "1+2+3+4+5",
     "1000000+2000000", "0/1", "1<<5", "0xFF+1", "2147483647+1", "-5+10",
@@ -56,7 +50,6 @@ exprs = [
 for e in exprs:
     inputs.append(f"5\n{e}\n6\n")
 
-# Conversioni
 inputs.extend(["4\nN\n", "5\nN\n"])
 
 if test_id >= len(inputs):
@@ -64,7 +57,6 @@ if test_id >= len(inputs):
 
 stdin_data = inputs[test_id]
 
-# Avvio processo
 cpu_vals, ram_vals = [], []
 proc = psutil.Popen([exe], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 proc.stdin.write(stdin_data.encode())
@@ -74,7 +66,7 @@ start = time.time()
 while proc.poll() is None:
     try:
         cpu_vals.append(proc.cpu_percent(interval=0.001))
-        ram_vals.append(proc.memory_info().rss / (1024 * 1024))  # MB
+        ram_vals.append(proc.memory_info().rss / (1024 * 1024))
     except:
         break
     time.sleep(0.01)
@@ -87,7 +79,6 @@ duration_ms = duration * 1000
 os.makedirs("badges", exist_ok=True)
 test_name = f"test-{test_id}"
 
-# ✅ Fix: uso corretto di thresholds, niente label_suffix
 Badge(
     label="CPU " + test_name,
     value=cpu_avg,
@@ -118,4 +109,4 @@ with open(f"badges/data-{test_name}.json", "w") as f:
         "test_id": test_id
     }, f)
 
-print(f"✅ Test {test_id} completato in {duration:.2f}s")
+print(f"Test {test_id} completato in {duration:.2f}s")
