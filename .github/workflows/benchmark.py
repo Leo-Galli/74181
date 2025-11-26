@@ -1,7 +1,7 @@
 import sys, os, subprocess, psutil, time, json
 from anybadge import Badge
 
-# --- Gestione argomento test_id ---
+# --- Gestione argomento ---
 arg = sys.argv[1]
 os_name = sys.argv[2]
 
@@ -14,9 +14,8 @@ else:
 is_win = os.name == 'nt'
 exe = "simulator.exe" if is_win else "./simulator"
 
-# --- Generazione input ---
+# --- Generazione input (uguale a prima) ---
 inputs = []
-
 for M in [0, 1]:
     for i in range(16):
         S3 = (i >> 3) & 1
@@ -60,14 +59,16 @@ for e in exprs:
 
 inputs.extend(["4\nN\n", "5\nN\n"])
 
-# --- Loop su tutti i test_ids richiesti ---
+# --- Accumulatori globali ---
+cpu_all, ram_all, time_all = [], [], []
+
 for test_id in test_ids:
     if test_id >= len(inputs):
         continue
 
     stdin_data = inputs[test_id]
-
     cpu_vals, ram_vals = [], []
+
     proc = psutil.Popen([exe], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     proc.stdin.write(stdin_data.encode())
     proc.stdin.close()
@@ -82,41 +83,47 @@ for test_id in test_ids:
         time.sleep(0.01)
     duration = time.time() - start
 
-    cpu_avg = sum(cpu_vals) / len(cpu_vals) if cpu_vals else 0
-    ram_avg = sum(ram_vals) / len(ram_vals) if ram_vals else 0
-    duration_ms = duration * 1000
+    if cpu_vals:
+        cpu_all.append(sum(cpu_vals) / len(cpu_vals))
+    if ram_vals:
+        ram_all.append(sum(ram_vals) / len(ram_vals))
+    time_all.append(duration * 1000)
 
-    os.makedirs("badges", exist_ok=True)
-    test_name = f"test-{test_id}"
+# --- Calcolo medie globali ---
+cpu_avg = sum(cpu_all) / len(cpu_all) if cpu_all else 0
+ram_avg = sum(ram_all) / len(ram_all) if ram_all else 0
+time_avg = sum(time_all) / len(time_all) if time_all else 0
 
-    Badge(
-        label="CPU " + test_name,
-        value=cpu_avg,
-        thresholds={0: "green", 10: "yellow", 30: "orange", 70: "red"},
-        value_format="%.1f"
-    ).write_badge(f"badges/cpu-{test_name}.svg", overwrite=True)
+os.makedirs("badges", exist_ok=True)
 
-    Badge(
-        label="RAM " + test_name,
-        value=ram_avg,
-        thresholds={0: "green", 20: "yellow", 50: "orange", 100: "red"},
-        value_format="%.1f"
-    ).write_badge(f"badges/ram-{test_name}.svg", overwrite=True)
+Badge(
+    label=f"CPU {os_name}",
+    value=cpu_avg,
+    thresholds={0: "green", 10: "yellow", 30: "orange", 70: "red"},
+    value_format="%.1f"
+).write_badge(f"badges/cpu-summary-{os_name}.svg", overwrite=True)
 
-    Badge(
-        label="Tempo(ms) " + test_name,
-        value=duration_ms,
-        thresholds={0: "green", 100: "yellow", 500: "orange", 1000: "red"},
-        value_format="%.0f"
-    ).write_badge(f"badges/time-{test_name}.svg", overwrite=True)
+Badge(
+    label=f"RAM {os_name}",
+    value=ram_avg,
+    thresholds={0: "green", 20: "yellow", 50: "orange", 100: "red"},
+    value_format="%.1f"
+).write_badge(f"badges/ram-summary-{os_name}.svg", overwrite=True)
 
-    with open(f"badges/data-{test_name}.json", "w") as f:
-        json.dump({
-            "cpu_avg_pct": cpu_avg,
-            "ram_avg_mb": ram_avg,
-            "duration_sec": duration,
-            "os": os_name,
-            "test_id": test_id
-        }, f)
+Badge(
+    label=f"Tempo(ms) {os_name}",
+    value=time_avg,
+    thresholds={0: "green", 100: "yellow", 500: "orange", 1000: "red"},
+    value_format="%.0f"
+).write_badge(f"badges/time-summary-{os_name}.svg", overwrite=True)
 
-    print(f"Test {test_id} completato in {duration:.2f}s")
+with open(f"badges/data-summary-{os_name}.json", "w") as f:
+    json.dump({
+        "cpu_avg_pct": cpu_avg,
+        "ram_avg_mb": ram_avg,
+        "time_avg_ms": time_avg,
+        "os": os_name,
+        "tests_run": len(test_ids)
+    }, f)
+
+print(f"Benchmark completato su {len(test_ids)} test per {os_name}")
