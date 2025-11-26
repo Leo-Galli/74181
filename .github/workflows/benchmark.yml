@@ -29,7 +29,7 @@ jobs:
           pip install psutil anybadge
 
       - name: Compile C simulator
-        run: gcc -o simulator simulator.c -Wall -Wextra -O2
+        run: gcc -o simulator 74181.c -Wall -Wextra -O2
 
       - name: Prepare test input
         run: |
