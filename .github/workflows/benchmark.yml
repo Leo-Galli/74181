@@ -24,26 +24,27 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Python deps
+      - name: Install Python dependencies
         run: |
           pip install psutil anybadge
 
       - name: Compile C simulator
-        run: gcc -o simulator 74181.c -Wall -Wextra -O2
+        run: gcc -o simulator simulator.c -Wall -Wextra -O2
 
       - name: Prepare test input
+        shell: bash
         run: |
           mkdir -p test_inputs
           if [ "${{ matrix.test }}" == "alu4" ]; then
-            echo "Inserire dati manualmente? (S/N): N" > stdin.txt
+            printf "N\n" > stdin.txt
           elif [ "${{ matrix.test }}" == "alu32" ]; then
-            echo "Inserire dati manualmente? (S/N): N" > stdin.txt
+            printf "N\n" > stdin.txt
           elif [ "${{ matrix.test }}" == "calc" ]; then
-            echo -e "5\n(2+3)*4\n6" > stdin.txt
+            printf "5\n(2+3)*4\n6\n" > stdin.txt
           elif [ "${{ matrix.test }}" == "bin2dec" ]; then
-            echo -e "N" > stdin.txt
+            printf "N\n" > stdin.txt
           elif [ "${{ matrix.test }}" == "dec2bin" ]; then
-            echo -e "N" > stdin.txt
+            printf "N\n" > stdin.txt
           fi
 
       - name: Run benchmark

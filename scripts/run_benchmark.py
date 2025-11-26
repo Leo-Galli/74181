@@ -1,3 +1,4 @@
+# scripts/run_benchmark.py
 import sys
 import os
 import subprocess
@@ -13,7 +14,7 @@ def monitor_and_run(cmd, input_file="stdin.txt"):
         with open(input_file, "r") as f:
             proc = psutil.Popen(cmd, stdin=f, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as e:
-        print(f"ERRORE lancio: {e}")
+        print(f"❌ Errore lancio: {e}")
         return None
 
     try:
@@ -52,6 +53,7 @@ def make_badge(label, value, thresholds, filename):
         thresholds=thresholds,
         value_format="%.1f"
     )
+    os.makedirs("badges", exist_ok=True)
     badge.write_badge(f"badges/{filename}", overwrite=True)
 
 if __name__ == "__main__":
@@ -60,39 +62,35 @@ if __name__ == "__main__":
         sys.exit(1)
 
     test_type = sys.argv[1]
-    os.makedirs("badges", exist_ok=True)
+    is_windows = os.name == 'nt'
 
-    # Mappa test → comando
-    cmd_map = {
-        "alu4": ["./simulator"] + ["1" if os.name != "nt" else "simulator.exe"],
-        "alu32": ["./simulator"] + ["6" if os.name != "nt" else "simulator.exe"],
-        "calc": ["./simulator"] + ["3" if os.name != "nt" else "simulator.exe"],
-        "bin2dec": ["./simulator"] + ["4" if os.name != "nt" else "simulator.exe"],
-        "dec2bin": ["./simulator"] + ["5" if os.name != "nt" else "simulator.exe"],
-    }
+    # Mappa test → opzione menu
+    menu_choice = {
+        "alu4": "1",
+        "alu32": "6",
+        "calc": "5",
+        "bin2dec": "4",
+        "dec2bin": "5"
+    }.get(test_type, "1")
 
-    cmd = ["echo", "1" if test_type == "alu4" else "6" if test_type == "alu32" else "3" if test_type == "calc" else "4" if test_type == "bin2dec" else "5"]
-    if os.name == "nt":
-        cmd = ["cmd", "/C", "echo", "1" if test_type == "alu4" else "6" if test_type == "alu32" else "3" if test_type == "calc" else "4" if test_type == "bin2dec" else "5"]
-        exe = ["simulator.exe"]
-    else:
-        exe = ["./simulator"]
+    # Crea stdin finale: opzione menu + input aggiuntivo se necessario
+    with open("stdin_full.txt", "w") as f:
+        f.write(menu_choice + "\n")
+        # Per 'calc', stdin.txt contiene già l'espressione e '6'
+        if test_type == "calc":
+            with open("stdin.txt", "r") as extra:
+                f.write(extra.read())
+        else:
+            # Per altri test, basta 'N' per input manuale = no
+            f.write("N\n")
 
-    # Simula input sequenziale: scelta menu + input test
-    try:
-        result = monitor_and_run(exe)
-    except Exception as e:
-        print(f"Fallito {test_type}: {e}")
-        result = None
+    # Comando di esecuzione
+    exe = "simulator.exe" if is_windows else "./simulator"
+    result = monitor_and_run([exe], input_file="stdin_full.txt")
 
-    if not result:
-        cpu_avg = 0.0
-        ram_avg = 0.0
-    else:
-        cpu_avg = result["cpu"]["avg"]
-        ram_avg = result["ram"]["avg"]
+    cpu_avg = result["cpu"]["avg"] if result else 0.0
+    ram_avg = result["ram"]["avg"] if result else 0.0
 
-    # CPU badge
     make_badge(
         label="CPU " + test_type,
         value=cpu_avg,
@@ -100,7 +98,6 @@ if __name__ == "__main__":
         filename=f"cpu-{test_type}.svg"
     )
 
-    # RAM badge
     make_badge(
         label="RAM " + test_type,
         value=ram_avg,
@@ -108,7 +105,6 @@ if __name__ == "__main__":
         filename=f"ram-{test_type}.svg"
     )
 
-    # Salva dati grezzi
     with open(f"badges/data-{test_type}.json", "w") as f:
         json.dump(result or {}, f, indent=2)
 
