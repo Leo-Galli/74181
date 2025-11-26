@@ -1,0 +1,9 @@
+Inserire dati manualmente? (S/N): N
+Operando A: <0>
+Operando B: <1>
+Cn: <1>
+M: <0>
+S0: <0>
+S1: <1>
+S2: <1>
+S3: <0>

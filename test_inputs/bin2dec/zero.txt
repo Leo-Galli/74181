@@ -1,0 +1,2 @@
+Inserire dati manualmente? (S/N): N
+Numero Binario: <0>
