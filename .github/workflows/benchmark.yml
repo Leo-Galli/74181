@@ -1,5 +1,7 @@
-name: ALU 74181 Benchmark
+# Nome del workflow
+name: Benchmark ALU 74181
 
+# Eventi che attivano il workflow
 on:
   push:
     branches: [ main ]
@@ -9,28 +11,37 @@ on:
 
 jobs:
   benchmark:
+    # Strategia: esegue su più sistemi operativi e con diversi test_id
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        test_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,...,99,100,101,102,103,104]
+        test_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
+                  21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,
+                  41,42,43,4...,99,
+                  100,101,102,103,104]
     runs-on: ${{ matrix.os }}
 
     steps:
+      # Step 1: checkout del codice
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      # Step 2: setup di Python
+      - name: Imposta Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      # Step 3: installa dipendenze
+      - name: Installa dipendenze
         run: pip install psutil anybadge
 
-      - name: Compile simulator
+      # Step 4: compila il simulatore
+      - name: Compila simulatore
         run: gcc -o simulator simulator.c -O2 -w
 
-      - name: Run benchmark and generate badges
+      # Step 5: esegui benchmark e genera badge
+      - name: Esegui benchmark e genera badge
         shell: bash
         run: |
           python3 << 'EOF'
@@ -80,7 +91,7 @@ edge32 = [
 ]
 inputs.extend(edge32)
 
-# Calculator: 20 expressions
+# Calcolatrice: 20 espressioni
 exprs = [
   "2+2", "10-5", "3*7", "15/3", "(2+3)*4", "2**10", "100%7", "1+2+3+4+5",
   "1000000+2000000", "0/1", "1<<5", "0xFF+1", "2147483647+1", "-5+10",
@@ -89,16 +100,16 @@ exprs = [
 for e in exprs:
   inputs.append(f"5\n{e}\n6\n")
 
-# Conversions: 2
+# Conversioni: 2
 inputs.extend(["4\nN\n", "5\nN\n"])
 
-# Ensure we don't exceed input list
+# Controllo indice
 if test_id >= len(inputs):
   sys.exit(0)
 
 stdin_data = inputs[test_id]
 
-# Launch and monitor
+# Avvio e monitoraggio
 cpu_vals, ram_vals = [], []
 proc = psutil.Popen([exe], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 proc.stdin.write(stdin_data.encode())
@@ -123,7 +134,7 @@ test_name = f"test-{test_id}"
 
 Badge("CPU " + test_name, cpu_avg, {0: "green", 10: "yellow", 30: "orange", 70: "red"}, value_format="%.1f").write_badge(f"badges/cpu-{test_name}.svg", overwrite=True)
 Badge("RAM " + test_name, ram_avg, {0: "green", 20: "yellow", 50: "orange", 100: "red"}, value_format="%.1f").write_badge(f"badges/ram-{test_name}.svg", overwrite=True)
-Badge("Time " + test_name, duration_ms, {0: "green", 100: "yellow", 500: "orange", 1000: "red"}, value_format="%.0f", label_suffix=" ms").write_badge(f"badges/time-{test_name}.svg", overwrite=True)
+Badge("Tempo " + test_name, duration_ms, {0: "green", 100: "yellow", 500: "orange", 1000: "red"}, value_format="%.0f", label_suffix=" ms").write_badge(f"badges/time-{test_name}.svg", overwrite=True)
 
 with open(f"badges/data-{test_name}.json", "w") as f:
   json.dump({
@@ -134,10 +145,11 @@ with open(f"badges/data-{test_name}.json", "w") as f:
     "test_id": test_id
   }, f)
 
-print(f"✅ Test {test_id} completed in {duration:.2f}s")
+print(f"✅ Test {test_id} completato in {duration:.2f}s")
 EOF
 
-      - name: Upload artifacts
+      # Step 6: carica artefatti
+      - name: Carica artefatti
         uses: actions/upload-artifact@v4
         with:
           name: badges-${{ matrix.os }}-${{ matrix.test_id }}
