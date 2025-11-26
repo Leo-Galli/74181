@@ -11,22 +11,22 @@ exe = "simulator.exe" if is_win else "./simulator"
 inputs = []
 
 # ALU 4-bit: 32 test
-for M in [0,1]:
+for M in [0, 1]:
     for i in range(16):
-        S3 = (i>>3)&1
-        S2 = (i>>2)&1
-        S1 = (i>>1)&1
-        S0 = i&1
+        S3 = (i >> 3) & 1
+        S2 = (i >> 2) & 1
+        S1 = (i >> 1) & 1
+        S0 = i & 1
         inp = "1\nN\n" + f"{S3}\n{S2}\n{S1}\n{S0}\n{M}\n0\n0\n0\n0\n0\n0\n0\n0\n"
         inputs.append(inp)
 
 # ALU 32-bit: 32 test
-for M in [0,1]:
+for M in [0, 1]:
     for i in range(16):
-        S3 = (i>>3)&1
-        S2 = (i>>2)&1
-        S1 = (i>>1)&1
-        S0 = i&1
+        S3 = (i >> 3) & 1
+        S2 = (i >> 2) & 1
+        S1 = (i >> 1) & 1
+        S0 = i & 1
         inp = "6\nN\n4294967295\n4294967295\n" + f"{S3}\n{S2}\n{S1}\n{S0}\n{M}\n"
         inputs.append(inp)
 
@@ -87,9 +87,28 @@ duration_ms = duration * 1000
 os.makedirs("badges", exist_ok=True)
 test_name = f"test-{test_id}"
 
-Badge("CPU " + test_name, cpu_avg, {0: "green", 10: "yellow", 30: "orange", 70: "red"}, value_format="%.1f").write_badge(f"badges/cpu-{test_name}.svg", overwrite=True)
-Badge("RAM " + test_name, ram_avg, {0: "green", 20: "yellow", 50: "orange", 100: "red"}, value_format="%.1f").write_badge(f"badges/ram-{test_name}.svg", overwrite=True)
-Badge("Tempo " + test_name, duration_ms, {0: "green", 100: "yellow", 500: "orange", 1000: "red"}, value_format="%.0f", label_suffix=" ms").write_badge(f"badges/time-{test_name}.svg", overwrite=True)
+# ✅ Fix: uso corretto di thresholds=
+Badge(
+    label="CPU " + test_name,
+    value=cpu_avg,
+    thresholds={0: "green", 10: "yellow", 30: "orange", 70: "red"},
+    value_format="%.1f"
+).write_badge(f"badges/cpu-{test_name}.svg", overwrite=True)
+
+Badge(
+    label="RAM " + test_name,
+    value=ram_avg,
+    thresholds={0: "green", 20: "yellow", 50: "orange", 100: "red"},
+    value_format="%.1f"
+).write_badge(f"badges/ram-{test_name}.svg", overwrite=True)
+
+Badge(
+    label="Tempo " + test_name,
+    value=duration_ms,
+    thresholds={0: "green", 100: "yellow", 500: "orange", 1000: "red"},
+    value_format="%.0f",
+    label_suffix=" ms"
+).write_badge(f"badges/time-{test_name}.svg", overwrite=True)
 
 with open(f"badges/data-{test_name}.json", "w") as f:
     json.dump({
