@@ -1,12 +1,20 @@
 import sys, os, subprocess, psutil, time, json
 from anybadge import Badge
 
-test_id = int(sys.argv[1])
+# --- Gestione argomento test_id ---
+arg = sys.argv[1]
 os_name = sys.argv[2]
+
+if "..." in arg:
+    start, end = map(int, arg.split("..."))
+    test_ids = range(start, end + 1)
+else:
+    test_ids = [int(arg)]
 
 is_win = os.name == 'nt'
 exe = "simulator.exe" if is_win else "./simulator"
 
+# --- Generazione input ---
 inputs = []
 
 for M in [0, 1]:
@@ -52,61 +60,63 @@ for e in exprs:
 
 inputs.extend(["4\nN\n", "5\nN\n"])
 
-if test_id >= len(inputs):
-    sys.exit(0)
+# --- Loop su tutti i test_ids richiesti ---
+for test_id in test_ids:
+    if test_id >= len(inputs):
+        continue
 
-stdin_data = inputs[test_id]
+    stdin_data = inputs[test_id]
 
-cpu_vals, ram_vals = [], []
-proc = psutil.Popen([exe], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-proc.stdin.write(stdin_data.encode())
-proc.stdin.close()
+    cpu_vals, ram_vals = [], []
+    proc = psutil.Popen([exe], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    proc.stdin.write(stdin_data.encode())
+    proc.stdin.close()
 
-start = time.time()
-while proc.poll() is None:
-    try:
-        cpu_vals.append(proc.cpu_percent(interval=0.001))
-        ram_vals.append(proc.memory_info().rss / (1024 * 1024))
-    except:
-        break
-    time.sleep(0.01)
-duration = time.time() - start
+    start = time.time()
+    while proc.poll() is None:
+        try:
+            cpu_vals.append(proc.cpu_percent(interval=0.001))
+            ram_vals.append(proc.memory_info().rss / (1024 * 1024))
+        except:
+            break
+        time.sleep(0.01)
+    duration = time.time() - start
 
-cpu_avg = sum(cpu_vals) / len(cpu_vals) if cpu_vals else 0
-ram_avg = sum(ram_vals) / len(ram_vals) if ram_vals else 0
-duration_ms = duration * 1000
+    cpu_avg = sum(cpu_vals) / len(cpu_vals) if cpu_vals else 0
+    ram_avg = sum(ram_vals) / len(ram_vals) if ram_vals else 0
+    duration_ms = duration * 1000
 
-os.makedirs("badges", exist_ok=True)
-test_name = f"test-{test_id}"
+    os.makedirs("badges", exist_ok=True)
+    test_name = f"test-{test_id}"
 
-Badge(
-    label="CPU " + test_name,
-    value=cpu_avg,
-    thresholds={0: "green", 10: "yellow", 30: "orange", 70: "red"},
-    value_format="%.1f"
-).write_badge(f"badges/cpu-{test_name}.svg", overwrite=True)
+    Badge(
+        label="CPU " + test_name,
+        value=cpu_avg,
+        thresholds={0: "green", 10: "yellow", 30: "orange", 70: "red"},
+        value_format="%.1f"
+    ).write_badge(f"badges/cpu-{test_name}.svg", overwrite=True)
 
-Badge(
-    label="RAM " + test_name,
-    value=ram_avg,
-    thresholds={0: "green", 20: "yellow", 50: "orange", 100: "red"},
-    value_format="%.1f"
-).write_badge(f"badges/ram-{test_name}.svg", overwrite=True)
+    Badge(
+        label="RAM " + test_name,
+        value=ram_avg,
+        thresholds={0: "green", 20: "yellow", 50: "orange", 100: "red"},
+        value_format="%.1f"
+    ).write_badge(f"badges/ram-{test_name}.svg", overwrite=True)
 
-Badge(
-    label="Tempo(ms) " + test_name,
-    value=duration_ms,
-    thresholds={0: "green", 100: "yellow", 500: "orange", 1000: "red"},
-    value_format="%.0f"
-).write_badge(f"badges/time-{test_name}.svg", overwrite=True)
+    Badge(
+        label="Tempo(ms) " + test_name,
+        value=duration_ms,
+        thresholds={0: "green", 100: "yellow", 500: "orange", 1000: "red"},
+        value_format="%.0f"
+    ).write_badge(f"badges/time-{test_name}.svg", overwrite=True)
 
-with open(f"badges/data-{test_name}.json", "w") as f:
-    json.dump({
-        "cpu_avg_pct": cpu_avg,
-        "ram_avg_mb": ram_avg,
-        "duration_sec": duration,
-        "os": os_name,
-        "test_id": test_id
-    }, f)
+    with open(f"badges/data-{test_name}.json", "w") as f:
+        json.dump({
+            "cpu_avg_pct": cpu_avg,
+            "ram_avg_mb": ram_avg,
+            "duration_sec": duration,
+            "os": os_name,
+            "test_id": test_id
+        }, f)
 
-print(f"Test {test_id} completato in {duration:.2f}s")
+    print(f"Test {test_id} completato in {duration:.2f}s")
