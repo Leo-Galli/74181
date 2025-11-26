@@ -1,2 +1,0 @@
-Inserire dati manualmente? (S/N): N
-Numero Decimale: <1>
