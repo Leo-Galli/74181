@@ -1,0 +1,57 @@
+name: ALU 74181 Benchmark & Badge Generator
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        test: [alu4, alu32, calc, bin2dec, dec2bin]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Python deps
+        run: |
+          pip install psutil anybadge
+
+      - name: Compile C simulator
+        run: gcc -o simulator simulator.c -Wall -Wextra -O2
+
+      - name: Prepare test input
+        run: |
+          mkdir -p test_inputs
+          if [ "${{ matrix.test }}" == "alu4" ]; then
+            echo "Inserire dati manualmente? (S/N): N" > stdin.txt
+          elif [ "${{ matrix.test }}" == "alu32" ]; then
+            echo "Inserire dati manualmente? (S/N): N" > stdin.txt
+          elif [ "${{ matrix.test }}" == "calc" ]; then
+            echo -e "5\n(2+3)*4\n6" > stdin.txt
+          elif [ "${{ matrix.test }}" == "bin2dec" ]; then
+            echo -e "N" > stdin.txt
+          elif [ "${{ matrix.test }}" == "dec2bin" ]; then
+            echo -e "N" > stdin.txt
+          fi
+
+      - name: Run benchmark
+        run: python scripts/run_benchmark.py ${{ matrix.test }}
+
+      - name: Upload badges
+        uses: actions/upload-artifact@v4
+        with:
+          name: badges-${{ matrix.os }}-${{ matrix.test }}
+          path: badges/
+          if-no-files-found: ignore
