@@ -33,7 +33,7 @@ jobs:
         run: pip install psutil anybadge
 
       - name: Compila simulatore
-        run: gcc -o simulator simulator.c -O2 -w
+        run: gcc -o simulator 74181.c -O2 -w
 
       - name: Esegui benchmark e genera badge
         run: python benchmark.py ${{ matrix.test_id }} ${{ matrix.os }}
