@@ -87,7 +87,7 @@ duration_ms = duration * 1000
 os.makedirs("badges", exist_ok=True)
 test_name = f"test-{test_id}"
 
-# ✅ Fix: uso corretto di thresholds=
+# ✅ Fix: uso corretto di thresholds, niente label_suffix
 Badge(
     label="CPU " + test_name,
     value=cpu_avg,
@@ -103,11 +103,10 @@ Badge(
 ).write_badge(f"badges/ram-{test_name}.svg", overwrite=True)
 
 Badge(
-    label="Tempo " + test_name,
+    label="Tempo(ms) " + test_name,
     value=duration_ms,
     thresholds={0: "green", 100: "yellow", 500: "orange", 1000: "red"},
-    value_format="%.0f",
-    label_suffix=" ms"
+    value_format="%.0f"
 ).write_badge(f"badges/time-{test_name}.svg", overwrite=True)
 
 with open(f"badges/data-{test_name}.json", "w") as f:
