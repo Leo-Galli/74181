@@ -33,12 +33,7 @@
 [![Ultimo Commit](https://img.shields.io/github/last-commit/Leo-Galli/74181)](https://github.com/Leo-Galli/74181/commits/main)
 ![Visualizzazioni](https://komarev.com/ghpvc/?username=Leo-Galli-74181&label=Visualizzazioni+Repository&color=blueviolet&style=flat)
 
-[![C/C++ CI](https://github.com/Leo-Galli/74181/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/Leo-Galli/74181/actions/workflows/c-cpp.yml)
 [![CodeQL](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/github-code-scanning/codeql)
-[![Microsoft C Code Analysis (74181)](https://github.com/Leo-Galli/74181/actions/workflows/msvc.yml/badge.svg)](https://github.com/Leo-Galli/74181/actions/workflows/msvc.yml)
-
-[![CMake on a single platform](https://github.com/Leo-Galli/74181/actions/workflows/cmake-single-platform.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/cmake-single-platform.yml)
-[![CMake on multiple platforms](https://github.com/Leo-Galli/74181/actions/workflows/cmake-multi-platform.yml/badge.svg?branch=main)](https://github.com/Leo-Galli/74181/actions/workflows/cmake-multi-platform.yml)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=Leo-Galli_74181&metric=bugs)](https://sonarcloud.io/summary/new_code?id=Leo-Galli_74181)
