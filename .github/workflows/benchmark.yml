@@ -58,7 +58,7 @@ jobs:
 
       - name: Setup MSVC
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@5f8f0e4a8c6b4b7a0e8f1a5b9f6c6c2c3e6e0c1d
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure CMake
         run: >
@@ -100,7 +100,7 @@ jobs:
       # ✅ FIX: necessario per usare cl.exe
       - name: Setup MSVC
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@5f8f0e4a8c6b4b7a0e8f1a5b9f6c6c2c3e6e0c1d
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Build simulator (Linux/macOS)
         if: runner.os != 'Windows'
@@ -127,7 +127,7 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
-      - uses: ilammy/msvc-dev-cmd@5f8f0e4a8c6b4b7a0e8f1a5b9f6c6c2c3e6e0c1d
+      - uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure CMake
         run: cmake -S ${{ github.workspace }} -B build
