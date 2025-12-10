@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
   schedule:
-    - cron: '20 20 * * 1'   # analisi periodica
+    - cron: '20 20 * * 1'
 
 permissions:
   contents: write
@@ -90,14 +90,23 @@ jobs:
         with:
           python-version: '3.10'
       - run: pip install psutil anybadge
+
+      # ✅ FIX: necessario per usare cl.exe
+      - name: Setup MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Build simulator (Linux/macOS)
         if: runner.os != 'Windows'
         run: clang -o simulator 74181.c -O2 -w || gcc -o simulator 74181.c -O2 -w
+
       - name: Build simulator (Windows)
         if: runner.os == 'Windows'
         run: cl.exe /O2 /Fe:simulator.exe 74181.c
+
       - name: Run benchmarks
         run: python .github/workflows/benchmark.py ${{ matrix.test_range }} ${{ matrix.os }}
+
       - name: Commit badges
         run: |
           git config --global user.name "github-actions[bot]"
