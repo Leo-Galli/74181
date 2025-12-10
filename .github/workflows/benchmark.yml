@@ -102,7 +102,7 @@ jobs:
 
       - name: Build simulator (Windows)
         if: runner.os == 'Windows'
-        run: cl.exe /O2 /Fe:simulator.exe 74181.c
+        run: cl.exe /O2 /Fe:simulator.exe 74181.c advapi32.lib
 
       - name: Run benchmarks
         run: python .github/workflows/benchmark.py ${{ matrix.test_range }} ${{ matrix.os }}
