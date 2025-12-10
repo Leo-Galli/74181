@@ -2,17 +2,20 @@ import sys, os, subprocess, psutil, time, json
 from anybadge import Badge
 from concurrent.futures import ThreadPoolExecutor
 
+# --- Argomenti ---
+arg = sys.argv[1]   # ignorato, ma lasciato per compatibilità workflow
 os_name = sys.argv[2]
+
 exe = "simulator.exe" if os.name == "nt" else "./simulator"
 
-# --- 3 INPUT MINIMI MA OTTIMALI ---
+# --- 3 TEST MINIMI, VELOCI E RAPPRESENTATIVI ---
 TESTS = [
     ("cpu_low",  "5\n2+2\n6\n"),                          # CPU bassa
     ("cpu_high", "5\n(2**30)+(2**30)\n6\n"),              # CPU alta
     ("ram_high", "6\nN\n4294967295\n4294967295\n0\n0\n")  # RAM alta
 ]
 
-# --- FUNZIONE DI BENCHMARK SINGOLO TEST ---
+# --- FUNZIONE DI BENCHMARK ---
 def run_test(name, stdin_data):
     proc = psutil.Popen(
         [exe],
@@ -20,6 +23,7 @@ def run_test(name, stdin_data):
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
+
     proc.stdin.write(stdin_data.encode())
     proc.stdin.close()
 
@@ -48,6 +52,7 @@ cpu_avg = sum(cpu_vals) / len(cpu_vals)
 ram_avg = sum(ram_vals) / len(ram_vals)
 time_avg = sum(time_vals) / len(time_vals)
 
+# --- BADGES ---
 os.makedirs("badges", exist_ok=True)
 
 Badge(
