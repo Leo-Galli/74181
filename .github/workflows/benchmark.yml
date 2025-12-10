@@ -19,7 +19,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - name: Install build tools
         run: sudo apt-get update && sudo apt-get install -y build-essential cmake
       - name: Configure CMake
@@ -54,10 +54,12 @@ jobs:
             c_compiler: clang
             cpp_compiler: clang++
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
       - name: Setup MSVC
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: ilammy/msvc-dev-cmd@5f8f0e4a8c6b4b7a0e8f1a5b9f6c6c2c3e6e0c1d
+
       - name: Configure CMake
         run: >
           cmake -B build
@@ -65,8 +67,10 @@ jobs:
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -S ${{ github.workspace }}
+
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }}
+
       - name: Test
         working-directory: build
         run: |
@@ -85,16 +89,18 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         test_range: ["0...104"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - uses: actions/setup-python@82c7e631f8b9e8e6e8e6e8e6e8e6e8e6e8e6e8e6
         with:
           python-version: '3.10'
+
       - run: pip install psutil anybadge
 
       # ✅ FIX: necessario per usare cl.exe
       - name: Setup MSVC
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: ilammy/msvc-dev-cmd@5f8f0e4a8c6b4b7a0e8f1a5b9f6c6c2c3e6e0c1d
 
       - name: Build simulator (Linux/macOS)
         if: runner.os != 'Windows'
@@ -119,23 +125,29 @@ jobs:
   code-analysis:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - uses: ilammy/msvc-dev-cmd@5f8f0e4a8c6b4b7a0e8f1a5b9f6c6c2c3e6e0c1d
+
       - name: Configure CMake
         run: cmake -S ${{ github.workspace }} -B build
+
       - name: Build Project
         run: cmake --build build --config Release
+
       - name: Initialize MSVC Code Analysis
         uses: microsoft/msvc-code-analysis-action@04825f6d9e00f87422d6bf04e1a38b1f3ed60d99
         id: run-analysis
         with:
           cmakeBuildDirectory: build
           ruleset: NativeRecommendedRules.ruleset
+
       - name: Upload SARIF to GitHub
         if: steps.run-analysis.outputs.sarif != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: ${{ steps.run-analysis.outputs.sarif }}
+
       - name: Run Executable
         run: |
           if (Test-Path .\build\Release\74181.exe) {
