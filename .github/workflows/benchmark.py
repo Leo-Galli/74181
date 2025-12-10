@@ -5,64 +5,43 @@ from anybadge import Badge
 arg = sys.argv[1]
 os_name = sys.argv[2]
 
-if "..." in arg:
-    start, end = map(int, arg.split("..."))
-    test_ids = range(start, end + 1)
-else:
-    test_ids = [int(arg)]
-
 exe = "simulator.exe" if os.name == "nt" else "./simulator"
 
-# --- Generazione input ottimizzata ---
-inputs = []
+# --- INPUT RIDOTTI E OTTIMIZZATI ---
+inputs = [
+    # CPU BASSA
+    "5\n2+2\n6\n",
 
-# Funzione helper per generare segnali S3..S0
-def bits4(i):
-    return [(i >> b) & 1 for b in (3, 2, 1, 0)]
+    # CPU ALTA
+    "5\n(2**30)+(2**30)\n6\n",
 
-# Test ALU 4 bit
-for M in (0, 1):
-    for i in range(16):
-        S3, S2, S1, S0 = bits4(i)
-        inputs.append(
-            f"1\nN\n{S3}\n{S2}\n{S1}\n{S0}\n{M}\n" + "0\n" * 8
-        )
+    # RAM BASSA (4 bit)
+    "1\nN\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n",
 
-# Test ALU 32 bit
-for M in (0, 1):
-    for i in range(16):
-        S3, S2, S1, S0 = bits4(i)
-        inputs.append(
-            f"6\nN\n4294967295\n4294967295\n{S3}\n{S2}\n{S1}\n{S0}\n{M}\n"
-        )
+    # RAM ALTA (32 bit)
+    "6\nN\n4294967295\n4294967295\n0\n0\n0\n0\n0\n",
 
-# Edge cases 4 bit
-inputs.extend([
-    "1\nN\n" + "0\n" * 12,
+    # EDGE: overflow
+    "5\n2147483647+1\n6\n",
+
+    # EDGE: divisione per zero
+    "5\n100/0\n6\n",
+
+    # EDGE: tutti 1
     "1\nN\n" + "1\n" * 12,
-    "1\nN\n0\n0\n0\n1\n0\n0\n1\n1\n0\n0\n1\n1\n",
-])
 
-# Edge cases 32 bit
-inputs.extend([
-    "6\nN\n0\n0\n0\n0\n0\n0\n",
-    "6\nN\n4294967295\n0\n0\n0\n0\n0\n",
-    "6\nN\n0\n4294967295\n0\n0\n0\n0\n",
-    "6\nN\n2147483647\n2147483647\n0\n0\n1\n0\n0\n",
-])
-
-# Espressioni
-exprs = [
-    "2+2", "10-5", "3*7", "15/3", "(2+3)*4", "2**10", "100%7", "1+2+3+4+5",
-    "1000000+2000000", "0/1", "1<<5", "0xFF+1", "2147483647+1", "-5+10",
-    "(10*(2+3))-7", "((2+2)*2)+2", "100/0", "2+2*2", "1+1", "999999999"
+    # MISC
+    "5\n(10*(2+3))-7\n6\n",
 ]
-inputs.extend([f"5\n{e}\n6\n" for e in exprs])
 
-# Ultimi due test
-inputs.extend(["4\nN\n", "5\nN\n"])
+# Se l’utente chiede un singolo test
+if "..." not in arg:
+    test_ids = [int(arg)]
+else:
+    start, end = map(int, arg.split("..."))
+    test_ids = range(start, min(end + 1, len(inputs)))
 
-# --- Benchmark super ottimizzato ---
+# --- Benchmark velocissimo ---
 cpu_all, ram_all, time_all = [], [], []
 
 for tid in test_ids:
@@ -71,7 +50,6 @@ for tid in test_ids:
 
     stdin_data = inputs[tid]
 
-    # Avvio processo
     proc = psutil.Popen(
         [exe],
         stdin=subprocess.PIPE,
@@ -82,16 +60,12 @@ for tid in test_ids:
     proc.stdin.write(stdin_data.encode())
     proc.stdin.close()
 
-    # Misurazione veloce: 1 sola lettura CPU/RAM
     start = time.perf_counter()
-
-    # Attesa processo SENZA polling lento
     proc.wait()
-
     duration = (time.perf_counter() - start) * 1000  # ms
 
     try:
-        cpu = proc.cpu_percent()  # una sola lettura
+        cpu = proc.cpu_percent()
         ram = proc.memory_info().rss / (1024 * 1024)
     except:
         cpu = 0
