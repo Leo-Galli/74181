@@ -90,12 +90,6 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - run: pip install psutil anybadge
-
       - name: Setup MSVC
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
@@ -108,74 +102,33 @@ jobs:
         if: runner.os == 'Windows'
         run: cl.exe /O2 /Fe:simulator.exe 74181.c advapi32.lib
 
-      - name: Run benchmarks (inline Python)
-        shell: python
+      - name: Run benchmark (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
-          import os, psutil, subprocess, time, json
-          from anybadge import Badge
-          from concurrent.futures import ThreadPoolExecutor
+          mkdir -p badges
+          # CPU test
+          CPU=$( (time -p ./simulator <<< "5\n2+2\n6\n") 2>&1 | awk '/user/ {print $2}' )
+          # RAM test
+          RAM=$( /usr/bin/time -f "%M" ./simulator <<< "6\nN\n4294967295\n4294967295\n0\n0\n" 2>&1 >/dev/null )
+          # TIME test
+          TIME=$( (time -p ./simulator <<< "5\n(2**30)+(2**30)\n6\n") 2>&1 | awk '/real/ {print $2*1000}' )
 
-          exe = "simulator.exe" if os.name == "nt" else "./simulator"
-          os_name = "${{ matrix.os }}"
+          echo "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>CPU $CPU</text></svg>" > badges/cpu-summary-${{ matrix.os }}.svg
+          echo "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>RAM $RAM KB</text></svg>" > badges/ram-summary-${{ matrix.os }}.svg
+          echo "<svg xmlns='http://www.w3.org/2000/svg' width='180' height='20'><text x='5' y='15'>TIME ${TIME}ms</text></svg>" > badges/time-summary-${{ matrix.os }}.svg
 
-          TESTS = [
-              ("cpu_low",  "5\n2+2\n6\n"),
-              ("cpu_high", "5\n(2**30)+(2**30)\n6\n"),
-              ("ram_high", "6\nN\n4294967295\n4294967295\n0\n0\n")
-          ]
+      - name: Run benchmark (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          mkdir badges
+          $cpu = (Measure-Command { .\simulator.exe | Out-Null }).TotalMilliseconds
+          $ram = (Get-Process simulator).WorkingSet64 / 1KB
+          $time = (Measure-Command { .\simulator.exe | Out-Null }).TotalMilliseconds
 
-          def run_test(name, stdin_data):
-              proc = psutil.Popen(
-                  [exe],
-                  stdin=subprocess.PIPE,
-                  stdout=subprocess.DEVNULL,
-                  stderr=subprocess.DEVNULL
-              )
-              proc.stdin.write(stdin_data.encode())
-              proc.stdin.close()
-
-              start = time.perf_counter()
-              proc.wait()
-              duration = (time.perf_counter() - start) * 1000
-
-              try:
-                  cpu = proc.cpu_percent()
-                  ram = proc.memory_info().rss / (1024 * 1024)
-              except:
-                  cpu = 0
-                  ram = 0
-
-              return cpu, ram, duration
-
-          with ThreadPoolExecutor(max_workers=3) as pool:
-              results = list(pool.map(lambda t: run_test(*t), TESTS))
-
-          cpu_avg = sum(r[0] for r in results) / 3
-          ram_avg = sum(r[1] for r in results) / 3
-          time_avg = sum(r[2] for r in results) / 3
-
-          os.makedirs("badges", exist_ok=True)
-
-          Badge(label=f"CPU {os_name}", value=cpu_avg,
-                thresholds={0:"green",10:"yellow",30:"orange",70:"red"},
-                value_format="%.1f").write_badge(f"badges/cpu-summary-{os_name}.svg", overwrite=True)
-
-          Badge(label=f"RAM {os_name}", value=ram_avg,
-                thresholds={0:"green",20:"yellow",50:"orange",100:"red"},
-                value_format="%.1f").write_badge(f"badges/ram-summary-{os_name}.svg", overwrite=True)
-
-          Badge(label=f"Tempo(ms) {os_name}", value=time_avg,
-                thresholds={0:"green",100:"yellow",500:"orange",1000:"red"},
-                value_format="%.0f").write_badge(f"badges/time-summary-{os_name}.svg", overwrite=True)
-
-          with open(f"badges/data-summary-{os_name}.json", "w") as f:
-              json.dump({
-                  "cpu_avg_pct": cpu_avg,
-                  "ram_avg_mb": ram_avg,
-                  "time_avg_ms": time_avg,
-                  "os": os_name,
-                  "tests_run": 3
-              }, f)
+          "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>CPU $cpu</text></svg>" | Out-File badges/cpu-summary-${{ matrix.os }}.svg
+          "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>RAM $ram KB</text></svg>" | Out-File badges/ram-summary-${{ matrix.os }}.svg
+          "<svg xmlns='http://www.w3.org/2000/svg' width='180' height='20'><text x='5' y='15'>TIME $time ms</text></svg>" | Out-File badges/time-summary-${{ matrix.os }}.svg
 
       - name: Commit badges
         run: |
