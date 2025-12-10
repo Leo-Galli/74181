@@ -15,33 +15,13 @@ permissions:
 
 jobs:
 
-  # --- Build & Test Linux ---
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - name: Install build tools
-        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
-      - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
-      - name: Build
-        run: cmake --build build --config Release
-      - name: Test
-        working-directory: build
-        run: |
-          if [ -f CTestTestfile.cmake ]; then
-            ctest -C Release
-          else
-            echo "No tests defined, skipping"
-          fi
-
-  # --- Multipiattaforma Build ---
-  build-matrix:
+  # --- Build, Test e Benchmark multipiattaforma ---
+  build-test-benchmark:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         build_type: [Release]
         include:
           - os: windows-latest
@@ -54,13 +34,19 @@ jobs:
             c_compiler: clang
             cpp_compiler: clang++
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@v4
+
+      - name: Cache build
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt') }}
 
       - name: Setup MSVC
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Configure CMake
+      - name: Configure
         run: >
           cmake -B build
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
@@ -69,119 +55,69 @@ jobs:
           -S ${{ github.workspace }}
 
       - name: Build
-        run: cmake --build build --config ${{ matrix.build_type }}
+        run: cmake --build build --config ${{ matrix.build_type }} --parallel
 
       - name: Test
-        working-directory: build
         run: |
-          if [ -f CTestTestfile.cmake ]; then
-            ctest --build-config ${{ matrix.build_type }}
+          if [ -f build/CTestTestfile.cmake ]; then
+            ctest --test-dir build --output-on-failure
           else
             echo "No tests defined, skipping"
           fi
         shell: bash
 
-  # --- Benchmark multipiattaforma con badges ---
-  benchmark:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-
-      - name: Setup MSVC
-        if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Build simulator (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: clang -o simulator 74181.c -O2 -w || gcc -o simulator 74181.c -O2 -w
-
-      - name: Build simulator (Windows)
-        if: runner.os == 'Windows'
-        run: cl.exe /O2 /Fe:simulator.exe 74181.c advapi32.lib
-
-      # ✅ BENCHMARK LINUX/MACOS (PARALLELO)
+      # --- Benchmark + Badges ---
       - name: Run benchmark (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
           mkdir -p badges
+          CPU=$( (time -p ./build/74181 <<< "2+2") 2>&1 | awk '/user/ {print $2}' )
+          RAM=$( /usr/bin/time -f "%M" ./build/74181 <<< "2+2" 2>&1 >/dev/null )
+          TIME=$( (time -p ./build/74181 <<< "2+2") 2>&1 | awk '/real/ {print $2*1000}' )
 
-          # CPU test
-          (CPU=$( (time -p ./simulator <<< "5\n2+2\n6\n") 2>&1 | awk '/user/ {print $2}' ) &)
+          echo "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>CPU $CPU</text></svg>" > badges/cpu-${{ matrix.os }}.svg
+          echo "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>RAM ${RAM}KB</text></svg>" > badges/ram-${{ matrix.os }}.svg
+          echo "<svg xmlns='http://www.w3.org/2000/svg' width='180' height='20'><text x='5' y='15'>TIME ${TIME}ms</text></svg>" > badges/time-${{ matrix.os }}.svg
 
-          # RAM test
-          (RAM=$( /usr/bin/time -f "%M" ./simulator <<< "6\nN\n4294967295\n4294967295\n0\n0\n" 2>&1 >/dev/null ) &)
-
-          # TIME test
-          (TIME=$( (time -p ./simulator <<< "5\n(2**30)+(2**30)\n6\n") 2>&1 | awk '/real/ {print $2*1000}' ) &)
-
-          wait
-
-          echo "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>CPU $CPU</text></svg>" > badges/cpu-summary-${{ matrix.os }}.svg
-          echo "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>RAM ${RAM}KB</text></svg>" > badges/ram-summary-${{ matrix.os }}.svg
-          echo "<svg xmlns='http://www.w3.org/2000/svg' width='180' height='20'><text x='5' y='15'>TIME ${TIME}ms</text></svg>" > badges/time-summary-${{ matrix.os }}.svg
-
-      # ✅ BENCHMARK WINDOWS (PARALLELO)
       - name: Run benchmark (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           mkdir badges
+          $cpu = (Measure-Command { .\build\Release\74181.exe | Out-Null }).TotalSeconds
+          $ram = (Get-Process 74181).WorkingSet64 / 1KB
+          $time = (Measure-Command { .\build\Release\74181.exe | Out-Null }).TotalMilliseconds
 
-          $cpuJob = Start-Job { (Measure-Command { .\simulator.exe | Out-Null }).TotalMilliseconds }
-          $ramJob = Start-Job { Start-Sleep -Milliseconds 10; (Get-Process simulator).WorkingSet64 / 1KB }
-          $timeJob = Start-Job { (Measure-Command { .\simulator.exe | Out-Null }).TotalMilliseconds }
-
-          $cpu = Receive-Job $cpuJob
-          $ram = Receive-Job $ramJob
-          $time = Receive-Job $timeJob
-
-          "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>CPU $cpu</text></svg>" | Out-File badges/cpu-summary-${{ matrix.os }}.svg
-          "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>RAM $ram KB</text></svg>" | Out-File badges/ram-summary-${{ matrix.os }}.svg
-          "<svg xmlns='http://www.w3.org/2000/svg' width='180' height='20'><text x='5' y='15'>TIME $time ms</text></svg>" | Out-File badges/time-summary-${{ matrix.os }}.svg
+          "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>CPU $cpu</text></svg>" | Out-File badges/cpu-${{ matrix.os }}.svg
+          "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>RAM $ram KB</text></svg>" | Out-File badges/ram-${{ matrix.os }}.svg
+          "<svg xmlns='http://www.w3.org/2000/svg' width='180' height='20'><text x='5' y='15'>TIME $time ms</text></svg>" | Out-File badges/time-${{ matrix.os }}.svg
 
       - name: Commit badges
+        if: github.ref == 'refs/heads/main'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add badges/
-          git commit -m "Update summary badges for ${{ matrix.os }}" || echo "No changes"
-          git push
+          git diff --cached --quiet || (git commit -m "Update badges for ${{ matrix.os }}" && git push)
 
   # --- MSVC Code Analysis ---
   code-analysis:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-
+      - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Configure CMake
+      - name: Configure
         run: cmake -S ${{ github.workspace }} -B build
-
-      - name: Build Project
-        run: cmake --build build --config Release
-
-      - name: Initialize MSVC Code Analysis
-        uses: microsoft/msvc-code-analysis-action@04825f6d9e00f87422d6bf04e1a38b1f3ed60d99
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Run Code Analysis
+        uses: microsoft/msvc-code-analysis-action@v1
         id: run-analysis
         with:
           cmakeBuildDirectory: build
           ruleset: NativeRecommendedRules.ruleset
-
-      - name: Upload SARIF to GitHub
+      - name: Upload SARIF
         if: steps.run-analysis.outputs.sarif != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: ${{ steps.run-analysis.outputs.sarif }}
-
-      - name: Run Executable
-        run: |
-          if (Test-Path .\build\Release\74181.exe) {
-            echo 0 | .\build\Release\74181.exe
-          } else {
-            Write-Output "Executable not found, skipping run"
-          }
-        shell: pwsh
