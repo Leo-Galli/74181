@@ -102,29 +102,41 @@ jobs:
         if: runner.os == 'Windows'
         run: cl.exe /O2 /Fe:simulator.exe 74181.c advapi32.lib
 
+      # ✅ BENCHMARK LINUX/MACOS (PARALLELO)
       - name: Run benchmark (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
           mkdir -p badges
+
           # CPU test
-          CPU=$( (time -p ./simulator <<< "5\n2+2\n6\n") 2>&1 | awk '/user/ {print $2}' )
+          (CPU=$( (time -p ./simulator <<< "5\n2+2\n6\n") 2>&1 | awk '/user/ {print $2}' ) &)
+
           # RAM test
-          RAM=$( /usr/bin/time -f "%M" ./simulator <<< "6\nN\n4294967295\n4294967295\n0\n0\n" 2>&1 >/dev/null )
+          (RAM=$( /usr/bin/time -f "%M" ./simulator <<< "6\nN\n4294967295\n4294967295\n0\n0\n" 2>&1 >/dev/null ) &)
+
           # TIME test
-          TIME=$( (time -p ./simulator <<< "5\n(2**30)+(2**30)\n6\n") 2>&1 | awk '/real/ {print $2*1000}' )
+          (TIME=$( (time -p ./simulator <<< "5\n(2**30)+(2**30)\n6\n") 2>&1 | awk '/real/ {print $2*1000}' ) &)
+
+          wait
 
           echo "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>CPU $CPU</text></svg>" > badges/cpu-summary-${{ matrix.os }}.svg
-          echo "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>RAM $RAM KB</text></svg>" > badges/ram-summary-${{ matrix.os }}.svg
+          echo "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>RAM ${RAM}KB</text></svg>" > badges/ram-summary-${{ matrix.os }}.svg
           echo "<svg xmlns='http://www.w3.org/2000/svg' width='180' height='20'><text x='5' y='15'>TIME ${TIME}ms</text></svg>" > badges/time-summary-${{ matrix.os }}.svg
 
+      # ✅ BENCHMARK WINDOWS (PARALLELO)
       - name: Run benchmark (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           mkdir badges
-          $cpu = (Measure-Command { .\simulator.exe | Out-Null }).TotalMilliseconds
-          $ram = (Get-Process simulator).WorkingSet64 / 1KB
-          $time = (Measure-Command { .\simulator.exe | Out-Null }).TotalMilliseconds
+
+          $cpuJob = Start-Job { (Measure-Command { .\simulator.exe | Out-Null }).TotalMilliseconds }
+          $ramJob = Start-Job { Start-Sleep -Milliseconds 10; (Get-Process simulator).WorkingSet64 / 1KB }
+          $timeJob = Start-Job { (Measure-Command { .\simulator.exe | Out-Null }).TotalMilliseconds }
+
+          $cpu = Receive-Job $cpuJob
+          $ram = Receive-Job $ramJob
+          $time = Receive-Job $timeJob
 
           "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>CPU $cpu</text></svg>" | Out-File badges/cpu-summary-${{ matrix.os }}.svg
           "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'><text x='5' y='15'>RAM $ram KB</text></svg>" | Out-File badges/ram-summary-${{ matrix.os }}.svg
