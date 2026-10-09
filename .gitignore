@@ -1,0 +1,18 @@
+# Artefatti di build
+build/
+build_check/
+*.o
+*.obj
+*.exe
+*.out
+
+# File generati a runtime dal simulatore
+input_alu.txt
+input_alu32.txt
+input_bin.txt
+input_dec.txt
+risultati_alu_74181.txt
+risultati_alu32.txt
+risultati_dec.txt
+risultati_bin.txt
+risultato_operazione.txt

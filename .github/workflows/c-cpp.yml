@@ -20,3 +20,9 @@ jobs:
 
     - name: Esegui programma (Calcolo del Clock + Esci)
       run: echo -e "0\n" | ./74181
+
+    - name: Compila i test di regressione dell'ALU
+      run: gcc -Wall -Wextra -O2 tests/test_alu74181.c -o test_alu74181
+
+    - name: Esegui i test di regressione dell'ALU
+      run: ./test_alu74181

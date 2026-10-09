@@ -25,7 +25,7 @@ INSTALLAZIONE:
    git clone https://github.com/Leo-Galli/74181.git
    cd 74181
 2. Compila:
-   gcc main.c -o simulatore
+   gcc 74181.c -o simulatore
 3. Esegui:
    ./simulatore    (Linux/macOS)
    simulatore.exe  (Windows)

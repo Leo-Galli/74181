@@ -654,40 +654,24 @@ static const Processore db_processori[] = {
     {"Intel Core i9-14900KF", 3300000000LL},
     {"Intel Core i9-15900K", 3400000000LL},
     {"Intel Core i9-15900KF", 3400000000LL},
-    {"Intel Core i3-2100", 3000000000LL},
-    {"Intel Core i3-2120", 3300000000LL},
     {"Intel Core i3-2130", 3300000000LL},
     {"Intel Core i3-3210", 3300000000LL},
-    {"Intel Core i3-3220", 3300000000LL},
-    {"Intel Core i3-3240", 3400000000LL},
     {"Intel Core i3-4100", 3400000000LL},
-    {"Intel Core i3-4130", 3400000000LL},
-    {"Intel Core i3-4150", 3500000000LL},
-    {"Intel Core i3-4160", 3500000000LL},
-    {"Intel Core i3-4170", 3600000000LL},
     {"Intel Core i3-4330", 3600000000LL},
     {"Intel Core i3-4340", 3600000000LL},
     {"Intel Core i3-4350", 3600000000LL},
     {"Intel Core i3-4360", 3600000000LL},
-    {"Intel Core i3-6100", 3700000000LL},
-    {"Intel Core i3-6300", 3800000000LL},
-    {"Intel Core i3-6320", 3800000000LL},
     {"Intel Core i3-7100", 3800000000LL},
     {"Intel Core i3-7300", 3900000000LL},
     {"Intel Core i3-7320", 3900000000LL},
-    {"Intel Core i3-8100", 3900000000LL},
-    {"Intel Core i3-8300", 4000000000LL},
     {"Intel Core i3-8350K", 4000000000LL},
-    {"Intel Core i3-9100", 3900000000LL},
     {"Intel Core i3-9100F", 3900000000LL},
-    {"Intel Core i3-9300", 4100000000LL},
     {"Intel Core i3-9300F", 4100000000LL},
     {"Intel Core i3-10100", 3800000000LL},
     {"Intel Core i3-10100F", 3800000000LL},
     {"Intel Core i3-10320", 3800000000LL},
     {"Intel Core i3-10300", 3800000000LL},
     {"Intel Core i3-10300F", 3800000000LL},
-    {"Intel Core i3-10320", 3800000000LL},
     {"Intel Core i3-10320F", 3800000000LL},
     {"Intel Core i3-10105", 3800000000LL},
     {"Intel Core i3-10105F", 3800000000LL},
@@ -705,9 +689,6 @@ static const Processore db_processori[] = {
     {"Intel Core i3-12300F", 3900000000LL},
     {"Intel Core i3-13100", 4000000000LL},
     {"Intel Core i3-13100F", 4000000000LL},
-    {"Intel Core i5-2400", 3100000000LL},
-    {"Intel Core i5-2500", 3300000000LL},
-    {"Intel Core i5-2500K", 3300000000LL},
     {"Intel Core i5-2500S", 2900000000LL},
     {"Intel Core i5-2500T", 2800000000LL},
     {"Intel Core i5-3470", 3200000000LL},
@@ -715,66 +696,39 @@ static const Processore db_processori[] = {
     {"Intel Core i5-3470T", 2900000000LL},
     {"Intel Core i5-3550", 3200000000LL},
     {"Intel Core i5-3550S", 3000000000LL},
-    {"Intel Core i5-3570", 3200000000LL},
-    {"Intel Core i5-3570K", 3600000000LL},
     {"Intel Core i5-3570S", 3000000000LL},
     {"Intel Core i5-3570T", 2900000000LL},
     {"Intel Core i5-4440", 3300000000LL},
     {"Intel Core i5-4440S", 2900000000LL},
     {"Intel Core i5-4440T", 2900000000LL},
-    {"Intel Core i5-4460", 3300000000LL},
     {"Intel Core i5-4460S", 2900000000LL},
     {"Intel Core i5-4460T", 2900000000LL},
-    {"Intel Core i5-4570", 3300000000LL},
     {"Intel Core i5-4570S", 2900000000LL},
     {"Intel Core i5-4570T", 2900000000LL},
-    {"Intel Core i5-4670", 3300000000LL},
     {"Intel Core i5-4670K", 3600000000LL},
     {"Intel Core i5-4670S", 3000000000LL},
     {"Intel Core i5-4670T", 2900000000LL},
-    {"Intel Core i5-4690", 3400000000LL},
-    {"Intel Core i5-4690K", 3600000000LL},
     {"Intel Core i5-4690S", 3000000000LL},
     {"Intel Core i5-4690T", 2900000000LL},
     {"Intel Core i5-5675C", 3300000000LL},
-    {"Intel Core i5-6400", 2800000000LL},
     {"Intel Core i5-6400T", 2100000000LL},
-    {"Intel Core i5-6500", 3300000000LL},
     {"Intel Core i5-6500T", 2400000000LL},
-    {"Intel Core i5-6600", 3300000000LL},
-    {"Intel Core i5-6600K", 3700000000LL},
     {"Intel Core i5-6600T", 2400000000LL},
-    {"Intel Core i5-7400", 3000000000LL},
     {"Intel Core i5-7400T", 2500000000LL},
-    {"Intel Core i5-7500", 3200000000LL},
-    {"Intel Core i5-7500T", 2900000000LL},
-    {"Intel Core i5-7600", 3300000000LL},
-    {"Intel Core i5-7600K", 3800000000LL},
     {"Intel Core i5-7600T", 2800000000LL},
     {"Intel Core i5-7640X", 4000000000LL},
     {"Intel Core i5-7660X", 4200000000LL},
-    {"Intel Core i7-2600", 3400000000LL},
-    {"Intel Core i7-2600K", 3500000000LL},
     {"Intel Core i7-2600S", 2900000000LL},
     {"Intel Core i7-2600T", 2500000000LL},
     {"Intel Core i7-3610QM", 2600000000LL},
     {"Intel Core i7-3630QM", 2600000000LL},
-    {"Intel Core i7-3770", 3400000000LL},
-    {"Intel Core i7-3770K", 3600000000LL},
     {"Intel Core i7-3770S", 3100000000LL},
     {"Intel Core i7-3770T", 2900000000LL},
-    {"Intel Core i7-4790", 3600000000LL},
-    {"Intel Core i7-4790K", 4000000000LL},
     {"Intel Core i7-4790S", 3600000000LL},
     {"Intel Core i7-4790T", 2900000000LL},
-    {"Intel Core i7-5820K", 3300000000LL},
     {"Intel Core i7-5930K", 3400000000LL},
     {"Intel Core i7-5960X", 3300000000LL},
-    {"Intel Core i7-6700", 3300000000LL},
-    {"Intel Core i7-6700K", 4000000000LL},
     {"Intel Core i7-6700T", 2800000000LL},
-    {"Intel Core i7-7700", 3600000000LL},
-    {"Intel Core i7-7700K", 4200000000LL},
     {"Intel Core i7-7700T", 2900000000LL},
     {"Intel Core i7-7800X", 3500000000LL},
     {"Intel Core i7-7820X", 3600000000LL},
@@ -783,65 +737,27 @@ static const Processore db_processori[] = {
     {"Intel Core i7-8565U", 1800000000LL},
     {"Intel Core i7-8750H", 2200000000LL},
     {"Intel Core i7-8850H", 2600000000LL},
-    {"Intel Core i7-9700", 3000000000LL},
-    {"Intel Core i7-9700K", 3600000000LL},
     {"Intel Core i7-9700KF", 3600000000LL},
     {"Intel Core i7-9700T", 2000000000LL},
-    {"Intel Core i7-10700", 2900000000LL},
-    {"Intel Core i7-10700K", 3800000000LL},
-    {"Intel Core i7-10700KF", 3800000000LL},
     {"Intel Core i7-10700T", 2000000000LL},
-    {"Intel Core i7-11700", 2900000000LL},
-    {"Intel Core i7-11700K", 3700000000LL},
-    {"Intel Core i7-11700KF", 3700000000LL},
     {"Intel Core i7-11700T", 1800000000LL},
-    {"Intel Core i7-12700", 2900000000LL},
-    {"Intel Core i7-12700K", 3200000000LL},
-    {"Intel Core i7-12700KF", 3200000000LL},
     {"Intel Core i7-12700T", 1800000000LL},
     {"Intel Core i7-13700", 2900000000LL},
-    {"Intel Core i7-13700K", 3100000000LL},
-    {"Intel Core i7-13700KF", 3100000000LL},
     {"Intel Core i7-13700T", 1800000000LL},
     {"Intel Core i7-14700", 3100000000LL},
-    {"Intel Core i7-14700K", 3200000000LL},
-    {"Intel Core i7-14700KF", 3200000000LL},
     {"Intel Core i7-14700T", 1900000000LL},
-    {"Intel Core i7-15700K", 3300000000LL},
-    {"Intel Core i7-15700KF", 3300000000LL},
     {"Intel Core i7-15700T", 2000000000LL},
-    {"Intel Core i9-9900", 3100000000LL},
-    {"Intel Core i9-9900K", 3600000000LL},
-    {"Intel Core i9-9900KF", 3600000000LL},
     {"Intel Core i9-9900KS", 4000000000LL},
-    {"Intel Core i9-10900", 2900000000LL},
-    {"Intel Core i9-10900K", 3700000000LL},
-    {"Intel Core i9-10900KF", 3700000000LL},
     {"Intel Core i9-10900T", 1800000000LL},
-    {"Intel Core i9-10920X", 3500000000LL},
-    {"Intel Core i9-10940X", 3600000000LL},
-    {"Intel Core i9-10980XE", 3600000000LL},
-    {"Intel Core i9-11900", 2900000000LL},
-    {"Intel Core i9-11900K", 3700000000LL},
-    {"Intel Core i9-11900KF", 3700000000LL},
     {"Intel Core i9-11900T", 1800000000LL},
     {"Intel Core i9-12900", 3200000000LL},
-    {"Intel Core i9-12900K", 3200000000LL},
-    {"Intel Core i9-12900KF", 3200000000LL},
-    {"Intel Core i9-12900KS", 3500000000LL},
     {"Intel Core i9-12900T", 1800000000LL},
     {"Intel Core i9-13900", 3000000000LL},
-    {"Intel Core i9-13900K", 3200000000LL},
-    {"Intel Core i9-13900KF", 3200000000LL},
     {"Intel Core i9-13900KS", 3400000000LL},
     {"Intel Core i9-13900T", 1800000000LL},
     {"Intel Core i9-14900", 3200000000LL},
-    {"Intel Core i9-14900K", 3300000000LL},
-    {"Intel Core i9-14900KF", 3300000000LL},
     {"Intel Core i9-14900KS", 3600000000LL},
     {"Intel Core i9-14900T", 1900000000LL},
-    {"Intel Core i9-15900K", 3400000000LL},
-    {"Intel Core i9-15900KF", 3400000000LL},
     {"Intel Core i9-15900KS", 3700000000LL},
     {"Intel Core i9-15900T", 2000000000LL},
     {"Intel Xeon E3-1220", 3100000000LL},
@@ -1072,61 +988,16 @@ static const Processore db_processori[] = {
     {"AMD A10-7850K", 3700000000LL},
     {"AMD A10-7870K", 3900000000LL},
     {"AMD A12-9800", 3800000000LL},
-    {"AMD FX-4100", 3600000000LL},
-    {"AMD FX-4300", 3800000000LL},
-    {"AMD FX-4350", 4200000000LL},
-    {"AMD FX-6300", 3500000000LL},
-    {"AMD FX-6350", 3900000000LL},
     {"AMD FX-8300", 3300000000LL},
-    {"AMD FX-8350", 4000000000LL},
     {"AMD FX-8370", 4000000000LL},
-    {"AMD FX-9590", 4700000000LL},
-    {"AMD Ryzen 3 1200", 3100000000LL},
-    {"AMD Ryzen 3 1300X", 3500000000LL},
-    {"AMD Ryzen 3 2200G", 3500000000LL},
-    {"AMD Ryzen 3 3200G", 3600000000LL},
     {"AMD Ryzen 3 3100", 3600000000LL},
     {"AMD Ryzen 3 3300X", 3800000000LL},
-    {"AMD Ryzen 3 4100", 3800000000LL},
-    {"AMD Ryzen 3 4300G", 3800000000LL},
-    {"AMD Ryzen 3 5300G", 4000000000LL},
     {"AMD Ryzen 3 PRO 4350G", 3800000000LL},
-    {"AMD Ryzen 5 1400", 3200000000LL},
-    {"AMD Ryzen 5 1500X", 3500000000LL},
-    {"AMD Ryzen 5 1600", 3200000000LL},
-    {"AMD Ryzen 5 1600X", 3600000000LL},
     {"AMD Ryzen 5 2400G", 3600000000LL},
-    {"AMD Ryzen 5 2600", 3400000000LL},
-    {"AMD Ryzen 5 2600X", 3600000000LL},
-    {"AMD Ryzen 5 3400G", 3700000000LL},
-    {"AMD Ryzen 5 3600", 3600000000LL},
-    {"AMD Ryzen 5 3600X", 3800000000LL},
-    {"AMD Ryzen 5 5600", 3500000000LL},
-    {"AMD Ryzen 5 5600X", 3700000000LL},
-    {"AMD Ryzen 5 7600", 3800000000LL},
-    {"AMD Ryzen 5 7600X", 4200000000LL},
-    {"AMD Ryzen 7 1700", 3000000000LL},
-    {"AMD Ryzen 7 1700X", 3400000000LL},
-    {"AMD Ryzen 7 1800X", 3600000000LL},
-    {"AMD Ryzen 7 2700", 3200000000LL},
-    {"AMD Ryzen 7 2700X", 3700000000LL},
-    {"AMD Ryzen 7 3700X", 3600000000LL},
-    {"AMD Ryzen 7 3800X", 3900000000LL},
     {"AMD Ryzen 7 5700X", 3400000000LL},
-    {"AMD Ryzen 7 5800X", 3800000000LL},
-    {"AMD Ryzen 7 5800X3D", 3400000000LL},
-    {"AMD Ryzen 7 7700", 3800000000LL},
-    {"AMD Ryzen 7 7700X", 4200000000LL},
     {"AMD Ryzen 7 7800X3D", 4200000000LL},
     {"AMD Ryzen 9 3900", 3200000000LL},
-    {"AMD Ryzen 9 3900X", 3800000000LL},
-    {"AMD Ryzen 9 3950X", 3500000000LL},
     {"AMD Ryzen 9 5900", 3700000000LL},
-    {"AMD Ryzen 9 5900X", 3700000000LL},
-    {"AMD Ryzen 9 5950X", 3400000000LL},
-    {"AMD Ryzen 9 7900", 3700000000LL},
-    {"AMD Ryzen 9 7900X", 4400000000LL},
-    {"AMD Ryzen 9 7950X", 4500000000LL},
     {"AMD Ryzen 9 7950X3D", 4200000000LL},
     {"AMD Ryzen Threadripper 1900X", 3800000000LL},
     {"AMD Ryzen Threadripper 1920X", 3500000000LL},
@@ -1139,18 +1010,7 @@ static const Processore db_processori[] = {
     {"AMD Ryzen Threadripper PRO 3955WX", 3900000000LL},
     {"AMD Ryzen Threadripper PRO 3975WX", 3500000000LL},
     {"AMD Ryzen Threadripper PRO 3995WX", 2700000000LL},
-    {"AMD EPYC 7251", 2600000000LL},
     {"AMD EPYC 7281", 2400000000LL},
-    {"AMD EPYC 7351", 2400000000LL},
-    {"AMD EPYC 7401", 2200000000LL},
-    {"AMD EPYC 7451", 2400000000LL},
-    {"AMD EPYC 7501", 2000000000LL},
-    {"AMD EPYC 7551", 2200000000LL},
-    {"AMD EPYC 7601", 2200000000LL},
-    {"AMD EPYC 7763", 2450000000LL},
-    {"AMD EPYC 9654", 2500000000LL},
-    {"AMD EPYC 9654P", 2500000000LL},
-    {"AMD EPYC 9754", 2600000000LL},
     {"AMD EPYC 9754P", 2600000000LL},
     {"AMD Athlon 200GE", 3200000000LL},
     {"AMD Athlon 220GE", 3400000000LL},
@@ -1370,8 +1230,6 @@ static const Processore db_processori[] = {
     {"AMD Opteron 6376", 2300000000LL},
     {"AMD Opteron 8439 SE", 2800000000LL},
     {"AMD Phenom 9600", 2300000000LL},
-    {"AMD Phenom II X4 965", 3400000000LL},
-    {"AMD Phenom II X6 1100T", 3300000000LL},
     {"AMD Turion 64 X2 TL-60", 2000000000LL},
     {"AMD Turion II Ultra M660", 2300000000LL},
     {"AMD Turion X2 Ultra ZM-86", 2400000000LL},
@@ -1389,22 +1247,7 @@ static const Processore db_processori[] = {
     {"Intel 80486DX4-100", 100000000LL},
     {"Intel Celeron 300A", 450000000LL},
     {"Intel Celeron 500", 500000000LL},
-    {"Intel Core 2 Duo E6600", 2400000000LL},
-    {"Intel Core 2 Duo E8400", 3000000000LL},
-    {"Intel Core 2 Quad Q6600", 2400000000LL},
-    {"Intel Core i3-2100", 3100000000LL},
-    {"Intel Core i5-2500K", 3300000000LL},
-    {"Intel Core i7-2600K", 3400000000LL},
     {"Intel Core i7-920", 2660000000LL},
-    {"Intel Core i7-3770K", 3500000000LL},
-    {"Intel Core i7-4790K", 4000000000LL},
-    {"Intel Core i7-6700K", 4000000000LL},
-    {"Intel Core i7-7700K", 4200000000LL},
-    {"Intel Core i9-9900K", 3600000000LL},
-    {"Intel Core i9-10900K", 3700000000LL},
-    {"Intel Core i9-11900K", 3500000000LL},
-    {"Intel Core i9-13900K", 3000000000LL},
-    {"Intel Core i9-14900K", 3200000000LL},
     {"Intel Itanium 2 9000", 1600000000LL},
     {"Intel Itanium 9500", 2660000000LL},
     {"Intel Pentium 60", 60000000LL},
@@ -1412,15 +1255,7 @@ static const Processore db_processori[] = {
     {"Intel Pentium II 300", 300000000LL},
     {"Intel Pentium III 800", 800000000LL},
     {"Intel Pentium 4 2.8GHz", 2800000000LL},
-    {"Intel Pentium D 820", 2800000000LL},
-    {"Intel Pentium Extreme Edition 965", 3600000000LL},
-    {"Intel Xeon E3-1240 v2", 3400000000LL},
-    {"Intel Xeon E5-2680", 2700000000LL},
-    {"Intel Xeon E5-2699 v4", 2200000000LL},
-    {"Intel Xeon E7-8890 v4", 2200000000LL},
-    {"Intel Xeon Platinum 8380", 2300000000LL},
     {"Intel Xeon Platinum 8490H", 1800000000LL},
-    {"Intel Xeon W-3175X", 3500000000LL},
     {"MIPS R2000", 16000000LL},
     {"MIPS R3000", 33000000LL},
     {"MIPS R4000", 100000000LL},
@@ -1446,7 +1281,86 @@ static const Processore db_processori[] = {
     {"Sun UltraSPARC IV+", 1600000000LL},
     {"Sun UltraSPARC T2", 1400000000LL},
     {"Sun UltraSPARC T3", 1600000000LL},
-    {"Generic", 1000000000LL}
+
+    /* --- Espansione database: generazioni piu' recenti (2023-2026) --- */
+
+    /* Apple Silicon */
+    {"Apple A18", 3800000000LL},
+    {"Apple A18 Pro", 4040000000LL},
+    {"Apple M4", 4400000000LL},
+    {"Apple M4 Pro", 4500000000LL},
+    {"Apple M4 Max", 4500000000LL},
+
+    /* Intel Core Ultra (Meteor Lake / Arrow Lake / Lunar Lake) */
+    {"Intel Core Ultra 5 125H", 4500000000LL},
+    {"Intel Core Ultra 5 135H", 4600000000LL},
+    {"Intel Core Ultra 5 226V", 4500000000LL},
+    {"Intel Core Ultra 7 155H", 4800000000LL},
+    {"Intel Core Ultra 7 165H", 5000000000LL},
+    {"Intel Core Ultra 7 258V", 4800000000LL},
+    {"Intel Core Ultra 7 265K", 5500000000LL},
+    {"Intel Core Ultra 9 185H", 5100000000LL},
+    {"Intel Core Ultra 9 288V", 5100000000LL},
+    {"Intel Core Ultra 9 285K", 5700000000LL},
+    {"Intel Core Ultra 9 285HX", 5400000000LL},
+
+    /* Intel Xeon Scalable recenti (Sapphire/Emerald Rapids, Xeon 6) */
+    {"Intel Xeon Platinum 8592+", 3900000000LL},
+    {"Intel Xeon Platinum 8593Q", 2200000000LL},
+    {"Intel Xeon Gold 6548Y+", 3500000000LL},
+    {"Intel Xeon 6980P", 3200000000LL},
+    {"Intel Xeon 6767P", 2800000000LL},
+
+    /* AMD Ryzen serie 7000/8000/9000 e Threadripper */
+    {"AMD Ryzen 5 8600G", 5000000000LL},
+    {"AMD Ryzen 7 8700G", 5100000000LL},
+    {"AMD Ryzen 5 9600X", 5400000000LL},
+    {"AMD Ryzen 7 9700X", 5500000000LL},
+    {"AMD Ryzen 7 9800X3D", 5200000000LL},
+    {"AMD Ryzen 9 9900X", 5600000000LL},
+    {"AMD Ryzen 9 9900X3D", 5500000000LL},
+    {"AMD Ryzen 9 9950X", 5700000000LL},
+    {"AMD Ryzen 9 9950X3D", 5700000000LL},
+    {"AMD Ryzen AI 9 HX 370", 5100000000LL},
+    {"AMD Ryzen AI 9 365", 5000000000LL},
+    {"AMD Threadripper 7960X", 4200000000LL},
+    {"AMD Threadripper 7970X", 4000000000LL},
+    {"AMD Threadripper 7980X", 3200000000LL},
+    {"AMD Threadripper PRO 7995WX", 5100000000LL},
+
+    /* AMD EPYC "Turin" (serie 9005) */
+    {"AMD EPYC 9015", 3700000000LL},
+    {"AMD EPYC 9115", 2800000000LL},
+    {"AMD EPYC 9355", 3550000000LL},
+    {"AMD EPYC 9455", 3400000000LL},
+    {"AMD EPYC 9575F", 5000000000LL},
+    {"AMD EPYC 9655", 3700000000LL},
+    {"AMD EPYC 9755", 3250000000LL},
+    {"AMD EPYC 9965", 3200000000LL},
+
+    /* Qualcomm Snapdragon (mobile e PC ARM) */
+    {"Qualcomm Snapdragon 8 Elite", 4320000000LL},
+    {"Qualcomm Snapdragon X Elite", 3800000000LL},
+    {"Qualcomm Snapdragon X Plus", 3400000000LL},
+
+    /* ARM Cortex-X recenti e server ARM */
+    {"ARM Cortex-X925", 3600000000LL},
+    {"Ampere Altra", 3000000000LL},
+    {"Ampere Altra Max", 3000000000LL},
+    {"Ampere AmpereOne", 3200000000LL},
+    {"AWS Graviton2", 2500000000LL},
+    {"AWS Graviton3", 2600000000LL},
+    {"AWS Graviton4", 2800000000LL},
+    {"Raspberry Pi 5", 2400000000LL},
+
+    /* Samsung Exynos e MediaTek Dimensity recenti */
+    {"Samsung Exynos 2400", 3200000000LL},
+    {"MediaTek Dimensity 9400", 3620000000LL},
+
+    /* Nvidia Grace e acceleratori ARM datacenter */
+    {"Nvidia Grace", 3400000000LL},
+
+    {"Generic", 1000000000LL},
 };
 
 #define NUM_PROCESSORI (sizeof(db_processori) / sizeof(db_processori[0]))
@@ -1546,12 +1460,24 @@ char* rileva_cpu() {
 }
 long long ottieni_clock(const char* nome_cpu) {
     if (!nome_cpu) return 1000000000LL;
+    /* Si sceglie la corrispondenza piu' lunga (piu' specifica) invece della prima
+       trovata: altrimenti una voce generica come "i5-7600" vincerebbe su
+       "i5-7600K" solo perche' precede quest'ultima nell'array. */
+    size_t migliore_lunghezza = 0;
+    long long migliore_clock = 0;
+    int trovato = 0;
     for (size_t i = 0; i < NUM_PROCESSORI; i++) {
-        if (strstr(nome_cpu, db_processori[i].nome) != NULL) {
-            return db_processori[i].clock_hz; 
+        const char* nome = db_processori[i].nome;
+        if (strstr(nome_cpu, nome) != NULL) {
+            size_t lunghezza = strlen(nome);
+            if (lunghezza > migliore_lunghezza) {
+                migliore_lunghezza = lunghezza;
+                migliore_clock = db_processori[i].clock_hz;
+                trovato = 1;
+            }
         }
     }
-    return 1000000000LL;
+    return trovato ? migliore_clock : 1000000000LL;
 }
 
 /*
@@ -1858,7 +1784,7 @@ int capacita_memoria = 10;
 int indice_memoria = 0;
 void salva_in_memoria(int valore) {
     if (memoria == NULL) {
-        memoria = malloc(capacita_memoria * sizeof(int));
+        memoria = malloc((size_t)capacita_memoria * sizeof(int));
         if (!memoria) {
             printf("ERRORE: impossibile allocare la memoria. Salvataggio saltato.\n");
             return;
@@ -1866,7 +1792,7 @@ void salva_in_memoria(int valore) {
     }
     if (indice_memoria >= capacita_memoria) {
         capacita_memoria *= 2;
-        int *temp = realloc(memoria, capacita_memoria * sizeof(int));
+        int *temp = realloc(memoria, (size_t)capacita_memoria * sizeof(int));
         if (!temp) {
             printf("ERRORE: impossibile espandere la memoria. Salvataggio saltato.\n");
             capacita_memoria /= 2;
@@ -2009,15 +1935,59 @@ int porta_exor_5(int a, int b, int c, int d, int e) {
  */
 
 
-void n_ALU74181(int Cn, int M, int A[4], int B[4], int S[4], int F[4], int *A_uguale_B, int *P, int *Cn_piu_4, int *G) { 
-  F[0] = porta_exor(porta_not(porta_and(Cn, porta_not(M))), porta_and(porta_not(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))))); 
-  F[1] = porta_exor(porta_not(porta_or(porta_and(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_and_3(porta_not(M), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), Cn))), porta_and(porta_not(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))))); 
-  F[2] = porta_exor(porta_not(porta_or_3(porta_and(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))), porta_and_4(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))))), porta_and(porta_not(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))))); 
-  F[3] = porta_exor(porta_not(porta_or_4(porta_and(porta_not(M), porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_4(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_5(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))))), porta_and(porta_not(porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3]))))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3]))))); 
-  *A_uguale_B = porta_and_4(porta_exor(porta_not(porta_and(Cn, porta_not(M))), porta_and(porta_not(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))))), porta_exor(porta_not(porta_or(porta_and(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0]))))), porta_and_3(porta_not(M), porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), Cn))), porta_and(porta_not(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))))), porta_exor(porta_not(porta_or_3(porta_and(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))), porta_and_4(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1])))))), porta_and(porta_not(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))))), porta_exor(porta_not(porta_or_4(porta_and(porta_not(M), porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2]))))), porta_and_3(porta_not(M), porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_4(porta_not(M), porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))), porta_and_5(porta_not(M), Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2])))))), porta_and(porta_not(porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3]))))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))))); 
-  *P = porta_not(porta_and_4(porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3]))))); 
-  *Cn_piu_4 = porta_or(porta_not(porta_not(porta_and_5(Cn, porta_not(porta_or(porta_and_3(porta_not(B[0]), S[2], A[0]), porta_and_3(A[0], B[0], S[3]))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))))), porta_not(porta_not(porta_or_4(porta_and_4(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and_3(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2])))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3])))))))); 
-  *G = porta_not(porta_or_4(porta_and_4(porta_not(porta_or_3(A[0], porta_and(B[0], S[0]), porta_and(S[1], porta_not(B[0])))), porta_not(porta_or(porta_and_3(porta_not(B[1]), S[2], A[1]), porta_and_3(A[1], S[3], B[1]))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and_3(porta_not(porta_or_3(A[1], porta_and(B[1], S[0]), porta_and(S[1], porta_not(B[1])))), porta_not(porta_or(porta_and_3(porta_not(B[2]), S[2], A[2]), porta_and_3(A[2], S[3], B[2]))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_and(porta_not(porta_or_3(A[2], porta_and(B[2], S[0]), porta_and(S[1], porta_not(B[2])))), porta_not(porta_or(porta_and_3(porta_not(B[3]), S[2], A[3]), porta_and_3(A[3], S[3], B[3])))), porta_not(porta_or_3(A[3], porta_and(B[3], S[0]), porta_and(S[1], porta_not(B[3])))))); 
+void n_ALU74181(int Cn, int M, int A[4], int B[4], int S[4], int F[4], int *A_uguale_B, int *P, int *Cn_piu_4, int *G) {
+    int S0 = S[0], S1 = S[1], S2 = S[2], S3 = S[3];
+    int notM = porta_not(M);
+
+    /* Segnali interni per-bit, indipendenti da modalita' e riporto in ingresso:
+         p[i]    = Ai + (Bi . S0) + (S1 . /Bi)                     ("propagate")
+         g[i]    = NOT( (/Bi . S2 . Ai) + (Ai . Bi . S3) )         ("generate", corrisponde a /Gi del chip reale)
+       Sono gli stessi segnali usati internamente dal chip 74181 originale per
+       costruire sia le uscite F0-F3 sia la catena di propagazione del riporto. */
+    int p[4], pbar[4], g[4];
+    for (int i = 0; i < 4; i++) {
+        int notB = porta_not(B[i]);
+        p[i] = porta_or_3(A[i], porta_and(B[i], S0), porta_and(S1, notB));
+        pbar[i] = porta_not(p[i]);
+        g[i] = porta_not(porta_or(porta_and_3(notB, S2, A[i]), porta_and_3(A[i], B[i], S3)));
+    }
+
+    F[0] = porta_exor(porta_not(porta_and(Cn, notM)), porta_and(p[0], g[0]));
+
+    F[1] = porta_exor(
+        porta_not(porta_or(
+            porta_and(notM, pbar[0]),
+            porta_and_3(notM, g[0], Cn))),
+        porta_and(p[1], g[1]));
+
+    F[2] = porta_exor(
+        porta_not(porta_or_3(
+            porta_and(notM, pbar[1]),
+            porta_and_3(notM, pbar[0], g[1]),
+            porta_and_4(notM, Cn, g[0], g[1]))),
+        porta_and(p[2], g[2]));
+
+    F[3] = porta_exor(
+        porta_not(porta_or_4(
+            porta_and(notM, pbar[2]),
+            porta_and_3(notM, pbar[1], g[2]),
+            porta_and_4(notM, pbar[0], g[1], g[2]),
+            porta_and_5(notM, Cn, g[0], g[1], g[2]))),
+        porta_and(p[3], g[3]));
+
+    *A_uguale_B = porta_and_4(F[0], F[1], F[2], F[3]);
+
+    *P = porta_not(porta_and_4(g[0], g[1], g[2], g[3]));
+
+    /* Catena di "generate" a cascata, condivisa tra Cn+4 e G come nel chip reale. */
+    int catena_generate = porta_or_4(
+        porta_and_4(pbar[0], g[1], g[2], g[3]),
+        porta_and_3(pbar[1], g[2], g[3]),
+        porta_and(pbar[2], g[3]),
+        pbar[3]);
+
+    *G = porta_not(catena_generate);
+    *Cn_piu_4 = porta_or(porta_and_5(Cn, g[0], g[1], g[2], g[3]), catena_generate);
 }
 static int leggi_bit_input_74181(const char* nome, int* var) {
     int input;
@@ -2391,7 +2361,7 @@ void ALU32() {
             Bbits[bit] = Q_B[nibble * 4 + bit];
         }
         n_ALU74181(currentCn, M, Abits, Bbits, S, F, &A_uguale_B, &P, &Cn_piu_4, &G);
-        unsigned int nibbleResult = F[0] | (F[1] << 1) | (F[2] << 2) | (F[3] << 3);
+        unsigned int nibbleResult = (unsigned int)F[0] | ((unsigned int)F[1] << 1) | ((unsigned int)F[2] << 2) | ((unsigned int)F[3] << 3);
         result |= (nibbleResult << (nibble * 4));
         currentCn = Cn_piu_4;
     }

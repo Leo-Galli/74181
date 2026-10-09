@@ -103,6 +103,25 @@ gcc 74181.c -o simulatore_74181
 
 ---
 
+## Test
+
+Il nucleo logico dell'ALU (`n_ALU74181`) è coperto da una suite di test di regressione in `tests/test_alu74181.c`, che verifica il simulatore contro le identità aritmetiche e logiche note del chip 74181 reale (somma con riporto, AND, OR, XOR, passaggio diretto, flag A=B) su tutte le combinazioni di operandi rilevanti, oltre al round-trip dei convertitori binario↔decimale.
+
+```bash
+gcc -Wall -Wextra -O2 tests/test_alu74181.c -o test_alu74181
+./test_alu74181
+```
+
+Oppure, tramite CMake:
+
+```bash
+cmake -B build
+cmake --build build
+ctest --test-dir build
+```
+
+---
+
 ## Statistiche
 
 ![Star History](https://api.star-history.com/svg?repos=Leo-Galli/74181\&type=Date)
@@ -119,7 +138,7 @@ Vedi [LICENSE](LICENSE) per i dettagli.
 
 ---
 
-## [Scarica l'ultima versione](https://github.com/Leo-Galli/74181/archive/refs/tags/v2.0.zip)
+## [Scarica l'ultima versione](https://github.com/Leo-Galli/74181/archive/refs/tags/v2.1.zip)
 
 ---
 
